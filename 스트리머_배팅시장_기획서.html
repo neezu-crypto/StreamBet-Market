@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>StreamBet Market 기획서</title>
+<style>
+  :root{
+    --bg: #0e1013;
+    --panel: #16191f;
+    --panel-2: #1c2027;
+    --line: #2a2f38;
+    --gold: #d4a73c;
+    --gold-soft: rgba(212,167,60,0.14);
+    --green: #4c9a6e;
+    --text: #e9e9ea;
+    --muted: #9aa0ac;
+    --serif: "Noto Serif KR", "Nanum Myeongjo", Georgia, "Apple SD Gothic Neo", serif;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse at top, #14171d 0%, var(--bg) 60%);
+    color:var(--text);
+    font-family:var(--sans);
+    line-height:1.7;
+    padding:0 0 80px;
+  }
+  .wrap{max-width:820px;margin:0 auto;padding:0 28px;}
+
+  /* Header */
+  header{
+    padding:70px 28px 50px;
+    text-align:center;
+    border-bottom:1px solid var(--line);
+    position:relative;
+  }
+  .eyebrow{
+    font-family:var(--mono);
+    letter-spacing:.25em;
+    font-size:12px;
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  h1{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:44px;
+    margin:0 0 14px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{color:var(--muted);font-size:15px;}
+  .ticket-row{
+    margin-top:28px;
+    display:flex;
+    justify-content:center;
+    gap:0;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--muted);
+  }
+  .ticket-row span{
+    padding:0 14px;
+    border-right:1px dashed var(--line);
+  }
+  .ticket-row span:last-child{border-right:none;}
+  .ticket-row b{color:var(--gold);font-weight:600;}
+
+  /* Section */
+  section{
+    padding:52px 28px;
+    border-bottom:1px solid var(--line);
+  }
+  section:last-of-type{border-bottom:none;}
+  .sec-head{
+    display:flex;
+    align-items:baseline;
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .sec-num{
+    font-family:var(--mono);
+    color:var(--gold);
+    font-size:14px;
+    border:1px solid var(--gold-soft);
+    background:var(--gold-soft);
+    padding:3px 9px;
+    border-radius:3px;
+    flex-shrink:0;
+  }
+  h2{
+    font-family:var(--serif);
+    font-size:24px;
+    font-weight:700;
+    margin:0;
+  }
+  h3{
+    font-family:var(--sans);
+    font-size:15px;
+    color:var(--gold);
+    margin:26px 0 10px;
+    font-weight:600;
+  }
+  p{color:var(--text);font-size:15px;}
+  ul, ol{padding-left:22px;font-size:15px;}
+  li{margin-bottom:6px;}
+  strong{color:var(--gold);font-weight:600;}
+
+  /* Table */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:16px 0;
+    font-size:14px;
+    background:var(--panel);
+    border:1px solid var(--line);
+  }
+  th, td{
+    padding:11px 14px;
+    text-align:left;
+    border-bottom:1px solid var(--line);
+  }
+  th{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.05em;
+    color:var(--gold);
+    background:var(--panel-2);
+    text-transform:uppercase;
+  }
+  tr:last-child td{border-bottom:none;}
+
+  /* Flow diagram */
+  .flow{
+    font-family:var(--mono);
+    font-size:13px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:20px 22px;
+    color:var(--muted);
+    white-space:pre-wrap;
+    line-height:2;
+  }
+  .flow b{color:var(--text);}
+
+  /* Chip / tag */
+  .chip{
+    display:inline-block;
+    font-family:var(--mono);
+    font-size:11px;
+    padding:2px 9px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    color:var(--muted);
+    margin-right:6px;
+  }
+
+  /* Callout */
+  .callout{
+    border-left:3px solid var(--gold);
+    background:var(--panel);
+    padding:14px 18px;
+    border-radius:0 6px 6px 0;
+    font-size:14px;
+    color:var(--muted);
+    margin-top:16px;
+  }
+  .callout b{color:var(--text);}
+
+  /* Open items */
+  .open-list li{
+    list-style:none;
+    position:relative;
+    padding-left:22px;
+    color:var(--muted);
+  }
+  .open-list li::before{
+    content:"○";
+    position:absolute;
+    left:0;
+    color:var(--gold);
+    font-size:11px;
+    top:5px;
+  }
+  .open-list{padding-left:0;}
+
+  footer{
+    text-align:center;
+    padding:40px 28px 0;
+    color:var(--muted);
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.1em;
+  }
+
+  @media (max-width:600px){
+    h1{font-size:32px;}
+    header{padding:50px 20px 36px;}
+    section{padding:38px 20px;}
+    .ticket-row{flex-wrap:wrap;gap:8px 0;}
+    .ticket-row span{border-right:none;padding:0 10px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Game Design Doc</div>
+  <h1>StreamBet Market</h1>
+  <div class="subtitle">스트리머 배팅시장 — 방송 중 실시간 이벤트에 배팅하는 가상 재화 게임 · 기획서</div>
+  <div class="ticket-row">
+    <span>재화 <b>가상 재화 (현금성 없음)</b></span>
+    <span>스택 <b>Firebase RTDB + GitHub Pages</b></span>
+    <span>초기자산 <b>1,000,000</b></span>
+  </div>
+</header>
+
+<div class="wrap">
+
+<section>
+  <div class="sec-head"><span class="sec-num">01</span><h2>개요</h2></div>
+  <p>방송 중 실시간으로 발생하는 이벤트에 시청자들이 가상 재화로 배팅하는 게임. 방송 내용은 예측이 불가능하고 실시간으로 변하기 때문에, 정해진 배팅 항목뿐 아니라 <strong>유저가 직접 배팅 주제를 제안</strong>할 수 있는 구조를 핵심으로 한다.</p>
+  <div class="callout"><b>기존 프로젝트와의 관계</b> — SOOP STOCK 등 기존 게임과 기술 스택을 공유하지만, 자산 시스템은 독립적으로 운영한다.</div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">02</span><h2>배팅 주제 카테고리</h2></div>
+  <h3>사전 정의 카테고리 (자동 · 반자동 판정)</h3>
+  <table>
+    <tr><th>구분</th><th>예시</th><th>판정 방식</th></tr>
+    <tr><td>게임 방송</td><td>이번 판 승/패, 킬수 구간, 목표 달성 여부</td><td>스트리머 확정 · 다수결</td></tr>
+    <tr><td>토크 · 저챗</td><td>키워드 발언 여부, 후원 금액 구간</td><td>스트리머 확정</td></tr>
+    <tr><td>시청자 지표</td><td>N분 후 시청자 수 증감, 채팅량 목표</td><td>API 연동 자동 판정</td></tr>
+    <tr><td>합방 · 대결</td><td>스트리머 간 승부, 미니게임 결과</td><td>스트리머 확정 · 다수결</td></tr>
+  </table>
+  <p style="color:var(--muted);font-size:13.5px;">초기 버전은 <strong>자동 판정이 가능한 카테고리</strong>부터 우선 구현하여 판정 시비 리스크를 최소화한다.</p>
+
+  <h3>유저 제안형 배팅 (템플릿 방식)</h3>
+  <p>자유 텍스트가 아닌 <strong>템플릿에 값을 채우는 방식</strong>으로 제안하여 판정 가능성을 담보한다.</p>
+  <div class="flow">예: [스트리머]가 [N분] 안에 [행동]을 할 것이다</div>
+  <p style="margin-top:14px;">제안 시 함께 지정: <span class="chip">판정 방법</span><span class="chip">배팅 가능 시간</span><span class="chip">배팅 마감 시점</span><span class="chip">이벤트 시작·마감 시점</span></p>
+  <div class="callout"><b>본인 제안 배팅 참여 허용</b> — 시크릿 창 등 우회 접속이 어차피 가능한 웹게임 특성상, 원천 차단보다는 배팅 한도 등 완화 장치로 대응한다.</div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">03</span><h2>대전 유형</h2></div>
+  <p>배팅 주제 개설 시 아래 3가지 유형 중 하나를 선택한다. 개인전 · 1vs1은 이진 판정, 단체전은 다중 판정으로 정산 로직이 달라진다.</p>
+  <table>
+    <tr><th>유형</th><th>대상</th><th>결과 형태</th><th>배당 계산</th></tr>
+    <tr><td>개인전</td><td>스트리머 1인의 승부 (예: N시간 안에 X 가능/불가능)</td><td>성공 · 실패 (이진)</td><td>찬성/반대 두 풀로 단순 분배</td></tr>
+    <tr><td>1vs1 대전</td><td>스트리머 vs 스트리머</td><td>승 · 패 (이진)</td><td>두 풀로 단순 분배</td></tr>
+    <tr><td>단체전</td><td>여러 스트리머 추가 후 1위 예측</td><td>순위 (다중)</td><td>N개 풀로 분산, 배당 편차 큼</td></tr>
+  </table>
+
+  <h3>단체전 설계 시 고려사항</h3>
+  <ul>
+    <li><strong>배당 편차</strong> — 인기 스트리머에 배팅이 몰리면 배당이 낮아지고 비인기 스트리머는 배당이 치솟는 패리뮤추얼 구조. 몰빵 방지를 위해 <strong>최소 배당 하한선</strong> 검토</li>
+    <li><strong>참가자 변경</strong> — 방송 중단 등으로 중도 이탈/추가 가능성 → <strong>배팅 마감 시점 이후 참가자 목록 고정</strong></li>
+    <li><strong>순위 판정 기준 명시</strong> — 시청자 수 1위 / 게임 순위 1위 / 스트리머 자체 선언 등, 검증 단계에서 <strong>판정 기준을 템플릿에 필수 입력</strong></li>
+  </ul>
+
+  <h3>템플릿 필드 (대전 유형 공통)</h3>
+  <div class="flow">대전 유형   : [개인전 / 1vs1 / 단체전]
+참가자    : [스트리머 1명 / 2명 / N명 (단체전만 추가 가능)]
+판정 기준  : [자유 텍스트 또는 사전 정의 항목 선택]
+판정 방법  : [관리자·인증 스트리머 검증 / 좋아요 다수결]
+시간 구조  : [배팅 가능 시간 / 배팅 마감 / 이벤트 시작·마감]</div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">04</span><h2>배팅 주제 검증 프로세스</h2></div>
+  <p>유저 제안 배팅은 오픈 전 검증 단계를 거친다. 검증 방식은 2가지 중 선택:</p>
+  <ol>
+    <li>관리자 / 인증 스트리머 직접 검증</li>
+    <li>다수 익명 계정의 '좋아요' 수 통과 (라이트 검증, 실시간성 확보)</li>
+  </ol>
+  <div class="flow"><b>주제 제안</b> (템플릿 입력)
+   │
+   ▼
+<b>검증</b> (관리자 · 인증 스트리머 승인  OR  좋아요 다수결 통과)
+   │
+   ▼
+<b>배팅 오픈</b> → <b>배팅 마감</b> → <b>이벤트 진행</b> → <b>정산</b></div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">05</span><h2>스트리머 인증 시스템</h2></div>
+  <p>스트리머 본인이 직접 신청하는 구조:</p>
+  <ol>
+    <li>스트리머가 닉네임 + SOOP 아이디 입력하여 신청</li>
+    <li>관리자가 검수 후 승인 · 반려</li>
+    <li>승인된 스트리머는 다음 권한을 얻는다:
+      <ul>
+        <li>자신의 방송과 관련된 배팅 주제 <strong>검증 권한</strong></li>
+        <li><strong>메인페이지 홍보 배너</strong>에 본인 방송국 노출</li>
+      </ul>
+    </li>
+  </ol>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">06</span><h2>시간 구조</h2></div>
+  <p>배팅 게임의 시간 흐름을 3가지로 명확히 분리하여 관리한다.</p>
+  <table>
+    <tr><th>구분</th><th>설명</th></tr>
+    <tr><td>배팅 가능 시간</td><td>유저가 배팅을 넣을 수 있는 구간</td></tr>
+    <tr><td>배팅 마감 시점</td><td>배팅 가능 시간의 종료 (이벤트 시작 전 마감 가능)</td></tr>
+    <tr><td>이벤트 시작 · 마감 시점</td><td>실제 결과가 갈리는 구간, 정산 트리거</td></tr>
+  </table>
+  <p style="color:var(--muted);font-size:13.5px;">세 시점을 분리함으로써 "이벤트는 진행 중이지만 배팅은 마감된" 상태를 자연스럽게 구현한다.</p>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">07</span><h2>자산(재화) 시스템</h2></div>
+  <ul>
+    <li><strong>초기 자산</strong> — 1,000,000원 (SOOP STOCK 등 기존 게임과 동일한 기준)</li>
+    <li><strong>자산 분리 원칙</strong> — 배팅시장 재화는 타 게임과 실시간 완전 공유하지 않음
+      <ul>
+        <li>계정(로그인/UID)만 공유하여 원 클릭 접근성 확보</li>
+        <li>게임 간 이동은 <strong>제한적 환전 기능</strong>으로만 연결 (비율 · 일일 한도는 추후 확정)</li>
+      </ul>
+    </li>
+  </ul>
+  <div class="callout"><b>왜 완전 공유가 아닌가</b> — 한쪽 게임의 밸런스 붕괴나 버그가 실시간 자산 공유 시 다른 게임 경제로 전염되는 것을 방지하기 위함.</div>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">08</span><h2>어뷰징 방지 장치</h2></div>
+  <p style="color:var(--muted);font-size:13.5px;margin-top:-6px;">카지노 모델 참고</p>
+  <ul>
+    <li><strong>최대 배팅 금액 제한</strong> — 1회 배팅당 상한선 (보유자산 비례 또는 고정액)</li>
+    <li><strong>최소 참여자 수 조건</strong> — 참여 인원 미달 시 정산 무효 · 환불 처리 (자작극 방지)</li>
+    <li><strong>연속 배팅 취소/재배팅 쿨다운</strong></li>
+    <li><strong>일일 배팅 총액 한도</strong></li>
+    <li><strong>신규 계정 배팅 한도 단계적 상향</strong></li>
+    <li style="color:var(--muted);">(검토 중) 본인이 제안한 배팅 참여 시 최대 배팅 한도를 낮게 적용</li>
+  </ul>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">09</span><h2>정산 방식</h2></div>
+  <table>
+    <tr><th>유형</th><th>정산 방법</th></tr>
+    <tr><td>자동 판정형 (시청자 수 등)</td><td>백엔드 자동 정산</td></tr>
+    <tr><td>유저 제안형</td><td>채팅 다수결 투표 기본, 인증 스트리머 있으면 스트리머 확정 최우선</td></tr>
+  </table>
+</section>
+
+<section>
+  <div class="sec-head"><span class="sec-num">10</span><h2>다음 논의 항목</h2></div>
+  <ul class="open-list">
+    <li>배팅 풀 구조 — 패리뮤추얼 방식 vs 고정 배당률</li>
+    <li>환전 시스템 상세 규칙 (비율, 방향, 일일 한도)</li>
+    <li>Firebase RTDB 데이터 스키마 설계</li>
+    <li>재화 획득 방법 (출석 · 시청 시간 보상 등)</li>
+  </ul>
+</section>
+
+</div>
+
+<footer>STREAMER BETTING MARKET · GAME DESIGN DOC</footer>
+
+</body>
+</html>
