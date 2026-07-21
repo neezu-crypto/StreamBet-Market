@@ -210,6 +210,42 @@ function sbmRenderMarketFeed() {
   sbmRenderAdminLists();
 }
 
+// 상단 스크롤 티커 — 최근 정산 결과를 우선 보여주고, 정산 이력이 없으면 진행중인 마켓의
+// 실시간 배당으로 대체한다. 애니메이션(ticker-scroll)이 -50% 이동을 전제로 하므로
+// 목록을 정확히 두 번 이어붙여야 끊김 없이 루프된다.
+function sbmRenderTicker() {
+  var track = document.getElementById('ticker-track');
+  if (!track) return;
+
+  var all = Object.keys(sbmMarketsCache).map(function (id) { return sbmMarketsCache[id]; });
+  var settled = all.filter(function (m) { return m.status === 'settled' && m.settlement; })
+    .sort(function (a, b) { return b.settlement.settledAt - a.settlement.settledAt; })
+    .slice(0, 8);
+
+  var source = settled.map(function (m) {
+    var winLabel = (m.outcomes[m.settlement.winningOutcomeId] || {}).label || '';
+    return { text: m.title + (winLabel ? ' · ' + winLabel + ' 적중' : ''), value: m.settlement.payoutMultiplier.toFixed(1) + 'x' };
+  });
+
+  if (!source.length) {
+    source = all.filter(function (m) { return m.status === 'open'; }).slice(0, 8).map(function (m) {
+      var odds = sbmComputeOdds(m);
+      var firstId = Object.keys(m.outcomes)[0];
+      return { text: m.title, value: (odds[firstId] || 0).toFixed(1) + 'x' };
+    });
+  }
+
+  if (!source.length) {
+    track.innerHTML = '<span>아직 하이라이트가 없습니다 · 첫 배팅 주제를 제안해보세요</span>';
+    return;
+  }
+
+  var itemsHtml = source.map(function (item, i) {
+    return '<span>' + item.text + ' <b class="' + (i % 2 === 0 ? 'up' : 'down') + ' num">' + item.value + '</b></span>';
+  }).join('');
+  track.innerHTML = itemsHtml + itemsHtml;
+}
+
 (function () {
   if (!window.sbmFirebase || !window.sbmDb) return;
   var fb = window.sbmFirebase;
@@ -217,6 +253,7 @@ function sbmRenderMarketFeed() {
     sbmMarketsCache = snap.val() || {};
     window.sbmMarketsCache = sbmMarketsCache;
     sbmRenderMarketFeed();
+    sbmRenderTicker();
   });
 
   // 04번 — 좋아요 (다수결 라이트 검증), 재화가 걸려있지 않아 클라이언트가 직접 write
