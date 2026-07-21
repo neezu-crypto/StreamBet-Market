@@ -1,0 +1,320 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+
+    "stocks": {
+      ".read": true,
+      "$stockId": {
+        ".write": false
+      }
+    },
+
+    "candlesticks": {
+      "$stockId": {
+        ".read": true,
+        "$ts": {
+          ".write": false
+        }
+      }
+    },
+
+    "sparklines": {
+      "$stockId": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "rankings": {
+      "top5": {
+        ".read": true,
+        ".write": false
+      },
+      "profitEntries": {
+        ".read": true,
+        ".write": false,
+        ".indexOn": ["value"]
+      }
+    },
+
+    "chartBanner": {
+      "$stockId": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "presence": {
+      "users": {
+        ".read": "auth != null",
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "!newData.exists() || (newData.hasChildren(['lastSeen']) && newData.child('lastSeen').isNumber())",
+          "lastSeen": {
+            ".validate": "newData.isNumber()"
+          },
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+
+    "users": {
+      ".read": false,
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": false
+      }
+    },
+
+    "bannerRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "chartBannerRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "cardBannerRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "kakaoLinks": {
+      ".read": false,
+      "$kakaoId": {
+        ".write": false
+      }
+    },
+
+    "cashChargeRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "pinRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "pinnedStocks": {
+      ".read": true,
+      "$stockId": {
+        ".write": false
+      }
+    },
+
+    "relayRoomRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "relayRooms": {
+      ".read": true,
+      "$streamerId": {
+        ".write": false
+      }
+    },
+
+    "unfreezeDonationRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "listingRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "lastUnfreezeEvent": {
+      ".read": true,
+      ".write": false
+    },
+
+    "maintenance": {
+      ".read": true,
+      ".write": false
+    },
+
+    "announcement": {
+      ".read": true,
+      ".write": false
+    },
+
+    "jackpot": {
+      "state": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "jackpotContributions": {
+      ".read": false,
+      "$uid": {
+        ".write": false
+      }
+    },
+
+    "jackpotDailyMaxDelta": {
+      ".read": false,
+      ".write": false
+    },
+
+    "jackpotLastWin": {
+      ".read": true,
+      ".write": false
+    },
+
+    "lottery": {
+      "pool": {
+        ".read": true,
+        ".write": false
+      }
+    },
+
+    "lotteryPurchases": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "lotteryLastWin": {
+      ".read": true,
+      ".write": false
+    },
+
+    "streamerVerificationRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "streamerVerifications": {
+      ".read": true,
+      ".indexOn": ["uid", "soopId"],
+      "$id": {
+        ".write": false
+      }
+    },
+
+    "delistedStocksLog": {
+      ".read": false,
+      "$stockId": {
+        ".write": false
+      }
+    },
+
+    "bettingMarket": {
+      "markets": {
+        ".read": "auth != null",
+        ".indexOn": ["status"],
+        "$marketId": { ".write": false }
+      },
+
+      "bets": {
+        "$marketId": {
+          "$betId": {
+            ".read": "auth != null && data.child('uid').val() === auth.uid",
+            ".write": false
+          }
+        }
+      },
+
+      "wallets": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+
+      "exchanges": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$exchangeId": { ".write": false }
+        }
+      },
+
+      "userBets": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+
+      "reserveFund": {
+        ".read": false,
+        ".write": false
+      },
+
+      "likes": {
+        "$marketId": {
+          "$uid": {
+            ".read": "auth != null",
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
+      },
+
+      "verifyRequests": {
+        ".read": false,
+        "$pushId": {
+          ".write": "auth != null && !data.exists() && newData.child('uid').val() === auth.uid"
+        }
+      },
+
+      "marketReports": {
+        ".read": "auth != null",
+        "$reportId": { ".write": false }
+      },
+
+      "marketReportMarks": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$marketId": { ".write": false }
+        }
+      },
+
+      "nicknameReports": {
+        ".read": "auth != null",
+        "$reportId": { ".write": false }
+      },
+
+      "blockedNicknames": {
+        ".read": "auth != null",
+        "$targetId": { ".write": false }
+      },
+
+      "profiles": {
+        ".read": "auth != null",
+        "$uid": { ".write": false }
+      },
+
+      "auditLog": {
+        ".read": "auth != null",
+        "$entryId": { ".write": false }
+      }
+    }
+  }
+}
