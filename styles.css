@@ -56,6 +56,10 @@ button{ font-family: inherit; cursor: pointer; }
   background: var(--ink); color: var(--text); font-size:12px; font-weight:600; transition: background .12s ease;
 }
 .dev-link:hover{ background: var(--panel-raised); }
+.charge-station-link{
+  display:block; text-align:center; width:100%; box-sizing:border-box;
+  padding:10px 11px; margin-bottom:14px; font-size:13px;
+}
 
 .devbar-game-scroll{
   display:flex; gap:8px; overflow-x:auto; flex:1 1 auto; min-width:0;
