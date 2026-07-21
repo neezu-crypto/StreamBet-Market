@@ -668,6 +668,19 @@ button{ font-family: inherit; cursor: pointer; }
 .propose-hours-row{ display:flex; align-items:center; gap:9px; }
 .propose-hours-row input{ width:80px; flex:none; text-align:center; font-family: var(--font-mono); }
 .propose-hours-unit{ font-size:12.5px; color: var(--muted); }
+.propose-outcome-toggle{ display:flex; align-items:center; gap:7px; font-size:12.5px; color:var(--muted); cursor:pointer; }
+.propose-outcome-row{ display:flex; align-items:center; gap:7px; margin-top:7px; }
+.propose-outcome-row input{ flex:1; }
+.propose-outcome-remove{
+  flex:none; width:26px; height:26px; border-radius:6px; border:1px solid var(--hairline);
+  background:none; color:var(--muted-2); font-size:14px; line-height:1;
+}
+.propose-outcome-remove:hover{ border-color:var(--coral); color:var(--coral); }
+.propose-outcome-add{
+  margin-top:8px; font-size:12px; font-weight:600; color:var(--gold); background:none;
+  border:1px dashed var(--gold-line); border-radius:7px; padding:7px 10px; width:100%;
+}
+.propose-outcome-add:hover{ background:var(--gold-dim); }
 .streamer-picker{ position:relative; }
 .streamer-chips{ display:flex; flex-wrap:wrap; gap:6px; margin-bottom:6px; }
 .streamer-chips:empty{ margin-bottom:0; }

@@ -61,7 +61,7 @@ const submitMarketProposal = onCall(async (request) => {
     }
   }
 
-  const { title, type, streamerIds, betHours, eventHours } = request.data || {};
+  const { title, type, streamerIds, betHours, eventHours, outcomeLabels } = request.data || {};
 
   if (!title || typeof title !== 'string' || !title.trim()) {
     throw new HttpsError('invalid-argument', '배팅 주제 문구를 입력해 주세요.');
@@ -78,6 +78,23 @@ const submitMarketProposal = onCall(async (request) => {
   }
   if (type === 'group' && ids.length < 2) {
     throw new HttpsError('invalid-argument', '단체전은 스트리머 2명 이상을 지정해야 합니다.');
+  }
+
+  // 03번 — 개인전은 기본 성공/실패 이진 외에, 등급 승급처럼 결과가 2개로 안 떨어지는
+  // 주제를 위해 직접 입력한 2~4개 선택지로 대체할 수 있다. 1vs1 · 단체전은 이미
+  // "누가 이기는가" 구조 자체가 선택지라 커스텀을 받지 않는다.
+  let customOutcomes = null;
+  if (type === 'personal' && Array.isArray(outcomeLabels) && outcomeLabels.length) {
+    const cleaned = outcomeLabels
+      .map((s) => (typeof s === 'string' ? s.trim() : ''))
+      .filter(Boolean);
+    if (cleaned.length < 2 || cleaned.length > 4) {
+      throw new HttpsError('invalid-argument', '선택지는 2개 이상 4개 이하로 입력해 주세요.');
+    }
+    if (new Set(cleaned).size !== cleaned.length) {
+      throw new HttpsError('invalid-argument', '선택지가 중복되지 않게 입력해 주세요.');
+    }
+    customOutcomes = cleaned;
   }
   const betH = Number(betHours);
   const eventH = Number(eventHours);
@@ -102,8 +119,14 @@ const submitMarketProposal = onCall(async (request) => {
 
   const outcomes = {};
   if (type === 'personal') {
-    outcomes.success = { label: '성공', pool: 0 };
-    outcomes.fail = { label: '실패', pool: 0 };
+    if (customOutcomes) {
+      customOutcomes.forEach((label, i) => {
+        outcomes['opt' + i] = { label, pool: 0 };
+      });
+    } else {
+      outcomes.success = { label: '성공', pool: 0 };
+      outcomes.fail = { label: '실패', pool: 0 };
+    }
   } else {
     ids.forEach((id) => {
       outcomes[id] = { label: names[id], streamerId: id, pool: 0 };

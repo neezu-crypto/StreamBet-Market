@@ -13,6 +13,7 @@
   var closeBtn = document.getElementById('propose-modal-close');
   var typeSelect = document.getElementById('propose-type');
   var streamerFields = document.getElementById('propose-streamer-fields');
+  var outcomeFields = document.getElementById('propose-outcome-fields');
   var titleInput = document.getElementById('propose-title');
   var betHoursInput = document.getElementById('propose-bet-hours');
   var eventHoursInput = document.getElementById('propose-event-hours');
@@ -142,6 +143,65 @@
     return all;
   }
 
+  // 03번 — 개인전은 기본이 성공/실패 이진이지만, 등급 승급처럼 결과가 2개로 안 떨어지는
+  // 주제도 있어서 직접 입력한 2~4개 선택지로 대체할 수 있게 한다. 1vs1 · 단체전은
+  // 이미 "누가 이기는가" 구조 자체가 선택지라 커스텀을 열지 않는다.
+  var customModeOn = false;
+  var customOutcomeLabels = ['', ''];
+
+  function renderOutcomeFields(type) {
+    outcomeFields.innerHTML = '';
+    customModeOn = false;
+    customOutcomeLabels = ['', ''];
+    if (type !== 'personal') return;
+
+    var field = document.createElement('div');
+    field.className = 'propose-field';
+    var toggleLabel = document.createElement('label');
+    toggleLabel.className = 'propose-outcome-toggle';
+    toggleLabel.innerHTML = '<input type="checkbox">성공/실패 대신 선택지를 직접 입력할게요 (2~4개)';
+    var inputsWrap = document.createElement('div');
+    inputsWrap.style.display = 'none';
+    field.appendChild(toggleLabel);
+    field.appendChild(inputsWrap);
+    outcomeFields.appendChild(field);
+
+    function renderInputs() {
+      inputsWrap.innerHTML = customOutcomeLabels.map(function (val, i) {
+        return '<div class="propose-outcome-row">' +
+          '<input type="text" class="propose-outcome-input" data-index="' + i + '" maxlength="20" placeholder="선택지 ' + (i + 1) + '" value="' + (val || '').replace(/"/g, '&quot;') + '">' +
+          (customOutcomeLabels.length > 2 ? '<button type="button" class="propose-outcome-remove" data-index="' + i + '">×</button>' : '') +
+          '</div>';
+      }).join('') +
+      (customOutcomeLabels.length < 4 ? '<button type="button" class="propose-outcome-add">+ 선택지 추가</button>' : '');
+
+      inputsWrap.querySelectorAll('.propose-outcome-input').forEach(function (inp) {
+        inp.addEventListener('input', function () {
+          customOutcomeLabels[parseInt(inp.getAttribute('data-index'), 10)] = inp.value;
+        });
+      });
+      inputsWrap.querySelectorAll('.propose-outcome-remove').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          customOutcomeLabels.splice(parseInt(btn.getAttribute('data-index'), 10), 1);
+          renderInputs();
+        });
+      });
+      var addBtn = inputsWrap.querySelector('.propose-outcome-add');
+      if (addBtn) {
+        addBtn.addEventListener('click', function () {
+          customOutcomeLabels.push('');
+          renderInputs();
+        });
+      }
+    }
+
+    toggleLabel.querySelector('input').addEventListener('change', function (e) {
+      customModeOn = e.target.checked;
+      inputsWrap.style.display = customModeOn ? '' : 'none';
+      if (customModeOn) renderInputs();
+    });
+  }
+
   var TITLE_PLACEHOLDERS = {
     personal: '예: 스트리머 OO가 노래대회에서 3등 이상',
     '1v1': '예: 스트리머 OO와 XX, 이번 대결에서 누가 이길까?',
@@ -154,6 +214,7 @@
   function resetForm() {
     typeSelect.value = 'personal';
     renderStreamerFields('personal');
+    renderOutcomeFields('personal');
     updateTitlePlaceholder();
     titleInput.value = '';
     betHoursInput.value = '24';
@@ -182,8 +243,13 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && backdrop.classList.contains('open')) closeModal();
   });
-  typeSelect.addEventListener('change', function () { renderStreamerFields(typeSelect.value); updateTitlePlaceholder(); });
+  typeSelect.addEventListener('change', function () {
+    renderStreamerFields(typeSelect.value);
+    renderOutcomeFields(typeSelect.value);
+    updateTitlePlaceholder();
+  });
   renderStreamerFields('personal');
+  renderOutcomeFields('personal');
 
   submitBtn.addEventListener('click', function () {
     if (!window.sbmRealUser) {
@@ -203,6 +269,17 @@
       errorEl.classList.add('show');
       return;
     }
+    var outcomeLabels = null;
+    if (typeSelect.value === 'personal' && customModeOn) {
+      var cleaned = customOutcomeLabels.map(function (s) { return (s || '').trim(); }).filter(Boolean);
+      var dedupOk = new Set(cleaned).size === cleaned.length;
+      if (cleaned.length < 2 || cleaned.length > 4 || !dedupOk) {
+        errorEl.textContent = '선택지는 중복 없이 2개 이상 4개 이하로 입력해 주세요.';
+        errorEl.classList.add('show');
+        return;
+      }
+      outcomeLabels = cleaned;
+    }
     errorEl.classList.remove('show');
     typeSelect.disabled = true;
     titleInput.disabled = true;
@@ -217,6 +294,7 @@
       streamerIds: streamers,
       betHours: betHours,
       eventHours: eventHours,
+      outcomeLabels: outcomeLabels,
     }).then(function (res) {
       submitBtn.textContent = '제안 완료';
       statusEl.style.color = 'var(--mint)';
