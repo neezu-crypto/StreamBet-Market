@@ -326,6 +326,11 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .btn-claim:hover{ background:#e6b453; }
 
+.feed-search-input{
+  width:100%; background: var(--panel-raised); border:1px solid var(--hairline); border-radius:8px;
+  padding:9px 11px; color:var(--text); font-size:13px; font-family:inherit; margin-bottom:16px;
+}
+.feed-search-input:focus-visible{ border-color: var(--gold); outline:none; }
 .chip-row{ display:flex; flex-wrap:wrap; gap:7px; margin-bottom:16px; }
 .chip{
   background: var(--panel-raised); border:1px solid var(--hairline); color: var(--muted);

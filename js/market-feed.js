@@ -154,6 +154,14 @@ function sbmRenderAdminLists() {
   });
 }
 
+var sbmFeedFilter = { search: '', type: 'all', sort: 'closing' };
+
+function sbmMatchesFilter(m) {
+  if (sbmFeedFilter.type !== 'all' && m.type !== sbmFeedFilter.type) return false;
+  if (sbmFeedFilter.search && m.title.toLowerCase().indexOf(sbmFeedFilter.search) === -1) return false;
+  return true;
+}
+
 function sbmRenderMarketFeed() {
   var heroSection = document.getElementById('feed-hero-section');
   var openSection = document.getElementById('feed-open-section');
@@ -162,27 +170,46 @@ function sbmRenderMarketFeed() {
   var closedGrid = document.getElementById('closed-grid');
   if (!heroSection || !openSection || !pendingSection) return;
 
-  var open = [], pending = [], closed = [];
+  var rawOpen = [], rawPending = [], closed = [];
   Object.keys(sbmMarketsCache).forEach(function (id) {
     var m = sbmMarketsCache[id];
-    if (m.status === 'open') open.push([id, m]);
-    else if (m.status === 'pendingValidation') pending.push([id, m]);
+    if (m.status === 'open') rawOpen.push([id, m]);
+    else if (m.status === 'pendingValidation') rawPending.push([id, m]);
     else if (m.status === 'settled' || m.status === 'void') closed.push([id, m]);
   });
-  open.sort(function (a, b) { return a[1].timing.bettingClosesAt - b[1].timing.bettingClosesAt; });
   closed.sort(function (a, b) {
     var at = function (m) { return m.settlement ? m.settlement.settledAt : (m.adminAction ? m.adminAction.at : 0); };
     return at(b[1]) - at(a[1]);
   });
 
-  var hero = open[0];
-  var restOpen = open.slice(1);
+  var open = rawOpen.filter(function (e) { return sbmMatchesFilter(e[1]); });
+  var pending = rawPending.filter(function (e) { return sbmMatchesFilter(e[1]); });
 
-  if (!hero && !restOpen.length && !pending.length) {
+  if (sbmFeedFilter.sort === 'popular') {
+    open.sort(function (a, b) { return (b[1].totalPool || 0) - (a[1].totalPool || 0); });
+  } else if (sbmFeedFilter.sort === 'newest') {
+    open.sort(function (a, b) { return (b[1].timing.bettingOpensAt || 0) - (a[1].timing.bettingOpensAt || 0); });
+  } else {
+    open.sort(function (a, b) { return a[1].timing.bettingClosesAt - b[1].timing.bettingClosesAt; });
+  }
+
+  var hero = sbmFeedFilter.sort === 'closing' ? open[0] : null;
+  var restOpen = sbmFeedFilter.sort === 'closing' ? open.slice(1) : open;
+
+  var noMarketsAtAll = !rawOpen.length && !rawPending.length;
+  var noFilterMatch = !noMarketsAtAll && !hero && !restOpen.length && !pending.length;
+
+  if (noMarketsAtAll) {
     heroSection.style.display = 'none';
     openSection.style.display = 'none';
     pendingSection.style.display = 'none';
     if (emptyState) emptyState.style.display = '';
+  } else if (noFilterMatch) {
+    if (emptyState) emptyState.style.display = 'none';
+    heroSection.style.display = 'none';
+    pendingSection.style.display = 'none';
+    openSection.style.display = '';
+    openSection.innerHTML = '<div class="admin-item-sub" style="padding:32px 0;text-align:center;">검색 · 필터 조건에 맞는 마켓이 없습니다.</div>';
   } else {
     if (emptyState) emptyState.style.display = 'none';
     heroSection.style.display = hero ? '' : 'none';
@@ -267,6 +294,36 @@ function sbmRenderTicker() {
     btn.disabled = true;
     btn.textContent = '좋아요 완료';
   });
+
+  var searchInput = document.getElementById('feed-search-input');
+  if (searchInput) {
+    searchInput.addEventListener('input', function () {
+      sbmFeedFilter.search = searchInput.value.trim().toLowerCase();
+      sbmRenderMarketFeed();
+    });
+  }
+  var typeFilterEl = document.getElementById('feed-type-filter');
+  if (typeFilterEl) {
+    typeFilterEl.querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        typeFilterEl.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        sbmFeedFilter.type = chip.getAttribute('data-type');
+        sbmRenderMarketFeed();
+      });
+    });
+  }
+  var sortFilterEl = document.getElementById('feed-sort-filter');
+  if (sortFilterEl) {
+    sortFilterEl.querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        sortFilterEl.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        sbmFeedFilter.sort = chip.getAttribute('data-sort');
+        sbmRenderMarketFeed();
+      });
+    });
+  }
 })();
 
 (function () {

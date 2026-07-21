@@ -428,32 +428,21 @@
       </div>
 
       <div class="rail-block">
-        <h3>카테고리</h3>
-        <div class="chip-row">
-          <button class="chip active">전체</button>
-          <button class="chip">게임 방송</button>
-          <button class="chip">토크 · 저챗</button>
-          <button class="chip">시청자 지표</button>
-          <button class="chip">합방 · 대결</button>
-          <button class="chip">유저 제안</button>
-        </div>
+        <h3>검색</h3>
+        <input type="text" class="feed-search-input" id="feed-search-input" placeholder="배팅 주제 검색">
         <h3>대전 유형</h3>
-        <div class="chip-row">
-          <button class="chip active">전체</button>
-          <button class="chip">개인전</button>
-          <button class="chip">1vs1</button>
-          <button class="chip">단체전</button>
+        <div class="chip-row" id="feed-type-filter">
+          <button class="chip active" data-type="all">전체</button>
+          <button class="chip" data-type="personal">개인전</button>
+          <button class="chip" data-type="1v1">1vs1</button>
+          <button class="chip" data-type="group">단체전</button>
         </div>
         <h3>정렬</h3>
-        <div class="chip-row">
-          <button class="chip active">마감임박</button>
-          <button class="chip">인기</button>
-          <button class="chip">최신</button>
+        <div class="chip-row" id="feed-sort-filter">
+          <button class="chip active" data-sort="closing">마감임박</button>
+          <button class="chip" data-sort="popular">인기</button>
+          <button class="chip" data-sort="newest">최신</button>
         </div>
-        <label class="toggle-row">
-          <input type="checkbox" checked>
-          <span>인증 스트리머 주제만</span>
-        </label>
       </div>
 
       <div class="jackpot-note"><span class="dot"></span> 잭팟 · 이벤트 — 준비중</div>
