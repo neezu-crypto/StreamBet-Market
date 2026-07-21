@@ -1,9 +1,3 @@
-document.addEventListener('click', function (e) {
-  document.querySelectorAll('details.dev-dropdown[open]').forEach(function (d) {
-    if (!d.contains(e.target)) d.removeAttribute('open');
-  });
-});
-
 (function () {
   var navMarket = document.getElementById('nav-market');
   var navAdmin = document.getElementById('nav-admin');
