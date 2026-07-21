@@ -155,7 +155,7 @@ function sbmRenderVerifyRequests() {
   });
 
   submitBtn.addEventListener('click', function () {
-    if (!window.sbmUser) {
+    if (!window.sbmRealUser) {
       statusEl.textContent = '신청하려면 로그인이 필요합니다 (Ctrl+Enter).';
       statusEl.style.color = 'var(--coral)';
       statusEl.classList.add('show');
@@ -177,7 +177,7 @@ function sbmRenderVerifyRequests() {
     fb.set(newRef, {
       nickname: nicknameInput.value.trim(),
       soopId: soopIdInput.value.trim(),
-      uid: window.sbmUser.uid,
+      uid: window.sbmRealUser.uid,
       submittedAt: Date.now(),
     }).then(function () {
       submitBtn.textContent = '신청 완료';

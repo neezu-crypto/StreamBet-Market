@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const {
-  requireAuth,
+  requireRealAccount,
   isAdminEmail,
   requireAdminOrVerifiedStreamer,
   isVerifiedStreamerUid,
@@ -43,7 +43,7 @@ async function refundAllActiveBets(marketId) {
 
 // 04번/03번 — 배팅 주제 제안 등록. stocks 참조 검증, 관리자·인증 스트리머는 즉시 오픈.
 const submitMarketProposal = onCall(async (request) => {
-  const uid = requireAuth(request);
+  const uid = requireRealAccount(request);
   const email = request.auth.token && request.auth.token.email;
   const isPrivileged = isAdminEmail(email) || (await isVerifiedStreamerUid(uid));
 

@@ -86,7 +86,7 @@
     errorEl.classList.remove('show');
     submitBtn.textContent = '환전하기';
 
-    if (!window.sbmUser) {
+    if (!window.sbmRealUser) {
       statusEl.style.color = 'var(--coral)';
       statusEl.textContent = '환전하려면 로그인이 필요합니다 (Ctrl+Enter).';
       statusEl.classList.add('show');
@@ -105,7 +105,7 @@
     submitBtn.disabled = false;
 
     var fb = window.sbmFirebase;
-    var uid = window.sbmUser.uid;
+    var uid = window.sbmRealUser.uid;
     var db = window.sbmDb;
     var walletSnap = await fb.get(fb.ref(db, 'bettingMarket/wallets/' + uid));
     var wallet = walletSnap.val() || { balance: 0, accountCreatedAt: Date.now() };

@@ -84,7 +84,7 @@
   }
 
   document.addEventListener('sbm-auth-changed', function (e) {
-    var user = e.detail.user;
+    var user = e.detail.realUser;
     betEntries = {};
     trackedKeys = {};
     if (!user) {

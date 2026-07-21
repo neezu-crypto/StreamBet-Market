@@ -224,9 +224,9 @@ function sbmRenderMarketFeed() {
     var btn = e.target.closest('.js-like-market');
     if (!btn) return;
     e.stopPropagation();
-    if (!window.sbmUser) { window.sbmSignIn && window.sbmSignIn(); return; }
+    if (!window.sbmRealUser) { window.sbmSignIn && window.sbmSignIn(); return; }
     var marketId = btn.getAttribute('data-market-id');
-    fb.set(fb.ref(window.sbmDb, 'bettingMarket/likes/' + marketId + '/' + window.sbmUser.uid), true);
+    fb.set(fb.ref(window.sbmDb, 'bettingMarket/likes/' + marketId + '/' + window.sbmRealUser.uid), true);
     btn.disabled = true;
     btn.textContent = '좋아요 완료';
   });

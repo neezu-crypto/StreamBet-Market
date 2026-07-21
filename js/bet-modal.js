@@ -88,7 +88,7 @@
     plusBtn.disabled = false;
     backdrop.classList.add('open');
 
-    if (!window.sbmUser) {
+    if (!window.sbmRealUser) {
       statusEl.style.color = 'var(--coral)';
       statusEl.textContent = '배팅하려면 로그인이 필요합니다 (Ctrl+Enter).';
       statusEl.classList.add('show');
@@ -98,11 +98,11 @@
       return;
     }
 
-    var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmUser.uid + '/balance'));
+    var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmRealUser.uid + '/balance'));
     walletBalance = walletSnap.val() || 0;
     balanceEl.textContent = fmt(walletBalance) + '원';
 
-    var idxSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + window.sbmUser.uid + '/' + marketId));
+    var idxSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + window.sbmRealUser.uid + '/' + marketId));
     var idx = idxSnap.val() || {};
     for (var betId in idx) {
       var betSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/bets/' + marketId + '/' + betId));

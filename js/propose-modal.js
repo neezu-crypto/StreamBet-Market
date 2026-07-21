@@ -186,7 +186,7 @@
   renderStreamerFields('personal');
 
   submitBtn.addEventListener('click', function () {
-    if (!window.sbmUser) {
+    if (!window.sbmRealUser) {
       errorEl.textContent = '제안하려면 로그인이 필요합니다 (Ctrl+Enter).';
       errorEl.classList.add('show');
       return;

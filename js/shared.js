@@ -11,7 +11,7 @@ var PROHIBITED_TOPIC_REASONS = [
 
 // 07번 — 처리자 식별값은 실제 로그인 유저 기준으로 계산 (더 이상 하드코딩 아님)
 function sbmActorLabel() {
-  var user = window.sbmUser;
+  var user = window.sbmRealUser;
   if (!user) return '로그인 필요';
   var name = user.displayName || user.email || user.uid;
   if (window.sbmIsAdmin) return name + ' (관리자)';

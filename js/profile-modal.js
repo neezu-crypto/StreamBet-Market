@@ -43,7 +43,7 @@
   }
 
   document.addEventListener('sbm-auth-changed', function (e) {
-    var user = e.detail.user;
+    var user = e.detail.realUser;
     if (!user) {
       currentProfile = null;
       openBtn.textContent = '로그인';
@@ -57,7 +57,7 @@
   });
 
   function openModal() {
-    if (!window.sbmUser) { window.sbmSignIn && window.sbmSignIn(); return; }
+    if (!window.sbmRealUser) { window.sbmSignIn && window.sbmSignIn(); return; }
     var p = currentProfile || {};
     nicknameInput.value = p.nickname || '';
     soopIdInput.value = p.soopId || '';

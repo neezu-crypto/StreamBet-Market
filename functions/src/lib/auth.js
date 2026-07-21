@@ -14,6 +14,18 @@ function isAdminEmail(email) {
   return !!email && email === ADMIN_EMAIL;
 }
 
+// 페이지 접속 시 자동으로 생성되는 익명 계정은 마켓 등 공개 데이터를 읽을 수 있게 하기 위한 것으로,
+// 재화가 걸린 기능(배팅, 제안, 환전, 출석보상, 신고 등)은 실제(비익명) 계정만 사용할 수 있다.
+// 그렇지 않으면 익명 계정을 계속 새로 발급받아 09번이 막으려는 "즉석 다중 계정" 어뷰징이 그대로 재현된다.
+function requireRealAccount(request) {
+  const uid = requireAuth(request);
+  const provider = request.auth.token && request.auth.token.firebase && request.auth.token.firebase.sign_in_provider;
+  if (provider === 'anonymous') {
+    throw new HttpsError('permission-denied', '게스트(익명) 계정은 이 기능을 사용할 수 없습니다. Google 로그인 후 다시 시도해 주세요.');
+  }
+  return uid;
+}
+
 function requireAdmin(request) {
   const uid = requireAuth(request);
   const email = request.auth.token && request.auth.token.email;
@@ -46,6 +58,7 @@ async function requireAdminOrVerifiedStreamer(request) {
 
 module.exports = {
   requireAuth,
+  requireRealAccount,
   isAdminEmail,
   requireAdmin,
   isVerifiedStreamerUid,

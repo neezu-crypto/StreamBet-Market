@@ -74,7 +74,7 @@ function sbmRenderReportQueue() {
     submitBtn.textContent = '신고하기';
     statusEl.classList.remove('show');
     backdrop.classList.add('open');
-    if (!window.sbmUser) {
+    if (!window.sbmRealUser) {
       statusEl.style.color = 'var(--coral)';
       statusEl.textContent = '신고하려면 로그인이 필요합니다 (Ctrl+Enter).';
       statusEl.classList.add('show');
