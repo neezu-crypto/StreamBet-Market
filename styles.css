@@ -248,6 +248,12 @@ button{ font-family: inherit; cursor: pointer; }
   transition: border-color .15s ease, color .15s ease;
 }
 .btn-exchange:hover{ border-color: var(--gold); color: var(--gold); }
+.btn-kakao{
+  background:#FEE500; border:1px solid #FEE500; color:#191919;
+  padding: 8px 14px; border-radius: 6px; font-size: 13px; font-weight:700;
+  transition: filter .15s ease;
+}
+.btn-kakao:hover{ filter: brightness(0.95); }
 .avatar{
   width:32px; height:32px; border-radius:50%; background: var(--panel-raised);
   border:1px solid var(--hairline); display:flex; align-items:center; justify-content:center;

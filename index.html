@@ -381,6 +381,7 @@
         <span class="wallet-amount num" id="wallet-amount">0<small>원</small></span>
       </div>
       <button class="btn-exchange" id="open-exchange-modal" type="button">환전</button>
+      <button class="btn-kakao" id="kakao-login-btn" type="button" style="display:none;">카카오 로그인</button>
       <button class="avatar" id="open-profile-modal" type="button" title="프로필">유</button>
     </div>
   </header>
@@ -871,6 +872,8 @@
 </div>
 
 <script type="module" src="js/firebase-init.js"></script>
+<script defer src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+<script defer src="js/kakao-login.js"></script>
 <script defer src="js/shared.js"></script>
 <script defer src="js/wallet.js"></script>
 <script defer src="js/settlement.js"></script>

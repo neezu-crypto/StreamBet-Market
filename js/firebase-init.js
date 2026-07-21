@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInAnonymously,
   signInWithPopup,
+  signInWithCustomToken,
   signOut,
   onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js';
@@ -66,6 +67,9 @@ function signIn() {
 }
 window.sbmSignIn = signIn;
 window.sbmSignOut = () => signOut(auth);
+// 주식시장과 동일 프로젝트를 공유하는 linkKakaoAccount Function이 돌려주는
+// 커스텀 토큰으로 전환할 때 쓴다 (js/kakao-login.js).
+window.sbmSignInWithCustomToken = (token) => signInWithCustomToken(auth, token);
 
 window.sbmIsVerifiedStreamer = false;
 
