@@ -51,18 +51,25 @@ function sbmRenderVerifiedStreamers() {
     list.innerHTML = '<li class="audit-empty">인증된 스트리머가 없습니다.</li>';
     return;
   }
+  var isAdmin = !!window.sbmIsAdmin;
   list.innerHTML = keys.map(function (key) {
     var v = sbmVerifiedCache[key];
-    var soopIdField = v.soopId
-      ? '<span>SOOP 아이디: ' + v.soopId + '</span>'
-      : '<span class="verify-soopid-missing">SOOP 아이디 미기재' +
+    var soopIdField;
+    if (v.soopId) {
+      soopIdField = '<span>SOOP 아이디: ' + v.soopId + '</span>';
+    } else if (isAdmin) {
+      soopIdField = '<span class="verify-soopid-missing">SOOP 아이디 미기재' +
         '<input type="text" class="verify-soopid-input" data-record-id="' + key + '" placeholder="SOOP 아이디 입력">' +
         '<button class="verify-req-approve verify-soopid-save-btn" data-record-id="' + key + '" type="button">저장</button></span>';
+    } else {
+      soopIdField = '<span>SOOP 아이디 미기재</span>';
+    }
+    var revokeBtn = isAdmin
+      ? '<button class="verify-req-reject" data-soopid="' + (v.soopId || '') + '" type="button">인증 해제</button>'
+      : '';
     return '<li class="verify-req-item">' +
       '<div class="verify-req-info"><b>' + v.nickname + '</b>' + soopIdField + '</div>' +
-      '<div class="verify-req-actions">' +
-      '<button class="verify-req-reject" data-soopid="' + (v.soopId || '') + '" type="button">인증 해제</button>' +
-      '</div></li>';
+      '<div class="verify-req-actions">' + revokeBtn + '</div></li>';
   }).join('');
 
   list.querySelectorAll('.verify-soopid-save-btn').forEach(function (btn) {
@@ -96,44 +103,60 @@ function sbmRenderVerifiedStreamers() {
 }
 
 // 05번 — 배팅시장 자체 신청함 (verifyRequests). 결과는 저장하지 않고 위 공유 노드로 승인 시 이관된다.
+var sbmVerifyRequestsCache = {};
+
+function sbmRenderVerifyRequestsList() {
+  var list = document.getElementById('verify-requests-list');
+  if (!list) return;
+  var fb = window.sbmFirebase;
+  var isAdmin = !!window.sbmIsAdmin;
+  var reqs = Object.keys(sbmVerifyRequestsCache).map(function (id) { return Object.assign({ id: id }, sbmVerifyRequestsCache[id]); })
+    .sort(function (a, b) { return b.submittedAt - a.submittedAt; });
+  if (!reqs.length) {
+    list.innerHTML = '<li class="audit-empty">대기 중인 인증 신청이 없습니다.</li>';
+    return;
+  }
+  list.innerHTML = reqs.map(function (r) {
+    var actions = isAdmin
+      ? '<button class="verify-req-approve" data-request-id="' + r.id + '" type="button">승인</button>' +
+        '<button class="verify-req-reject" data-request-id="' + r.id + '" type="button">반려</button>'
+      : '';
+    return '<li class="verify-req-item">' +
+      '<div class="verify-req-info"><b>' + r.nickname + '</b><span>SOOP 아이디: ' + r.soopId + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span></div>' +
+      '<div class="verify-req-actions">' + actions + '</div></li>';
+  }).join('');
+
+  list.querySelectorAll('.verify-req-approve').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fb.httpsCallable('approveVerification')({ requestId: btn.getAttribute('data-request-id') })
+        .catch(function (e) { alert(e.message); btn.disabled = false; });
+    });
+  });
+  list.querySelectorAll('.verify-req-reject').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.disabled = true;
+      fb.httpsCallable('rejectVerification')({ requestId: btn.getAttribute('data-request-id') })
+        .catch(function (e) { alert(e.message); btn.disabled = false; });
+    });
+  });
+}
+
 function sbmRenderVerifyRequests() {
   var list = document.getElementById('verify-requests-list');
   if (!list || sbmVerifySubscribed || !window.sbmFirebase) return;
   sbmVerifySubscribed = true;
   var fb = window.sbmFirebase;
   fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/verifyRequests'), function (snap) {
-    var val = snap.val() || {};
-    var reqs = Object.keys(val).map(function (id) { return Object.assign({ id: id }, val[id]); })
-      .sort(function (a, b) { return b.submittedAt - a.submittedAt; });
-    if (!reqs.length) {
-      list.innerHTML = '<li class="audit-empty">대기 중인 인증 신청이 없습니다.</li>';
-      return;
-    }
-    list.innerHTML = reqs.map(function (r) {
-      return '<li class="verify-req-item">' +
-        '<div class="verify-req-info"><b>' + r.nickname + '</b><span>SOOP 아이디: ' + r.soopId + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span></div>' +
-        '<div class="verify-req-actions">' +
-        '<button class="verify-req-approve" data-request-id="' + r.id + '" type="button">승인</button>' +
-        '<button class="verify-req-reject" data-request-id="' + r.id + '" type="button">반려</button>' +
-        '</div></li>';
-    }).join('');
-
-    list.querySelectorAll('.verify-req-approve').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        btn.disabled = true;
-        fb.httpsCallable('approveVerification')({ requestId: btn.getAttribute('data-request-id') })
-          .catch(function (e) { alert(e.message); btn.disabled = false; });
-      });
-    });
-    list.querySelectorAll('.verify-req-reject').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-        btn.disabled = true;
-        fb.httpsCallable('rejectVerification')({ requestId: btn.getAttribute('data-request-id') })
-          .catch(function (e) { alert(e.message); btn.disabled = false; });
-      });
-    });
+    sbmVerifyRequestsCache = snap.val() || {};
+    sbmRenderVerifyRequestsList();
   });
 }
+
+document.addEventListener('sbm-auth-changed', function () {
+  sbmRenderVerifyRequestsList();
+  sbmRenderVerifiedStreamers();
+});
 
 (function () {
   var openBtn = document.getElementById('open-verify-modal');
