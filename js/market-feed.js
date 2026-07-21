@@ -101,6 +101,23 @@ function sbmRenderPendingCard(marketId, market) {
     '</div></div></div></article>';
 }
 
+// 배팅 마감 시각이 지나 closeBettingScheduled가 자동으로 마감시켰지만 아직 판정 전인 마켓.
+// 이걸 안 보여주면 판정 나기 전까지 메인 화면에서 마켓이 통째로 사라져 보인다.
+function sbmRenderClosedPendingCard(marketId, market) {
+  var total = market.totalPool || 0;
+  return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
+    '<div class="ticket-main"><div class="badges">' +
+    '<span class="badge badge-pending">정산 대기중</span>' +
+    '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
+    '<h2 class="ticket-title">' + market.title + '</h2>' +
+    '<div class="ticket-meta"><span>배팅 마감됨 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
+    '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;">' +
+    '<span class="participants">판정 대기 중 · 카드 클릭 시 판정(관리자 · 인증 스트리머)</span>' +
+    '<div class="stub-foot-actions">' +
+    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + market.title + '" type="button">신고</button>' +
+    '</div></div></div></article>';
+}
+
 function sbmRenderClosedCard(marketId, market, batch) {
   var isVoid = market.status === 'void';
   var settledAt = market.settlement ? market.settlement.settledAt : (market.adminAction ? market.adminAction.at : Date.now());
@@ -183,16 +200,19 @@ function sbmMatchesFilter(m) {
 function sbmRenderMarketFeed() {
   var heroSection = document.getElementById('feed-hero-section');
   var openSection = document.getElementById('feed-open-section');
+  var closedPendingSection = document.getElementById('feed-closed-pending-section');
+  var closedPendingGrid = document.getElementById('feed-closed-pending-grid');
   var pendingSection = document.getElementById('feed-pending-section');
   var emptyState = document.getElementById('feed-empty-state');
   var closedGrid = document.getElementById('closed-grid');
-  if (!heroSection || !openSection || !pendingSection) return;
+  if (!heroSection || !openSection || !pendingSection || !closedPendingSection) return;
 
-  var rawOpen = [], rawPending = [], closed = [];
+  var rawOpen = [], rawPending = [], rawClosedPending = [], closed = [];
   Object.keys(sbmMarketsCache).forEach(function (id) {
     var m = sbmMarketsCache[id];
     if (m.status === 'open') rawOpen.push([id, m]);
     else if (m.status === 'pendingValidation') rawPending.push([id, m]);
+    else if (m.status === 'closed') rawClosedPending.push([id, m]); // 배팅 마감, 판정 대기중
     else if (m.status === 'settled' || m.status === 'void') closed.push([id, m]);
   });
   closed.sort(function (a, b) {
@@ -202,6 +222,8 @@ function sbmRenderMarketFeed() {
 
   var open = rawOpen.filter(function (e) { return sbmMatchesFilter(e[1]); });
   var pending = rawPending.filter(function (e) { return sbmMatchesFilter(e[1]); });
+  var closedPending = rawClosedPending.filter(function (e) { return sbmMatchesFilter(e[1]); })
+    .sort(function (a, b) { return a[1].timing.bettingClosesAt - b[1].timing.bettingClosesAt; });
 
   if (sbmFeedFilter.sort === 'popular') {
     open.sort(function (a, b) { return (b[1].totalPool || 0) - (a[1].totalPool || 0); });
@@ -214,17 +236,19 @@ function sbmRenderMarketFeed() {
   var hero = sbmFeedFilter.sort === 'closing' ? open[0] : null;
   var restOpen = sbmFeedFilter.sort === 'closing' ? open.slice(1) : open;
 
-  var noMarketsAtAll = !rawOpen.length && !rawPending.length;
-  var noFilterMatch = !noMarketsAtAll && !hero && !restOpen.length && !pending.length;
+  var noMarketsAtAll = !rawOpen.length && !rawPending.length && !rawClosedPending.length;
+  var noFilterMatch = !noMarketsAtAll && !hero && !restOpen.length && !pending.length && !closedPending.length;
 
   if (noMarketsAtAll) {
     heroSection.style.display = 'none';
     openSection.style.display = 'none';
+    closedPendingSection.style.display = 'none';
     pendingSection.style.display = 'none';
     if (emptyState) emptyState.style.display = '';
   } else if (noFilterMatch) {
     if (emptyState) emptyState.style.display = 'none';
     heroSection.style.display = 'none';
+    closedPendingSection.style.display = 'none';
     pendingSection.style.display = 'none';
     openSection.style.display = '';
     openSection.innerHTML = '<div class="admin-item-sub" style="padding:32px 0;text-align:center;">검색 · 필터 조건에 맞는 마켓이 없습니다.</div>';
@@ -237,6 +261,11 @@ function sbmRenderMarketFeed() {
     openSection.innerHTML = restOpen.length
       ? '<div class="section-label">진행중인 마켓</div><div class="grid">' + restOpen.map(function (e) { return sbmRenderOpenCard(e[0], e[1], false); }).join('') + '</div>'
       : '';
+
+    closedPendingSection.style.display = closedPending.length ? '' : 'none';
+    if (closedPendingGrid) {
+      closedPendingGrid.innerHTML = closedPending.map(function (e) { return sbmRenderClosedPendingCard(e[0], e[1]); }).join('');
+    }
 
     pendingSection.style.display = pending.length ? '' : 'none';
     pendingSection.innerHTML = pending.length
