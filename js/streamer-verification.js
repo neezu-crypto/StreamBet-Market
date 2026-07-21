@@ -3,6 +3,7 @@ var sbmVerifySubscribed = false;
 var sbmVerifiedSubscribed = false;
 
 function sbmVerifiedAvatarSrc(soopId) {
+  if (!soopId) return ''; // soopId 필드가 없는 레거시 인증 레코드(주식시장 쪽에서 예전에 만들어진 것) 대비
   var demo = window.SBM_DEMO_AVATARS && window.SBM_DEMO_AVATARS[soopId];
   if (demo) return demo;
   var folder = soopId.slice(0, 2);
@@ -27,8 +28,14 @@ function sbmRenderVerifiedBanner() {
   var ctaBtn = document.getElementById('open-verify-modal');
   var items = Object.keys(sbmVerifiedCache).map(function (key) {
     var v = sbmVerifiedCache[key];
-    return '<a class="verified-item" data-soopid="' + v.soopId + '" href="https://www.sooplive.com/station/' + v.soopId + '" target="_blank" rel="noopener noreferrer">' +
-      '<div class="verified-avatar-ring"><img class="verified-avatar" src="' + sbmVerifiedAvatarSrc(v.soopId) + '" alt="' + v.nickname + '"></div>' +
+    var soopId = v.soopId || '';
+    var avatarSrc = sbmVerifiedAvatarSrc(soopId);
+    var avatarHtml = avatarSrc
+      ? '<img class="verified-avatar" src="' + avatarSrc + '" alt="' + v.nickname + '">'
+      : '<span class="verified-avatar verified-avatar-fallback">' + (v.nickname ? v.nickname.charAt(0) : '?') + '</span>';
+    var href = soopId ? 'https://www.sooplive.com/station/' + soopId : '#';
+    return '<a class="verified-item" data-soopid="' + soopId + '" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
+      '<div class="verified-avatar-ring">' + avatarHtml + '</div>' +
       '<span class="verified-name">' + v.nickname + '<small>✓ 인증</small></span></a>';
   }).join('');
   track.innerHTML = items;
@@ -46,9 +53,9 @@ function sbmRenderVerifiedStreamers() {
   }
   list.innerHTML = entries.map(function (v) {
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + v.nickname + '</b><span>SOOP 아이디: ' + v.soopId + '</span></div>' +
+      '<div class="verify-req-info"><b>' + v.nickname + '</b><span>SOOP 아이디: ' + (v.soopId || '(미기재)') + '</span></div>' +
       '<div class="verify-req-actions">' +
-      '<button class="verify-req-reject" data-soopid="' + v.soopId + '" type="button">인증 해제</button>' +
+      '<button class="verify-req-reject" data-soopid="' + (v.soopId || '') + '" type="button">인증 해제</button>' +
       '</div></li>';
   }).join('');
   list.querySelectorAll('.verify-req-reject').forEach(function (btn) {
