@@ -5,17 +5,6 @@ document.addEventListener('click', function (e) {
 });
 
 (function () {
-  var resetBtn = document.getElementById('reset-cache-btn');
-  if (!resetBtn) return;
-  resetBtn.addEventListener('click', function () {
-    Object.keys(localStorage)
-      .filter(function (k) { return k.indexOf('sbm_cache_') === 0; })
-      .forEach(function (k) { localStorage.removeItem(k); });
-    location.reload();
-  });
-})();
-
-(function () {
   var navMarket = document.getElementById('nav-market');
   var navAdmin = document.getElementById('nav-admin');
   var navRanking = document.getElementById('nav-ranking');
@@ -74,37 +63,9 @@ document.addEventListener('click', function (e) {
 })();
 
 (function () {
-  var EMPTY_KEY = 'sbm_demo_empty';
-  var btn = document.getElementById('demo-empty-btn');
-  var heroSection = document.getElementById('feed-hero-section');
-  var openSection = document.getElementById('feed-open-section');
-  var pendingSection = document.getElementById('feed-pending-section');
-  var emptyState = document.getElementById('feed-empty-state');
-  if (!heroSection || !openSection || !pendingSection || !emptyState) return;
-
-  var isEmpty = sessionStorage.getItem(EMPTY_KEY) === '1';
-  if (isEmpty) {
-    heroSection.style.display = 'none';
-    openSection.style.display = 'none';
-    pendingSection.style.display = 'none';
-    emptyState.style.display = '';
-  }
-
   var emptyStateBtn = document.getElementById('empty-state-propose-btn');
   var fab = document.querySelector('.fab');
   if (emptyStateBtn && fab) {
     emptyStateBtn.addEventListener('click', function () { fab.click(); });
-  }
-
-  if (btn) {
-    btn.textContent = isEmpty ? '빈 마켓 상태 해제' : '빈 마켓 상태 테스트';
-    btn.addEventListener('click', function () {
-      if (sessionStorage.getItem(EMPTY_KEY) === '1') {
-        sessionStorage.removeItem(EMPTY_KEY);
-      } else {
-        sessionStorage.setItem(EMPTY_KEY, '1');
-      }
-      location.reload();
-    });
   }
 })();
