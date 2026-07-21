@@ -4,17 +4,22 @@ var sbmBlockedNicknamesCache = {};
 var sbmBlockSubscribed = false;
 var sbmNickReportSubscribed = false;
 
-// 13번 — 차단된 닉네임은 랭킹에서 즉시 숨김
+// 13번 — 차단된 닉네임은 랭킹에서 즉시 숨김. 랭킹 목록이 다시 그려질 때마다(ranking.js)
+// 구독을 새로 걸지 않고 이미 받아온 캐시로 즉시 재적용할 수 있게 분리해둔다.
+function sbmReapplyNicknameBlocks() {
+  document.querySelectorAll('.ranking-row[data-id]').forEach(function (row) {
+    var id = row.getAttribute('data-id');
+    row.classList.toggle('blocked', !!sbmBlockedNicknamesCache[id]);
+  });
+}
+
 function sbmApplyNicknameBlocks() {
   if (sbmBlockSubscribed || !window.sbmFirebase) return;
   sbmBlockSubscribed = true;
   var fb = window.sbmFirebase;
   fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknames'), function (snap) {
     sbmBlockedNicknamesCache = snap.val() || {};
-    document.querySelectorAll('.ranking-row[data-id]').forEach(function (row) {
-      var id = row.getAttribute('data-id');
-      row.classList.toggle('blocked', !!sbmBlockedNicknamesCache[id]);
-    });
+    sbmReapplyNicknameBlocks();
   });
 }
 

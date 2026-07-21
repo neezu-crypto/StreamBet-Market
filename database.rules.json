@@ -314,6 +314,11 @@
       "auditLog": {
         ".read": "auth != null",
         "$entryId": { ".write": false }
+      },
+
+      "rankings": {
+        ".read": "auth != null",
+        ".write": false
       }
     }
   }
