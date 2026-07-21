@@ -54,8 +54,11 @@ function sbmRenderOpenCard(marketId, market, isHero) {
   var odds = sbmComputeOdds(market);
   var total = market.totalPool || 0;
   var isMulti = outcomes.length > 2;
+  // 06번 — 배팅 마감과 이벤트 마감은 별개 시점. 배팅은 마감됐어도 이벤트가 아직 진행중이면
+  // "진행중인 마켓"으로 계속 보여준다(배팅 버튼만 뺀다).
+  var bettingClosed = market.status === 'closed';
   var closesIn = (market.timing.bettingClosesAt || 0) - Date.now();
-  var isUrgent = closesIn > 0 && closesIn <= 10 * 60 * 1000;
+  var isUrgent = !bettingClosed && closesIn > 0 && closesIn <= 10 * 60 * 1000;
 
   var oddsHtml;
   if (isMulti) {
@@ -71,19 +74,28 @@ function sbmRenderOpenCard(marketId, market, isHero) {
       }).join('') + '</div>';
   }
 
-  var badges = '<span class="badge ' + (isUrgent ? 'badge-live' : 'badge-open') + '">' + (isUrgent ? '마감임박' : '진행중') + '</span>' +
+  var badges = (bettingClosed
+    ? '<span class="badge badge-pending">배팅 마감</span>'
+    : '<span class="badge ' + (isUrgent ? 'badge-live' : 'badge-open') + '">' + (isUrgent ? '마감임박' : '진행중') + '</span>') +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span>' +
     (market.category === 'userProposed' ? '<span class="badge badge-type">유저 제안</span>' : '');
 
-  var meta = '<span>마감까지 ' + sbmTimeLeft(closesIn) + '</span><span class="sep">·</span><span>총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span>';
+  var meta = bettingClosed
+    ? '<span>이벤트 종료까지 ' + sbmTimeLeft((market.timing.eventEndsAt || 0) - Date.now()) + '</span><span class="sep">·</span><span>총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span>'
+    : '<span>마감까지 ' + sbmTimeLeft(closesIn) + '</span><span class="sep">·</span><span>총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span>';
+
+  var participants = bettingClosed ? '배팅 마감 · 이벤트 진행중 · 카드 클릭 시 관리(관리자 · 인증 스트리머)' : '카드 클릭 시 관리(관리자 · 인증 스트리머)';
+  var actions = bettingClosed
+    ? '<div class="stub-foot-actions"><button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + market.title + '" type="button">신고</button></div>'
+    : sbmCardStubActions(marketId, market.title);
 
   return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' + badges + '</div>' +
     '<h2 class="ticket-title">' + market.title + '</h2>' +
     '<div class="ticket-meta">' + meta + '</div></div>' +
     '<div class="ticket-stub">' + oddsHtml +
-    '<div class="stub-foot"><span class="participants">카드 클릭 시 관리(관리자 · 인증 스트리머)</span>' +
-    sbmCardStubActions(marketId, market.title) + '</div></div></article>';
+    '<div class="stub-foot"><span class="participants">' + participants + '</span>' +
+    actions + '</div></div></article>';
 }
 
 function sbmRenderPendingCard(marketId, market) {
@@ -110,7 +122,7 @@ function sbmRenderClosedPendingCard(marketId, market) {
     '<span class="badge badge-pending">정산 대기중</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
     '<h2 class="ticket-title">' + market.title + '</h2>' +
-    '<div class="ticket-meta"><span>배팅 마감됨 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
+    '<div class="ticket-meta"><span>이벤트 종료 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;">' +
     '<span class="participants">판정 대기 중 · 카드 클릭 시 판정(관리자 · 인증 스트리머)</span>' +
     '<div class="stub-foot-actions">' +
@@ -212,7 +224,12 @@ function sbmRenderMarketFeed() {
     var m = sbmMarketsCache[id];
     if (m.status === 'open') rawOpen.push([id, m]);
     else if (m.status === 'pendingValidation') rawPending.push([id, m]);
-    else if (m.status === 'closed') rawClosedPending.push([id, m]); // 배팅 마감, 판정 대기중
+    else if (m.status === 'closed') {
+      // 06번 — 배팅 마감과 이벤트 마감은 별개. 이벤트가 아직 진행중이면 "진행중인 마켓"에 계속 노출하고,
+      // 이벤트까지 끝난 뒤에야 "정산 대기중"으로 옮긴다.
+      if (Date.now() < (m.timing.eventEndsAt || 0)) rawOpen.push([id, m]);
+      else rawClosedPending.push([id, m]);
+    }
     else if (m.status === 'settled' || m.status === 'void') closed.push([id, m]);
   });
   closed.sort(function (a, b) {
@@ -230,11 +247,18 @@ function sbmRenderMarketFeed() {
   } else if (sbmFeedFilter.sort === 'newest') {
     open.sort(function (a, b) { return (b[1].timing.bettingOpensAt || 0) - (a[1].timing.bettingOpensAt || 0); });
   } else {
-    open.sort(function (a, b) { return a[1].timing.bettingClosesAt - b[1].timing.bettingClosesAt; });
+    open.sort(function (a, b) {
+      var aClosed = a[1].status === 'closed', bClosed = b[1].status === 'closed';
+      if (aClosed !== bClosed) return aClosed ? 1 : -1; // 아직 배팅 가능한 마켓이 먼저
+      if (aClosed) return (a[1].timing.eventEndsAt || 0) - (b[1].timing.eventEndsAt || 0);
+      return a[1].timing.bettingClosesAt - b[1].timing.bettingClosesAt;
+    });
   }
 
-  var hero = sbmFeedFilter.sort === 'closing' ? open[0] : null;
-  var restOpen = sbmFeedFilter.sort === 'closing' ? open.slice(1) : open;
+  // 히어로(마감 임박)는 실제로 배팅 가능한 마켓 중에서만 뽑는다 — 배팅 마감된 마켓이 우연히
+  // 정렬 맨 앞에 와도 "마감 임박" 히어로로 보여주지 않는다.
+  var hero = (sbmFeedFilter.sort === 'closing' && open[0] && open[0][1].status === 'open') ? open[0] : null;
+  var restOpen = hero ? open.slice(1) : open;
 
   var noMarketsAtAll = !rawOpen.length && !rawPending.length && !rawClosedPending.length;
   var noFilterMatch = !noMarketsAtAll && !hero && !restOpen.length && !pending.length && !closedPending.length;
