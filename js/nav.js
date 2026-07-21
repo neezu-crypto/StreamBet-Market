@@ -24,9 +24,27 @@
     });
   }
 
+  function sbmCanUseAdminTab() {
+    return !!(window.sbmIsAdmin || window.sbmIsVerifiedStreamer);
+  }
+
+  // 관리 탭은 관리자 · 인증 스트리머에게만 보여준다. 실제 데이터 접근·조작 권한은
+  // RTDB 규칙과 Cloud Functions가 이미 막고 있지만, 일반 유저에게는 탭 버튼 자체와
+  // 진입을 UX 차원에서도 차단한다.
+  function sbmUpdateAdminTabVisibility() {
+    var allowed = sbmCanUseAdminTab();
+    navAdmin.style.display = allowed ? '' : 'none';
+    if (!allowed && adminView.style.display !== 'none') {
+      showTab(tabs[0]); // 지금 관리 탭을 보고 있는데 권한을 잃으면 마켓 탭으로 되돌린다
+    }
+  }
+  document.addEventListener('sbm-auth-changed', sbmUpdateAdminTabVisibility);
+  sbmUpdateAdminTabVisibility();
+
   navMarket.addEventListener('click', function (e) { e.preventDefault(); showTab(tabs[0]); });
   navAdmin.addEventListener('click', function (e) {
     e.preventDefault();
+    if (!sbmCanUseAdminTab()) return; // 버튼이 숨겨져 있어도 직접 조작될 가능성 대비
     showTab(tabs[1]);
     sbmRenderAuditLog();
     sbmRenderVerifyRequests();
