@@ -38,6 +38,11 @@ const updateProfile = onCall(async (request) => {
   };
   if (nameChanged) update.nicknameChangedAt = Date.now();
   await ref.update(update);
+
+  // 13번 — 랭킹에 표시되는 닉네임·아바타가 바뀌므로 이 시점에만 랭킹 재계산
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('updateProfile');
+
   return update;
 });
 

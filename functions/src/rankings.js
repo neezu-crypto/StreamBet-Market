@@ -1,4 +1,3 @@
-const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { getDatabase } = require('firebase-admin/database');
 
 // 13번 — 자산 · 승률 · 누적수익 랭킹. 클라이언트는 다른 유저의 wallets/bets를
@@ -86,8 +85,15 @@ async function computeRankings() {
   });
 }
 
-const computeRankingsScheduled = onSchedule('every 5 minutes', async () => {
-  await computeRankings();
-});
+// 고정 주기 폴링 대신, 랭킹에 영향을 주는 이벤트(정산·환전·출석·프로필 변경·닉네임 차단) 직후에만
+// 호출한다. 실패해도 원래 하려던 동작(배팅 정산, 환전 등) 자체는 실패하지 않도록 항상 호출부에서
+// catch로 감싼다.
+async function recomputeRankingsAfter(action) {
+  try {
+    await computeRankings();
+  } catch (e) {
+    console.error('랭킹 재계산 실패 (' + action + ')', e);
+  }
+}
 
-module.exports = { computeRankingsScheduled, computeRankings };
+module.exports = { computeRankings, recomputeRankingsAfter };

@@ -102,6 +102,11 @@ const blockNickname = onCall(async (request) => {
   });
   await reportRef.remove();
   await logAudit(uid, actorName, '닉네임 차단', report.nickname + ' (' + report.reason + ')');
+
+  // 13번 — 차단 시 랭킹에서 즉시 제외되어야 하므로 이 시점에만 랭킹 재계산
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('blockNickname');
+
   return { status: 'blocked' };
 });
 
@@ -117,6 +122,11 @@ const unblockNickname = onCall(async (request) => {
   await ref.remove();
   const actorName = request.auth.token.name || request.auth.token.email || uid;
   await logAudit(uid, actorName, '닉네임 차단 해제', entry ? entry.nickname : targetId);
+
+  // 13번 — 차단 해제 시 다시 랭킹에 노출되어야 하므로 이 시점에만 랭킹 재계산
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('unblockNickname');
+
   return { status: 'unblocked' };
 });
 

@@ -324,6 +324,11 @@ const judgeMarket = onCall(async (request) => {
   }
 
   await logAudit(uid, request.auth.token.name, '판정 확정', market.title + ' → "' + market.outcomes[winningOutcomeId].label + '" 적중');
+
+  // 13번 — 정산으로 잔액·승패 기록이 바뀌므로 랭킹을 이 시점에만 재계산 (고정 주기 폴링 대신)
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('judgeMarket');
+
   return { status: 'settled', payoutMultiplier: result.multiplier };
 });
 

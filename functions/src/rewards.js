@@ -33,6 +33,10 @@ const claimAttendance = onCall(async (request) => {
   await adjustBalance(uid, reward);
   await walletRef(uid).update({ attendanceStreak: streak, lastAttendanceDate: today });
 
+  // 13번 — 자산 랭킹에 영향을 주는 잔액 변경이므로 이 시점에만 랭킹 재계산
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('claimAttendance');
+
   return { reward, streak };
 });
 

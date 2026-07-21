@@ -80,6 +80,10 @@ const exchangeCurrency = onCall(async (request) => {
   const logRef = getDatabase().ref('bettingMarket/exchanges/' + uid).push();
   await logRef.set({ direction, amount: amt, fee, resultAmount: net, requestedAt: now });
 
+  // 13번 — 자산 랭킹에 영향을 주는 잔액 변경이므로 이 시점에만 랭킹 재계산
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('exchangeCurrency');
+
   return { fee, resultAmount: net };
 });
 
