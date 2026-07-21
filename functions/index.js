@@ -14,4 +14,5 @@ module.exports = {
   distributeJackpotWeekly,
   ...require('./src/reports'),
   ...require('./src/profile'),
+  ...require('./src/charge'),
 };

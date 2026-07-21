@@ -250,6 +250,23 @@
   </div>
 </div>
 
+<div class="propose-backdrop" id="charge-backdrop">
+  <div class="propose-modal">
+    <button class="propose-modal-close" id="charge-modal-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="propose-modal-title">자산충전</h3>
+    <div class="admin-tab-notice">
+      <b>안내</b> — 개발자의 <a href="https://www.sooplive.com/station/skftodwocks2" target="_blank" rel="noopener noreferrer" style="color:var(--gold);">라이브 방송</a>에 후원하면 룰렛 결과에 따라 자산 충전을 받을 수 있습니다. 방송에서 사용한 닉네임을 입력해 신청해 주세요 — 실제 지급은 방송에서 후원·룰렛 결과를 확인한 관리자가 처리합니다.
+    </div>
+    <label class="propose-field">
+      <span>닉네임</span>
+      <input type="text" id="charge-nickname" maxlength="20" placeholder="방송에서 사용한 닉네임">
+    </label>
+    <p class="propose-error" id="charge-error"></p>
+    <button class="propose-submit-btn" id="charge-submit-btn" type="button">신청하기</button>
+    <p class="propose-status" id="charge-status"></p>
+  </div>
+</div>
+
 <div class="bet-backdrop" id="bet-backdrop">
   <div class="bet-modal">
     <button class="bet-modal-close" id="bet-modal-close" type="button" aria-label="닫기">✕</button>
@@ -379,6 +396,7 @@
         <span class="wallet-amount num" id="wallet-amount">0<small>원</small></span>
       </div>
       <button class="btn-exchange" id="open-exchange-modal" type="button">환전</button>
+      <button class="btn-exchange" id="open-charge-modal" type="button">자산충전</button>
       <button class="btn-kakao" id="kakao-login-btn" type="button" style="display:none;">카카오 로그인</button>
       <button class="avatar" id="open-profile-modal" type="button" title="프로필">유</button>
     </div>
@@ -806,6 +824,11 @@
         <li class="audit-empty">인증된 스트리머가 없습니다.</li>
       </ul>
 
+      <div class="section-label">자산 충전 신청 <span class="admin-only-tag">관리자 전용</span></div>
+      <ul class="audit-log verify-req-list" id="charge-requests-list">
+        <li class="audit-empty">대기 중인 충전 신청이 없습니다.</li>
+      </ul>
+
       <div class="section-label">최근 처리 내역</div>
       <ul class="audit-log" id="audit-log">
         <li class="audit-empty">아직 처리 내역이 없습니다.</li>
@@ -881,6 +904,7 @@
 <script defer src="js/market-feed.js"></script>
 <script defer src="js/propose-modal.js"></script>
 <script defer src="js/exchange-modal.js"></script>
+<script defer src="js/charge-modal.js"></script>
 <script defer src="js/profile-modal.js"></script>
 </body>
 </html>

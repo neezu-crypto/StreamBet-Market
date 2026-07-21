@@ -277,6 +277,11 @@
         }
       },
 
+      "chargeRequests": {
+        ".read": "auth != null",
+        "$requestId": { ".write": false }
+      },
+
       "verifyRequests": {
         ".read": "auth != null",
         "$pushId": {

@@ -50,6 +50,7 @@
     sbmRenderVerifyRequests();
     sbmRenderVerifiedStreamers();
     sbmRenderReportQueue();
+    sbmRenderChargeRequests();
     sbmRenderNicknameReportQueue();
     sbmRenderBlockedNicknames();
   });
