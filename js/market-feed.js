@@ -316,22 +316,25 @@ function sbmRenderTicker() {
   if (!track) return;
 
   var all = Object.keys(sbmMarketsCache).map(function (id) { return sbmMarketsCache[id]; });
-  var settled = all.filter(function (m) { return m.status === 'settled' && m.settlement; })
-    .sort(function (a, b) { return b.settlement.settledAt - a.settlement.settledAt; })
-    .slice(0, 8);
 
-  var source = settled.map(function (m) {
-    var winLabel = (m.outcomes[m.settlement.winningOutcomeId] || {}).label || '';
-    return { text: m.title + (winLabel ? ' · ' + winLabel + ' 적중' : ''), value: m.settlement.payoutMultiplier.toFixed(1) + 'x' };
-  });
-
-  if (!source.length) {
-    source = all.filter(function (m) { return m.status === 'open'; }).slice(0, 8).map(function (m) {
+  var open = all.filter(function (m) { return m.status === 'open'; })
+    .sort(function (a, b) { return a.timing.bettingClosesAt - b.timing.bettingClosesAt; })
+    .slice(0, 5)
+    .map(function (m) {
       var odds = sbmComputeOdds(m);
       var firstId = Object.keys(m.outcomes)[0];
-      return { text: m.title, value: (odds[firstId] || 0).toFixed(1) + 'x' };
+      return { text: m.title + ' · 진행중', value: (odds[firstId] || 0).toFixed(1) + 'x' };
     });
-  }
+
+  var settled = all.filter(function (m) { return m.status === 'settled' && m.settlement; })
+    .sort(function (a, b) { return b.settlement.settledAt - a.settlement.settledAt; })
+    .slice(0, 5)
+    .map(function (m) {
+      var winLabel = (m.outcomes[m.settlement.winningOutcomeId] || {}).label || '';
+      return { text: m.title + (winLabel ? ' · ' + winLabel + ' 적중' : ''), value: m.settlement.payoutMultiplier.toFixed(1) + 'x' };
+    });
+
+  var source = open.concat(settled);
 
   if (!source.length) {
     track.innerHTML = '<span>아직 하이라이트가 없습니다 · 첫 배팅 주제를 제안해보세요</span>';
