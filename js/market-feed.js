@@ -2,6 +2,16 @@
 var sbmMarketsCache = {};
 window.sbmMarketsCache = sbmMarketsCache;
 
+// 검색 필터에서 스트리머 이름으로도 찾을 수 있게 stocks의 id → 닉네임을 한 번 받아둔다.
+var sbmStockNames = {};
+if (window.sbmFirebase && window.sbmDb) {
+  var sbmFbInit = window.sbmFirebase;
+  sbmFbInit.get(sbmFbInit.ref(window.sbmDb, 'stocks')).then(function (snap) {
+    var val = snap.val() || {};
+    Object.keys(val).forEach(function (id) { sbmStockNames[id] = val[id].name; });
+  });
+}
+
 function sbmComputeOdds(market) {
   var rake = market.rakeRate != null ? market.rakeRate : 0.05;
   var total = market.totalPool || 0;
@@ -158,7 +168,15 @@ var sbmFeedFilter = { search: '', type: 'all', sort: 'closing' };
 
 function sbmMatchesFilter(m) {
   if (sbmFeedFilter.type !== 'all' && m.type !== sbmFeedFilter.type) return false;
-  if (sbmFeedFilter.search && m.title.toLowerCase().indexOf(sbmFeedFilter.search) === -1) return false;
+  if (sbmFeedFilter.search) {
+    var q = sbmFeedFilter.search;
+    var inTitle = m.title.toLowerCase().indexOf(q) > -1;
+    var inStreamer = (m.streamerIds || []).some(function (id) {
+      var name = sbmStockNames[id];
+      return name && name.toLowerCase().indexOf(q) > -1;
+    });
+    if (!inTitle && !inStreamer) return false;
+  }
   return true;
 }
 
