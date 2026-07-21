@@ -99,7 +99,9 @@
     }
 
     var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmRealUser.uid + '/balance'));
-    walletBalance = walletSnap.val() || 0;
+    // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,
+    // 화면에도 0원이 아니라 그 초기 자산을 그대로 보여줘야 한다 (07번).
+    walletBalance = walletSnap.exists() ? walletSnap.val() : 1000000;
     balanceEl.textContent = fmt(walletBalance) + '원';
 
     var idxSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + window.sbmRealUser.uid + '/' + marketId));

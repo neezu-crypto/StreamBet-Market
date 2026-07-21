@@ -108,7 +108,9 @@
     var uid = window.sbmRealUser.uid;
     var db = window.sbmDb;
     var walletSnap = await fb.get(fb.ref(db, 'bettingMarket/wallets/' + uid));
-    var wallet = walletSnap.val() || { balance: 0, accountCreatedAt: Date.now() };
+    // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,
+    // 화면에도 0원이 아니라 그 초기 자산을 그대로 보여줘야 한다 (07번).
+    var wallet = walletSnap.val() || { balance: 1000000, accountCreatedAt: Date.now() };
     var cashSnap = await fb.get(fb.ref(db, 'users/' + uid + '/cash'));
 
     walletBM = wallet.balance || 0;
