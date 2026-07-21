@@ -69,4 +69,30 @@ const revokeVerification = onCall(async (request) => {
   return { status: 'revoked' };
 });
 
-module.exports = { approveVerification, rejectVerification, revokeVerification };
+// 05번 — streamerVerifications는 주식시장과 공유하는 노드라, soopId 필드를 나중에
+// 스키마에 추가하기 전부터 있던 레거시 레코드는 soopId가 비어있다. 관리자가
+// 관리 탭에서 그런 레코드에 SOOP 아이디를 나중에 채워 넣을 수 있게 한다.
+const setVerifiedSoopId = onCall(async (request) => {
+  const adminUid = requireAdmin(request);
+  const adminName = request.auth.token.name || request.auth.token.email;
+  const { recordId, soopId } = request.data || {};
+  const id = (soopId || '').trim();
+  if (!recordId || !id) throw new HttpsError('invalid-argument', 'SOOP 아이디를 입력해 주세요.');
+
+  const db = getDatabase();
+  const ref = db.ref('streamerVerifications/' + recordId);
+  const snap = await ref.get();
+  if (!snap.exists()) throw new HttpsError('not-found', '인증된 스트리머를 찾을 수 없습니다.');
+
+  const dupSnap = await db.ref('streamerVerifications').orderByChild('soopId').equalTo(id).get();
+  const dupKeys = dupSnap.exists() ? Object.keys(dupSnap.val()) : [];
+  if (dupKeys.some((key) => key !== recordId)) {
+    throw new HttpsError('failed-precondition', '이미 다른 스트리머가 사용 중인 SOOP 아이디입니다.');
+  }
+
+  await ref.update({ soopId: id });
+  await logAudit(adminUid, adminName, 'SOOP 아이디 입력', snap.val().nickname + ' → ' + id);
+  return { status: 'updated' };
+});
+
+module.exports = { approveVerification, rejectVerification, revokeVerification, setVerifiedSoopId };

@@ -144,6 +144,11 @@ button{ font-family: inherit; cursor: pointer; }
 .verify-req-approve:hover{ background:#e6b453; }
 .verify-req-reject{ background:none; border:1px solid var(--coral); color:var(--coral); }
 .verify-req-reject:hover{ background: var(--coral-dim); }
+.verify-soopid-missing{ display:flex; align-items:center; gap:6px; }
+.verify-soopid-input{
+  font-family:inherit; font-size:11px; padding:5px 8px; width:110px;
+  border-radius:6px; border:1px solid var(--hairline); background: var(--panel-raised); color: var(--text);
+}
 
 /* ---------- Ranking tab ---------- */
 .ranking-panel{ margin-top:26px; }

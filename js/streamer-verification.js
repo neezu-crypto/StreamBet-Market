@@ -46,20 +46,48 @@ function sbmRenderVerifiedBanner() {
 function sbmRenderVerifiedStreamers() {
   var list = document.getElementById('verified-streamers-list');
   if (!list) return;
-  var entries = Object.keys(sbmVerifiedCache).map(function (key) { return sbmVerifiedCache[key]; });
-  if (!entries.length) {
+  var keys = Object.keys(sbmVerifiedCache);
+  if (!keys.length) {
     list.innerHTML = '<li class="audit-empty">인증된 스트리머가 없습니다.</li>';
     return;
   }
-  list.innerHTML = entries.map(function (v) {
+  list.innerHTML = keys.map(function (key) {
+    var v = sbmVerifiedCache[key];
+    var soopIdField = v.soopId
+      ? '<span>SOOP 아이디: ' + v.soopId + '</span>'
+      : '<span class="verify-soopid-missing">SOOP 아이디 미기재' +
+        '<input type="text" class="verify-soopid-input" data-record-id="' + key + '" placeholder="SOOP 아이디 입력">' +
+        '<button class="verify-req-approve verify-soopid-save-btn" data-record-id="' + key + '" type="button">저장</button></span>';
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + v.nickname + '</b><span>SOOP 아이디: ' + (v.soopId || '(미기재)') + '</span></div>' +
+      '<div class="verify-req-info"><b>' + v.nickname + '</b>' + soopIdField + '</div>' +
       '<div class="verify-req-actions">' +
       '<button class="verify-req-reject" data-soopid="' + (v.soopId || '') + '" type="button">인증 해제</button>' +
       '</div></li>';
   }).join('');
+
+  list.querySelectorAll('.verify-soopid-save-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var recordId = btn.getAttribute('data-record-id');
+      var input = list.querySelector('.verify-soopid-input[data-record-id="' + recordId + '"]');
+      var soopId = input.value.trim();
+      if (!soopId) { alert('SOOP 아이디를 입력해 주세요.'); return; }
+      btn.disabled = true;
+      input.disabled = true;
+      window.sbmFirebase.httpsCallable('setVerifiedSoopId')({ recordId: recordId, soopId: soopId })
+        .catch(function (e) {
+          alert(e.message);
+          btn.disabled = false;
+          input.disabled = false;
+        });
+    });
+  });
+
   list.querySelectorAll('.verify-req-reject').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      if (!btn.getAttribute('data-soopid')) {
+        alert('SOOP 아이디가 없어서 인증 해제할 수 없습니다. 먼저 SOOP 아이디를 입력해 주세요.');
+        return;
+      }
       btn.disabled = true;
       window.sbmFirebase.httpsCallable('revokeVerification')({ soopId: btn.getAttribute('data-soopid') })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
