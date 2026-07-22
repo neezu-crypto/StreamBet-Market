@@ -284,7 +284,6 @@
   var fab = document.querySelector('.fab');
   if (fab) fab.addEventListener('click', openModal);
   closeBtn.addEventListener('click', closeModal);
-  backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeModal(); });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && backdrop.classList.contains('open')) closeModal();
   });
