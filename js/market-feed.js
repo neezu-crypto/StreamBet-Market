@@ -348,6 +348,12 @@ function sbmRenderTicker() {
     return '<span>' + item.text + ' <b class="' + (i % 2 === 0 ? 'up' : 'down') + ' num">' + item.value + '</b></span>';
   }).join('');
   track.innerHTML = itemsHtml + itemsHtml;
+
+  // devbar 마퀴와 같은 속도(초당 40px)로 맞춘다. 내용은 두 벌 이어붙였으니 원본 폭은 절반.
+  var pxPerSecond = 40;
+  var originalWidth = track.scrollWidth / 2;
+  var duration = Math.max(originalWidth / pxPerSecond, 8);
+  track.style.setProperty('--ticker-duration', duration + 's');
 }
 
 window.sbmMarketsLoaded = false;

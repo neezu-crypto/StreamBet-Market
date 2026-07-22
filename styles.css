@@ -291,7 +291,7 @@ button{ font-family: inherit; cursor: pointer; }
 .ticker-track{
   display:flex; gap: 36px; width: max-content;
   padding: 9px 0;
-  animation: ticker-scroll 34s linear infinite;
+  animation: ticker-scroll var(--ticker-duration, 34s) linear infinite;
 }
 .ticker-track span{ font-family: var(--font-mono); font-size:12px; color: var(--muted); white-space:nowrap; }
 .ticker-track b{ font-weight:600; margin-left:6px; }
