@@ -47,9 +47,9 @@ button{ font-family: inherit; cursor: pointer; }
 .devbar{ background: #0e1116; border-bottom: 1px solid var(--hairline); position: relative; z-index: 30; }
 .devbar-inner{
   max-width: 1180px; margin: 0 auto; padding: 7px 20px;
-  display:flex; align-items:center; justify-content:space-between; gap:16px;
+  display:flex; align-items:center; gap:16px;
 }
-.devbar-label{ font-size:11px; color: var(--text); letter-spacing:.04em; flex-shrink:0; }
+.devbar-label{ font-size:11px; color: var(--text); letter-spacing:.04em; flex-shrink:0; white-space:nowrap; align-self:center; }
 .dev-link{
   flex-shrink:0; padding: 6px 11px; border-radius:6px; border:none;
   background: var(--ink); color: var(--text); font-size:12px; font-weight:600; transition: background .12s ease;
