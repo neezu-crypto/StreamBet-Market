@@ -350,7 +350,7 @@ button{ font-family: inherit; cursor: pointer; }
 
 /* ---------- Feed ---------- */
 .feed{ display:flex; flex-direction:column; gap:22px; min-width:0; }
-#feed-hero-section, #feed-open-section, #feed-pending-section{ display:flex; flex-direction:column; gap:22px; }
+#feed-hero-section, #feed-open-section, #feed-closed-pending-section, #feed-pending-section{ display:flex; flex-direction:column; gap:22px; }
 .empty-state-box{
   display:block; width:100%; text-align:center; padding: 46px 24px;
   border: 1px dashed var(--hairline); border-radius:14px; background:none; font-family:inherit;
