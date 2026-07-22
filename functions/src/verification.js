@@ -1,8 +1,40 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAdmin } = require('./lib/auth');
+const { requireAuth, requireAdmin } = require('./lib/auth');
 const { logAudit } = require('./lib/audit');
-const { SOOP_ID_RE } = require('./constants');
+const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
+
+// 05번 — 스트리머 인증 신청은 로그인 없이도 가능해야 한다(익명 계정 포함). 방송 인증은
+// 재화가 걸린 행위가 아니라 관리자가 수기로 검수하는 절차라 requireRealAccount를 쓰지 않는다.
+// 주식시장에서 이미 같은 닉네임으로 인증된 스트리머가 있으면, 익명 세션의 임시 uid 대신
+// 그 스트리머가 주식시장에서 실제로 쓰던 uid를 그대로 이어받는다 — 그래야 나중에 그 계정으로
+// 로그인했을 때 이 앱에서도 동일한 uid 기준으로 인증 스트리머 권한이 인식된다.
+const submitVerificationRequest = onCall(async (request) => {
+  const uid = requireAuth(request);
+  const { nickname, soopId } = request.data || {};
+  const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
+  const trimmedSoopId = typeof soopId === 'string' ? soopId.trim() : '';
+
+  if (!trimmedNickname || trimmedNickname.length > 20 || NICKNAME_FORBIDDEN_RE.test(trimmedNickname)) {
+    throw new HttpsError('invalid-argument', '닉네임은 20자 이하, 사용할 수 없는 문자 없이 입력해 주세요.');
+  }
+  if (!SOOP_ID_RE.test(trimmedSoopId)) {
+    throw new HttpsError('invalid-argument', 'SOOP 아이디는 영문 소문자/숫자 2~20자로 입력해 주세요.');
+  }
+
+  const db = getDatabase();
+  const existingSnap = await db
+    .ref('streamerVerifications')
+    .orderByChild('nickname')
+    .equalTo(trimmedNickname)
+    .limitToFirst(1)
+    .get();
+  const finalUid = existingSnap.exists() ? Object.values(existingSnap.val())[0].uid : uid;
+
+  const newRef = db.ref('bettingMarket/verifyRequests').push();
+  await newRef.set({ nickname: trimmedNickname, soopId: trimmedSoopId, uid: finalUid, submittedAt: Date.now() });
+  return { status: 'submitted' };
+});
 
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
@@ -97,4 +129,4 @@ const setVerifiedSoopId = onCall(async (request) => {
   return { status: 'updated' };
 });
 
-module.exports = { approveVerification, rejectVerification, revokeVerification, setVerifiedSoopId };
+module.exports = { submitVerificationRequest, approveVerification, rejectVerification, revokeVerification, setVerifiedSoopId };

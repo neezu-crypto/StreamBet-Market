@@ -213,12 +213,6 @@ document.addEventListener('sbm-auth-changed', function () {
   });
 
   submitBtn.addEventListener('click', function () {
-    if (!window.sbmRealUser) {
-      statusEl.textContent = '신청하려면 로그인이 필요합니다 (Ctrl+Enter).';
-      statusEl.style.color = 'var(--coral)';
-      statusEl.classList.add('show');
-      return;
-    }
     if (!nicknameInput.value.trim() || !soopIdInput.value.trim()) {
       statusEl.textContent = '닉네임과 SOOP 아이디를 모두 입력해 주세요.';
       statusEl.style.color = 'var(--coral)';
@@ -242,13 +236,9 @@ document.addEventListener('sbm-auth-changed', function () {
     submitBtn.disabled = true;
     submitBtn.textContent = '신청 처리중...';
 
-    var fb = window.sbmFirebase;
-    var newRef = fb.push(fb.ref(window.sbmDb, 'bettingMarket/verifyRequests'));
-    fb.set(newRef, {
+    window.sbmFirebase.httpsCallable('submitVerificationRequest')({
       nickname: nicknameInput.value.trim(),
       soopId: soopIdInput.value.trim(),
-      uid: window.sbmRealUser.uid,
-      submittedAt: Date.now(),
     }).then(function () {
       submitBtn.textContent = '신청 완료';
       statusEl.style.color = 'var(--mint)';
