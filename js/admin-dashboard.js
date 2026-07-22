@@ -98,36 +98,56 @@ function sbmSubscribeBannedAccounts() {
     var isAdmin = !!window.sbmIsAdmin;
     var wallet = data.wallet || {};
     var profile = data.profile || {};
-    var banHtml = data.banned
-      ? '<span class="admin-ban-tag">정지됨 · ' + sbmEscapeHtml(data.banned.reason || '') + '</span>'
-      : '';
+    var nickname = profile.nickname || '';
+
     var betsHtml = data.bets.length
       ? data.bets.map(function (b) {
-          return '<div>' + new Date(b.placedAt).toLocaleString('ko-KR') + ' · ' + sbmFmtNum(b.amount) + '원 · ' + (b.status || '') + '</div>';
+          return '<div class="lookup-bet-row"><span>' + new Date(b.placedAt).toLocaleString('ko-KR') + ' · ' + (b.status || '') + '</span>' +
+            '<span class="amount">' + sbmFmtNum(b.amount) + '원</span></div>';
         }).join('')
-      : '<div>배팅 내역이 없습니다.</div>';
+      : '<div class="lookup-bet-empty">배팅 내역이 없습니다.</div>';
 
     var actionsHtml = isAdmin
-      ? '<div class="admin-lookup-adjust-row">' +
-          '<input type="number" id="admin-adjust-amount" placeholder="조정 금액(+/-)">' +
-          '<input type="text" id="admin-adjust-reason" placeholder="사유">' +
-          '<button class="verify-req-approve" id="admin-adjust-btn" type="button">잔액 조정</button>' +
+      ? '<div class="lookup-action-group">' +
+          '<div class="lookup-action-title">잔액 조정</div>' +
+          '<div class="lookup-action-row">' +
+            '<input type="number" id="admin-adjust-amount" class="amount-input" placeholder="+/- 금액">' +
+            '<input type="text" id="admin-adjust-reason" placeholder="사유">' +
+            '<button class="lookup-btn-gold" id="admin-adjust-btn" type="button">적용</button>' +
+          '</div>' +
         '</div>' +
-        '<div class="admin-lookup-adjust-row">' +
-          '<input type="text" id="admin-ban-reason" placeholder="정지 사유">' +
-          (data.banned
-            ? '<button class="verify-req-reject" id="admin-unban-btn" type="button">정지 해제</button>'
-            : '<button class="verify-req-reject" id="admin-ban-btn" type="button">계정 정지</button>') +
+        '<div class="lookup-action-group">' +
+          '<div class="lookup-action-title">계정 정지</div>' +
+          '<div class="lookup-action-row">' +
+            (data.banned
+              ? '<button class="lookup-btn-coral" id="admin-unban-btn" type="button">정지 해제</button>'
+              : '<input type="text" id="admin-ban-reason" placeholder="정지 사유">' +
+                '<button class="lookup-btn-coral" id="admin-ban-btn" type="button">계정 정지</button>') +
+          '</div>' +
         '</div>'
       : '';
 
     resultEl.innerHTML =
-      '<div class="admin-lookup-result-head"><b>' + sbmEscapeHtml(profile.nickname || '(닉네임 없음)') + '</b>' +
-      '<span>uid: ' + sbmEscapeHtml(data.uid) + '</span>' + banHtml + '</div>' +
-      '<div>보유 재화 <b>' + sbmFmtNum(wallet.balance || 0) + '원</b>' +
-      (wallet.accountCreatedAt ? ' · 가입 ' + new Date(wallet.accountCreatedAt).toLocaleDateString('ko-KR') : '') + '</div>' +
-      '<div class="admin-lookup-bets">' + betsHtml + '</div>' +
-      actionsHtml;
+      '<div class="lookup-card">' +
+        '<div class="lookup-card-top">' +
+          '<div class="lookup-avatar">' + sbmEscapeHtml(nickname ? nickname.charAt(0) : '?') + '</div>' +
+          '<div class="lookup-identity">' +
+            '<div class="lookup-nickname' + (nickname ? '' : ' muted') + '">' + sbmEscapeHtml(nickname || '닉네임 없음') + '</div>' +
+            '<div class="lookup-uid">' + sbmEscapeHtml(data.uid) + '</div>' +
+            (data.banned ? '<div class="lookup-uid" style="color:var(--coral);">정지 사유: ' + sbmEscapeHtml(data.banned.reason || '') + '</div>' : '') +
+          '</div>' +
+          '<span class="lookup-status-badge' + (data.banned ? ' banned' : '') + '">' + (data.banned ? '정지됨' : '정상') + '</span>' +
+        '</div>' +
+        '<div class="lookup-stats-row">' +
+          '<div class="lookup-stat"><span class="label">보유 재화</span><span class="value">' + sbmFmtNum(wallet.balance || 0) + '원</span></div>' +
+          '<div class="lookup-stat"><span class="label">가입일</span><span class="value">' + (wallet.accountCreatedAt ? new Date(wallet.accountCreatedAt).toLocaleDateString('ko-KR') : '-') + '</span></div>' +
+        '</div>' +
+        '<div class="lookup-section">' +
+          '<div class="lookup-section-label">최근 배팅</div>' +
+          '<div class="lookup-bets-list">' + betsHtml + '</div>' +
+        '</div>' +
+        (actionsHtml ? '<div class="lookup-actions">' + actionsHtml + '</div>' : '') +
+      '</div>';
 
     var adjustBtn = document.getElementById('admin-adjust-btn');
     if (adjustBtn) {

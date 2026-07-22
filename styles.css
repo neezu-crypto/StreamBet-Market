@@ -185,21 +185,61 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .admin-lookup-error{ font-size:11.5px; color: var(--coral); margin:6px 0 0; display:none; }
 .admin-lookup-error.show{ display:block; }
-.admin-lookup-result{
-  margin-top:12px; padding:14px; border-radius:10px; background: var(--panel-raised); border:1px solid var(--hairline);
-  display:flex; flex-direction:column; gap:10px;
+.admin-lookup-result{ margin-top:14px; }
+.lookup-card{
+  border-radius:12px; background: linear-gradient(165deg, rgba(217,164,65,0.05), transparent 40%), var(--panel-raised);
+  border:1px solid var(--hairline); overflow:hidden;
 }
-.admin-lookup-result-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
-.admin-lookup-result-head b{ font-size:14px; }
-.admin-lookup-result-head span{ font-size:11px; color: var(--muted-2); }
-.admin-lookup-adjust-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
-.admin-lookup-adjust-row input{
-  font-family:inherit; font-size:12.5px; padding:7px 9px; width:120px;
-  border-radius:6px; border:1px solid var(--hairline); background: var(--panel); color: var(--text);
+.lookup-card-top{ display:flex; align-items:center; gap:12px; padding:16px 16px 14px; border-bottom:1px solid var(--hairline); }
+.lookup-avatar{
+  width:40px; height:40px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  background: var(--panel); border:1px solid var(--hairline); color: var(--mint); font-weight:700; font-size:14px;
 }
-.admin-lookup-adjust-row input[type="text"]{ width:180px; }
-.admin-lookup-bets{ font-size:11.5px; color: var(--muted); max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
-.admin-ban-tag{ color: var(--coral); font-weight:700; }
+.lookup-identity{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.lookup-nickname{ font-size:14.5px; font-weight:700; color: var(--text); }
+.lookup-nickname.muted{ color: var(--muted-2); font-weight:600; }
+.lookup-uid{
+  font-family: var(--font-mono); font-size:10.5px; color: var(--muted-2);
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+.lookup-status-badge{
+  flex-shrink:0; font-size:10.5px; font-weight:700; padding:4px 10px; border-radius:20px;
+  background: var(--mint-dim); color: var(--mint); border:1px solid rgba(63,182,137,0.35);
+}
+.lookup-status-badge.banned{ background: var(--coral-dim); color: var(--coral); border-color: rgba(226,85,79,0.35); }
+.lookup-stats-row{ display:flex; gap:10px; padding:14px 16px; border-bottom:1px solid var(--hairline); }
+.lookup-stat{ flex:1; display:flex; flex-direction:column; gap:4px; }
+.lookup-stat .label{ font-size:10.5px; color: var(--muted-2); }
+.lookup-stat .value{ font-size:16px; font-weight:700; color: var(--gold); font-family: var(--font-mono); }
+.lookup-section{ padding:14px 16px; border-bottom:1px solid var(--hairline); }
+.lookup-section-label{ font-size:11px; letter-spacing:.04em; text-transform:uppercase; color: var(--muted-2); font-weight:700; margin-bottom:9px; }
+.lookup-bets-list{ display:flex; flex-direction:column; gap:7px; max-height:180px; overflow-y:auto; }
+.lookup-bet-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:12px; color: var(--muted); padding:7px 9px; border-radius:7px; background: var(--panel);
+}
+.lookup-bet-row .amount{ color: var(--text); font-family: var(--font-mono); font-weight:600; }
+.lookup-bet-empty{ font-size:12px; color: var(--muted-2); text-align:center; padding:6px 0; }
+.lookup-actions{ display:flex; flex-direction:column; gap:14px; padding:14px 16px; }
+.lookup-action-group{ display:flex; flex-direction:column; gap:8px; }
+.lookup-action-title{ font-size:12px; font-weight:700; color: var(--text); }
+.lookup-action-row{ display:flex; gap:8px; flex-wrap:wrap; }
+.lookup-action-row input{
+  font-family:inherit; font-size:12.5px; padding:9px 10px; flex:1; min-width:100px;
+  border-radius:7px; border:1px solid var(--hairline); background: var(--panel); color: var(--text);
+}
+.lookup-action-row input:focus-visible{ border-color: var(--gold); outline:none; }
+.lookup-action-row input.amount-input{ flex:0 0 130px; font-family: var(--font-mono); }
+.lookup-btn-gold{
+  flex-shrink:0; background: var(--gold); color:#1a1200; border:none; font-weight:700;
+  font-size:12.5px; padding:9px 16px; border-radius:7px;
+}
+.lookup-btn-gold:hover{ background:#e6b453; }
+.lookup-btn-coral{
+  flex-shrink:0; background:transparent; border:1px solid var(--coral); color: var(--coral);
+  font-weight:700; font-size:12.5px; padding:9px 16px; border-radius:7px;
+}
+.lookup-btn-coral:hover{ background: var(--coral-dim); }
 
 /* ---------- Ranking tab ---------- */
 .ranking-panel{ margin-top:26px; }
