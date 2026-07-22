@@ -9,7 +9,7 @@ function sbmRenderAttendance(wallet) {
   if (!window.sbmRealUser) {
     titleEl.textContent = '출석 체크';
     btn.textContent = '로그인 후 출석 체크';
-    btn.disabled = true;
+    btn.disabled = false;
     streakEl.querySelectorAll('.day').forEach(function (d) { d.classList.remove('done', 'today'); });
     return;
   }
