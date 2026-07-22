@@ -193,6 +193,10 @@ document.addEventListener('sbm-auth-changed', function () {
 
   document.addEventListener('click', function (e) {
     if (e.target.closest('#open-verify-modal')) openModal();
+    if (e.target.closest('#login-verify-btn')) {
+      window.sbmCloseLoginModal && window.sbmCloseLoginModal();
+      openModal();
+    }
   });
   closeBtn.addEventListener('click', closeModal);
   backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeModal(); });

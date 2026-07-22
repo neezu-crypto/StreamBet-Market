@@ -1,4 +1,7 @@
 var ATTENDANCE_SCHEDULE = [10000, 14000, 20000, 26000, 32000, 40000, 60000];
+// 로그인 전에도 화면에 "0원"이 아니라 미리보기 잔액을 보여줘 관심을 유도한다. 실제 지갑은
+// 로그인 후 서버(ensureWallet)가 생성하는 1,000,000원이며, 이 값은 그 전까지의 표시 전용이다.
+var GUEST_PREVIEW_BALANCE = 200000;
 
 function sbmRenderAttendance(wallet) {
   var titleEl = document.getElementById('attendance-title');
@@ -44,7 +47,7 @@ function sbmRenderAttendance(wallet) {
   document.addEventListener('sbm-auth-changed', function (e) {
     var user = e.detail.realUser;
     if (!user) {
-      if (walletAmountEl) walletAmountEl.innerHTML = '0<small>원</small>';
+      if (walletAmountEl) walletAmountEl.innerHTML = GUEST_PREVIEW_BALANCE.toLocaleString('ko-KR') + '<small>원</small>';
       sbmRenderAttendance(null);
       return;
     }
