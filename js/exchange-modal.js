@@ -92,7 +92,7 @@
     submitBtn.disabled = false;
 
     var fb = window.sbmFirebase;
-    var uid = window.sbmRealUser.uid;
+    var uid = window.sbmUser.uid;
     var db = window.sbmDb;
     var walletSnap = await fb.get(fb.ref(db, 'bettingMarket/wallets/' + uid));
     // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,
@@ -113,7 +113,7 @@
   }
 
   function openModal() {
-    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    if (!window.sbmTrusted) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     resetForm();
     backdrop.classList.add('open');
   }

@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount, requireAdmin, assertNotBanned } = require('./lib/auth');
+const { requireAuth, isTrustedAccount, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { adjustBalance, ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const { NICKNAME_FORBIDDEN_RE, NEW_ACCOUNT_WAIT_MS } = require('./constants');
@@ -21,7 +21,7 @@ const submitChargeRequest = onCall(async (request) => {
   }
 
   const wallet = await ensureWallet(uid);
-  if (!isRealAccount(request)) {
+  if (!(await isTrustedAccount(request))) {
     if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
       throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 신청할 수 있습니다.');
     }

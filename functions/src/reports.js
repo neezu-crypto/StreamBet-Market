@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount, requireAdminOrVerifiedStreamer, assertNotBanned } = require('./lib/auth');
+const { requireAuth, isTrustedAccount, requireAdminOrVerifiedStreamer, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const {
@@ -50,7 +50,7 @@ const reportMarket = onCall(async (request) => {
     throw new HttpsError('failed-precondition', '이미 이 마켓을 신고했습니다.');
   }
   const wallet = await ensureWallet(uid);
-  if (!isRealAccount(request)) await checkReportGate(uid, wallet);
+  if (!(await isTrustedAccount(request))) await checkReportGate(uid, wallet);
 
   const reportRef = db.ref('bettingMarket/marketReports').push();
   await reportRef.set({

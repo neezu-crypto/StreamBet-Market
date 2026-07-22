@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount, assertNotBanned } = require('./lib/auth');
+const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountDay, kstDateKey, walletRef } = require('./lib/wallet');
 const {
   EXCHANGE_FEE_RATE,
@@ -32,8 +32,14 @@ function dailyCapForDay(day) {
 }
 
 // 07번 — 환전 (배팅시장 ↔ 주식시장, 항상 요청자 본인 uid 기준)
+// 익명 세션은 그대로 막되(반복 생성해 실캐시를 무한정 찍어내는 어뷰징 경로 방지),
+// 인증 스트리머는 로그인 없이도 환전까지 포함해 실계정과 동일하게 이용할 수 있어야 한다
+// (스트리머 인증 제도의 목적 — 로그인을 꺼리는 스트리머도 검수만 통과하면 완전히 동일하게 사용).
 const exchangeCurrency = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
+  if (!(await isTrustedAccount(request))) {
+    throw new HttpsError('permission-denied', '환전은 로그인 계정 또는 인증 스트리머만 이용할 수 있습니다. Google 로그인 후 다시 시도해 주세요.');
+  }
   await assertNotBanned(uid);
   const { direction, amount } = request.data || {};
   const amt = Number(amount);

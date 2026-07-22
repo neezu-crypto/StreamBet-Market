@@ -44,8 +44,8 @@
   }
 
   document.addEventListener('sbm-auth-changed', function (e) {
-    var user = e.detail.realUser;
-    if (!user) {
+    var user = e.detail.user;
+    if (!e.detail.trusted || !user) {
       currentProfile = null;
       openBtn.textContent = '로그인';
       openBtn.classList.add('avatar-login');
@@ -59,7 +59,7 @@
   });
 
   function openModal() {
-    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    if (!window.sbmTrusted) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     var p = currentProfile || {};
     nicknameInput.value = p.nickname || '';
     soopIdInput.value = p.soopId || '';

@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount, assertNotBanned } = require('./lib/auth');
+const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt } = require('./lib/wallet');
 const {
   BET_STEP,
@@ -40,7 +40,7 @@ const placeBet = onCall(async (request) => {
   }
 
   const wallet = await ensureWallet(uid);
-  if (!isRealAccount(request) && accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
+  if (!(await isTrustedAccount(request)) && accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
     throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 배팅에 참여할 수 있습니다.');
   }
   const cap = Math.min(betCapForDay(accountDay(wallet)), BET_MAX_AMOUNT);
@@ -91,7 +91,7 @@ const cancelBet = onCall(async (request) => {
 
   const wallet = await ensureWallet(uid);
   const sinceLast = Date.now() - (wallet.lastBetActionAt || 0);
-  if (!isRealAccount(request) && sinceLast < BET_CANCEL_COOLDOWN_MS) {
+  if (!(await isTrustedAccount(request)) && sinceLast < BET_CANCEL_COOLDOWN_MS) {
     throw new HttpsError('failed-precondition', '취소 · 재배팅은 30초 쿨다운 중에는 할 수 없습니다.');
   }
 

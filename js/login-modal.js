@@ -21,6 +21,6 @@
   });
 
   document.addEventListener('sbm-auth-changed', function (e) {
-    if (e.detail.realUser) closeModal();
+    if (e.detail.trusted) closeModal();
   });
 })();

@@ -64,6 +64,17 @@ async function requireAdminOrVerifiedStreamer(request) {
   throw new HttpsError('permission-denied', '관리자 또는 인증 스트리머만 수행할 수 있습니다.');
 }
 
+// 스트리머 인증 제도의 목적 — 스트리머는 로그인(구글/카카오 계정 연동)을 꺼리는 경우가 많아,
+// 관리자 검수만 통과하면 로그인 없이(익명 세션이어도) 실계정 로그인 유저와 완전히 동일하게
+// 대기시간·쿨다운 면제는 물론 환전까지 포함한 모든 기능을 그대로 쓸 수 있어야 한다.
+// 한도액(1회 최대 배팅, 환전 일별 한도 등)은 실계정과 동일하게 그대로 적용된다.
+async function isTrustedAccount(request) {
+  if (isRealAccount(request)) return true;
+  const email = request.auth.token && request.auth.token.email;
+  if (isAdminEmail(email)) return true;
+  return isVerifiedStreamerUid(request.auth.uid);
+}
+
 // 관리 탭 — 계정 정지. 재화가 걸린 모든 액션 함수 진입부에서 호출해 정지된 uid를 차단한다.
 async function assertNotBanned(uid) {
   const db = getDatabase();
@@ -78,6 +89,7 @@ module.exports = {
   requireAuth,
   requireRealAccount,
   isRealAccount,
+  isTrustedAccount,
   isAdminEmail,
   requireAdmin,
   isVerifiedStreamerUid,
