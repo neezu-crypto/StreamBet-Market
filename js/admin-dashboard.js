@@ -12,6 +12,9 @@ function sbmRenderAdminDashboard() {
     document.getElementById('stat-new-wallets').textContent = d.newWalletsToday + '개';
     document.getElementById('stat-active-markets').textContent = d.activeMarkets + '개';
     document.getElementById('stat-bet-today').textContent = sbmFmtNum(d.totalBetAmountToday) + '원 · ' + d.totalBetCountToday + '건';
+    document.getElementById('stat-anonymous').textContent = d.anonymousCount + '명';
+    document.getElementById('stat-real-users').textContent = d.realCount + '명';
+    document.getElementById('stat-verified-streamers').textContent = d.verifiedStreamerCount + '명';
   }).catch(function (e) { circEl.textContent = '오류: ' + e.message; });
 }
 

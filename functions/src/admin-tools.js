@@ -1,5 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
+const { getAuth } = require('firebase-admin/auth');
 const { requireAdmin, requireAdminOrVerifiedStreamer } = require('./lib/auth');
 const { adjustBalance, ensureWallet, kstDateKey } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
@@ -16,16 +17,36 @@ function nicknameFor(profiles, uid) {
   return (profiles[uid] && profiles[uid].nickname) || '';
 }
 
+// bettingMarket/wallets에 지갑이 있는(=실제로 게임에 참여한) uid들을 실계정/익명으로 분류한다.
+// Firebase Auth의 getUsers는 한 번에 최대 100개 식별자만 받으므로 청크로 나눠 조회한다.
+async function countAccountTypes(uids) {
+  let anonymousCount = 0;
+  let realCount = 0;
+  const auth = getAuth();
+  for (let i = 0; i < uids.length; i += 100) {
+    const chunk = uids.slice(i, i + 100).map((uid) => ({ uid }));
+    if (!chunk.length) continue;
+    const result = await auth.getUsers(chunk);
+    result.users.forEach((u) => {
+      if (u.providerData && u.providerData.length > 0) realCount += 1;
+      else anonymousCount += 1;
+    });
+    anonymousCount += result.notFound.length; // Auth에서 이미 지워졌으면 익명으로 취급
+  }
+  return { anonymousCount, realCount };
+}
+
 // 관리 탭 대시보드 — 지갑 총량·오늘 신규 지갑·활성 마켓·오늘 배팅액 (관리자·인증 스트리머)
 const getAdminDashboardStats = onCall(async (request) => {
   await requireAdminOrVerifiedStreamer(request);
   const db = getDatabase();
   const today = kstDateKey();
 
-  const [walletsSnap, marketsSnap, betsSnap] = await Promise.all([
+  const [walletsSnap, marketsSnap, betsSnap, verificationsSnap] = await Promise.all([
     db.ref('bettingMarket/wallets').get(),
     db.ref('bettingMarket/markets').get(),
     db.ref('bettingMarket/bets').get(),
+    db.ref('streamerVerifications').get(),
   ]);
 
   const wallets = walletsSnap.val() || {};
@@ -35,6 +56,9 @@ const getAdminDashboardStats = onCall(async (request) => {
     totalCirculation += w.balance || 0;
     if (kstDateKey(new Date(w.accountCreatedAt || 0)) === today) newWalletsToday += 1;
   });
+
+  const { anonymousCount, realCount } = await countAccountTypes(Object.keys(wallets));
+  const verifiedStreamerCount = Object.keys(verificationsSnap.val() || {}).length;
 
   const markets = marketsSnap.val() || {};
   const activeMarkets = Object.values(markets).filter((m) => m.status === 'open' || m.status === 'closed').length;
@@ -58,6 +82,9 @@ const getAdminDashboardStats = onCall(async (request) => {
     activeMarkets,
     totalBetAmountToday,
     totalBetCountToday,
+    anonymousCount,
+    realCount,
+    verifiedStreamerCount,
   };
 });
 
