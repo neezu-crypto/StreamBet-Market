@@ -80,7 +80,7 @@
     <label class="propose-field">
       <span>이벤트 마감 시점
         <span class="field-help" tabindex="0">?
-          <span class="field-help-tip">실제 결과가 갈리는 시점. 배팅은 마감됐어도 이벤트는 계속 진행 중일 수 있어요(06번). 배팅 마감 시점을 기준으로 몇 시간 뒤인지 정하면 돼요.</span>
+          <span class="field-help-tip">실제 결과가 갈리는 시점. 배팅은 마감됐어도 이벤트는 계속 진행 중일 수 있어요. 배팅 마감 시점을 기준으로 몇 시간 뒤인지 정하면 돼요.</span>
         </span>
       </span>
       <div class="propose-hours-row">
@@ -176,7 +176,7 @@
       <div class="manage-outcomes" id="manage-outcomes"></div>
       <label class="review-toggle-row">
         <input type="checkbox" id="manage-override-participants">
-        <span><b>참가자 미달이어도 정산 진행</b> — 09번 최소 참여자 5명을 못 채워도 무효 처리하지 않고 정산합니다</span>
+        <span><b>참가자 미달이어도 정산 진행</b> — 최소 참여자 5명을 못 채워도 무효 처리하지 않고 정산합니다</span>
       </label>
       <button class="manage-confirm-btn" id="manage-confirm-btn" type="button">판정 확정</button>
     </div>
@@ -320,7 +320,7 @@
     </label>
     <label class="review-toggle-row">
       <input type="checkbox" id="review-override-participants">
-      <span><b>참가자 미달이어도 정산 진행</b> — 09번 최소 참여자 5명을 못 채워도 무효 처리하지 않고 정산합니다</span>
+      <span><b>참가자 미달이어도 정산 진행</b> — 최소 참여자 5명을 못 채워도 무효 처리하지 않고 정산합니다</span>
     </label>
 
     <div class="review-actions">
@@ -655,114 +655,6 @@
       </div>
       <div class="grid" id="closed-grid">
 
-        <article class="ticket settled" data-batch="0">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료</span>
-              <span class="badge badge-type">개인전</span>
-              <span class="badge badge-type">게임 방송 · 자동판정</span>
-            </div>
-            <h2 class="ticket-title">봉준이 어제 방송에서 랭크 1위를 달성할 것이다</h2>
-            <div class="ticket-meta"><span>2026.07.20 정산 완료</span> <span class="sep">·</span> <span>참여 176명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome win">달성 성공<small>찬성 쪽 적중</small></div>
-              <div class="result-payout">1.7x<small>확정 배당</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket settled" data-batch="0">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료 · 무효</span>
-              <span class="badge badge-type">1vs1</span>
-              <span class="badge badge-type">유저 제안</span>
-            </div>
-            <h2 class="ticket-title">박퍼니 vs 유하띠 — 즉흥 노래 대결 승부</h2>
-            <div class="ticket-meta"><span>2026.07.19 정산 완료</span> <span class="sep">·</span> <span>참여 6명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome void">최소 참여 인원 미달<small>08번 규정에 따라 전액 환불</small></div>
-              <div class="result-payout">1.0x<small>원금 반환</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket settled" data-batch="1" style="display:none;">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료</span>
-              <span class="badge badge-type">단체전</span>
-              <span class="badge badge-type">합방 · 대결</span>
-            </div>
-            <h2 class="ticket-title">지난 주 시청자 랭킹 1위는 누가 될까</h2>
-            <div class="ticket-meta"><span>2026.07.14 정산 완료</span> <span class="sep">·</span> <span>참여 298명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome win">1위 · 유하띠<small>4인 단체전 적중</small></div>
-              <div class="result-payout">3.4x<small>확정 배당</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket settled" data-batch="1" style="display:none;">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료</span>
-              <span class="badge badge-type">개인전</span>
-              <span class="badge badge-type">토크 · 저챗</span>
-            </div>
-            <h2 class="ticket-title">김민교.가 방송 중 후원 100만원 이상 달성할 것이다</h2>
-            <div class="ticket-meta"><span>2026.07.12 정산 완료</span> <span class="sep">·</span> <span>참여 92명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome void">실패<small>반대 쪽 적중</small></div>
-              <div class="result-payout">1.4x<small>확정 배당</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket settled" data-batch="2" style="display:none;">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료</span>
-              <span class="badge badge-type">1vs1</span>
-              <span class="badge badge-type">유저 제안</span>
-            </div>
-            <h2 class="ticket-title">봉준 vs 박퍼니 — 저녁 내기 게임 승부</h2>
-            <div class="ticket-meta"><span>2026.07.09 정산 완료</span> <span class="sep">·</span> <span>참여 133명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome win">봉준 승<small>찬성 쪽 적중</small></div>
-              <div class="result-payout">1.95x<small>확정 배당</small></div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket settled" data-batch="2" style="display:none;">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-settled">정산 완료</span>
-              <span class="badge badge-type">개인전</span>
-              <span class="badge badge-type">게임 방송 · 반자동판정</span>
-            </div>
-            <h2 class="ticket-title">박퍼니가 오늘 랭크 다이아 승급에 성공할 것이다</h2>
-            <div class="ticket-meta"><span>2026.07.08 정산 완료</span> <span class="sep">·</span> <span>참여 47명</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="result-row">
-              <div class="result-outcome void">실패<small>반대 쪽 적중</small></div>
-              <div class="result-payout">1.4x<small>확정 배당</small></div>
-            </div>
-          </div>
-        </article>
-
       </div>
       <div class="load-sentinel" id="load-sentinel"><span class="load-dot"></span> 더 불러오는 중</div>
     </section>
@@ -787,9 +679,9 @@
       <div class="admin-policy-box">
         <h4>운영 원칙</h4>
         <ul>
-          <li>최소 참여자 <b>5명</b> 미만이면 무효 처리 · 전액 환불 (09번)</li>
-          <li>조기 마감 · 무효 처리는 <b>사유 선택 필수</b> + 처리자 · 시각 기록 (10번)</li>
-          <li>검수 시 추천수 · 참가자 미달을 개별 예외로 승인할 수 있음 (04번)</li>
+          <li>최소 참여자 <b>5명</b> 미만이면 무효 처리 · 전액 환불</li>
+          <li>조기 마감 · 무효 처리는 <b>사유 선택 필수</b> + 처리자 · 시각 기록</li>
+          <li>검수 시 추천수 · 참가자 미달을 개별 예외로 승인할 수 있음</li>
         </ul>
         <h4>금지 주제 (사전 경고 없이 삭제)</h4>
         <ul>

@@ -98,7 +98,7 @@
     var opGroup = document.createElement('optgroup');
     opGroup.label = '운영 사유';
     var policyGroup = document.createElement('optgroup');
-    policyGroup.label = '금지 주제 위반 (04번)';
+    policyGroup.label = '금지 주제 위반';
 
     reasons.forEach(function (r) {
       var opt = document.createElement('option');
