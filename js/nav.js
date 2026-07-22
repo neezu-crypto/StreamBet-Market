@@ -53,6 +53,10 @@
     sbmRenderChargeRequests();
     sbmRenderNicknameReportQueue();
     sbmRenderBlockedNicknames();
+    sbmRenderAdminDashboard();
+    sbmRenderAnomalyMonitor();
+    sbmRenderExchangeLog();
+    sbmSubscribeBannedAccounts();
   });
   navRanking.addEventListener('click', function (e) {
     e.preventDefault();

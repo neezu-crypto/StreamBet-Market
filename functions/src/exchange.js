@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount } = require('./lib/auth');
+const { requireRealAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountDay, kstDateKey, walletRef } = require('./lib/wallet');
 const {
   EXCHANGE_FEE_RATE,
@@ -34,6 +34,7 @@ function dailyCapForDay(day) {
 // 07번 — 환전 (배팅시장 ↔ 주식시장, 항상 요청자 본인 uid 기준)
 const exchangeCurrency = onCall(async (request) => {
   const uid = requireRealAccount(request);
+  await assertNotBanned(uid);
   const { direction, amount } = request.data || {};
   const amt = Number(amount);
   if (!['toStock', 'toBettingMarket'].includes(direction) || !Number.isFinite(amt) || amt <= 0 || amt % EXCHANGE_STEP !== 0) {

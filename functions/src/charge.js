@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount, requireAdmin } = require('./lib/auth');
+const { requireAuth, isRealAccount, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { adjustBalance, ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const { NICKNAME_FORBIDDEN_RE, NEW_ACCOUNT_WAIT_MS } = require('./constants');
@@ -12,6 +12,7 @@ const CHARGE_REQUEST_COOLDOWN_MS = 60 * 1000; // 매크로 방지 — 계정당 
 // 결과를 직접 확인한 뒤 지급액을 입력해 처리한다(grantChargeRequest).
 const submitChargeRequest = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const nickname = (request.data && request.data.nickname || '').trim();
   if (!nickname) throw new HttpsError('invalid-argument', '닉네임을 입력해 주세요.');
   if (nickname.length > 20) throw new HttpsError('invalid-argument', '닉네임은 20자 이하로 입력해 주세요.');

@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount } = require('./lib/auth');
+const { requireAuth, isRealAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt } = require('./lib/wallet');
 const {
   BET_STEP,
@@ -32,6 +32,7 @@ async function adjustPool(marketId, outcomeId, delta) {
 // 09번 — 배팅 참가. 잔액 차감·쿨다운·한도는 전부 서버(Functions)가 검증한다.
 const placeBet = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const { marketId, outcomeId, amount } = request.data || {};
   const amt = Number(amount);
   if (!marketId || !outcomeId || !Number.isFinite(amt) || amt <= 0 || amt % BET_STEP !== 0) {
@@ -71,6 +72,7 @@ const placeBet = onCall(async (request) => {
 // 09번 — 취소 + 재배팅(30초 쿨다운). 취소 자체를 이 함수로 처리하고, 재배팅은 placeBet을 다시 호출한다.
 const cancelBet = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const { marketId, betId } = request.data || {};
   if (!marketId || !betId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
 

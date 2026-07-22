@@ -6,6 +6,7 @@ const {
   isAdminEmail,
   requireAdminOrVerifiedStreamer,
   isVerifiedStreamerUid,
+  assertNotBanned,
 } = require('./lib/auth');
 const { adjustBalance, ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { computeSettlement } = require('./lib/pool');
@@ -45,6 +46,7 @@ async function refundAllActiveBets(marketId) {
 // 04번/03번 — 배팅 주제 제안 등록. stocks 참조 검증, 관리자·인증 스트리머는 즉시 오픈.
 const submitMarketProposal = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const email = request.auth.token && request.auth.token.email;
   const isPrivileged = isAdminEmail(email) || (await isVerifiedStreamerUid(uid));
 

@@ -282,6 +282,11 @@
         "$requestId": { ".write": false }
       },
 
+      "bannedAccounts": {
+        ".read": "auth != null",
+        "$uid": { ".write": false }
+      },
+
       "verifyRequests": {
         ".read": "auth != null",
         "$pushId": { ".write": false }
@@ -311,6 +316,7 @@
 
       "profiles": {
         ".read": "auth != null",
+        ".indexOn": ["nickname"],
         "$uid": { ".write": false }
       },
 

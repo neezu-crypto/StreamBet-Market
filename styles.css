@@ -163,6 +163,44 @@ button{ font-family: inherit; cursor: pointer; }
   border-radius:6px; border:1px solid var(--hairline); background: var(--panel-raised); color: var(--text);
 }
 
+/* ---------- Admin dashboard/moderation additions ---------- */
+.admin-stats-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-bottom:18px; }
+@media (max-width: 720px){ .admin-stats-grid{ grid-template-columns: repeat(2, 1fr); } }
+.admin-stat-box{
+  display:flex; flex-direction:column; gap:6px; padding:12px 14px; border-radius:10px;
+  background: var(--panel-raised); border:1px solid var(--hairline);
+}
+.admin-stat-box .label{ font-size:11px; color: var(--muted-2); }
+.admin-stat-box .value{ font-size:18px; font-weight:700; color: var(--text); font-family: var(--font-mono); }
+.admin-anomaly-summary{
+  font-size:12.5px; color: var(--muted); background: var(--panel-raised); border:1px solid var(--hairline);
+  border-radius:8px; padding:10px 12px; margin-bottom:10px;
+}
+.admin-anomaly-summary b{ color: var(--gold); }
+.admin-lookup-box{ margin-bottom:8px; }
+.admin-lookup-row{ display:flex; gap:8px; }
+.admin-lookup-row input{
+  flex:1; font-family:inherit; font-size:13px; padding:9px 11px;
+  border-radius:7px; border:1px solid var(--hairline); background: var(--panel-raised); color: var(--text);
+}
+.admin-lookup-error{ font-size:11.5px; color: var(--coral); margin:6px 0 0; display:none; }
+.admin-lookup-error.show{ display:block; }
+.admin-lookup-result{
+  margin-top:12px; padding:14px; border-radius:10px; background: var(--panel-raised); border:1px solid var(--hairline);
+  display:flex; flex-direction:column; gap:10px;
+}
+.admin-lookup-result-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+.admin-lookup-result-head b{ font-size:14px; }
+.admin-lookup-result-head span{ font-size:11px; color: var(--muted-2); }
+.admin-lookup-adjust-row{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; }
+.admin-lookup-adjust-row input{
+  font-family:inherit; font-size:12.5px; padding:7px 9px; width:120px;
+  border-radius:6px; border:1px solid var(--hairline); background: var(--panel); color: var(--text);
+}
+.admin-lookup-adjust-row input[type="text"]{ width:180px; }
+.admin-lookup-bets{ font-size:11.5px; color: var(--muted); max-height:180px; overflow-y:auto; display:flex; flex-direction:column; gap:4px; }
+.admin-ban-tag{ color: var(--coral); font-weight:700; }
+
 /* ---------- Ranking tab ---------- */
 .ranking-panel{ margin-top:26px; }
 .ranking-tabs{ display:flex; gap:8px; margin-bottom:16px; }

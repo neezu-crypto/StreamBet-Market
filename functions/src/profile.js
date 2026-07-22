@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, isRealAccount } = require('./lib/auth');
+const { requireAuth, isRealAccount, assertNotBanned } = require('./lib/auth');
 const { NICKNAME_CHANGE_COOLDOWN_MS, NICKNAME_MAX_LENGTH, NICKNAME_FORBIDDEN_RE, SOOP_ID_RE } = require('./constants');
 
 function avatarUrlFor(soopId) {
@@ -12,6 +12,7 @@ function avatarUrlFor(soopId) {
 // 13번 — 닉네임(1일 1회 제한) · SOOP 아이디 → 프로필 이미지 자동 설정
 const updateProfile = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const { nickname, soopId } = request.data || {};
   const name = (nickname || '').trim();
   if (!name || name.length > NICKNAME_MAX_LENGTH) {

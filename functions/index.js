@@ -15,4 +15,5 @@ module.exports = {
   ...require('./src/reports'),
   ...require('./src/profile'),
   ...require('./src/charge'),
+  ...require('./src/admin-tools'),
 };

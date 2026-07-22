@@ -64,6 +64,16 @@ async function requireAdminOrVerifiedStreamer(request) {
   throw new HttpsError('permission-denied', '관리자 또는 인증 스트리머만 수행할 수 있습니다.');
 }
 
+// 관리 탭 — 계정 정지. 재화가 걸린 모든 액션 함수 진입부에서 호출해 정지된 uid를 차단한다.
+async function assertNotBanned(uid) {
+  const db = getDatabase();
+  const snap = await db.ref('bettingMarket/bannedAccounts/' + uid).get();
+  if (snap.exists()) {
+    const ban = snap.val();
+    throw new HttpsError('permission-denied', '정지된 계정입니다' + (ban.reason ? ' (사유: ' + ban.reason + ')' : '') + '.');
+  }
+}
+
 module.exports = {
   requireAuth,
   requireRealAccount,
@@ -72,4 +82,5 @@ module.exports = {
   requireAdmin,
   isVerifiedStreamerUid,
   requireAdminOrVerifiedStreamer,
+  assertNotBanned,
 };
