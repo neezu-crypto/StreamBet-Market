@@ -397,7 +397,21 @@ button{ font-family: inherit; cursor: pointer; }
 @media (prefers-reduced-motion: reduce){
   .ticket:not(.hero-ticket):hover{ transform: none; }
 }
-.js-manage-market, .js-open-review{ cursor: pointer; }
+body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
+.skeleton-ticket{
+  min-height: 150px;
+  background: linear-gradient(90deg, var(--panel) 0%, var(--panel-raised) 50%, var(--panel) 100%);
+  background-size: 200% 100%;
+  animation: sbm-skeleton-sweep 1.4s ease-in-out infinite;
+}
+.hero-ticket.skeleton-ticket{ min-height: 190px; }
+@keyframes sbm-skeleton-sweep{
+  0%{ background-position: 200% 0; }
+  100%{ background-position: -200% 0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .skeleton-ticket{ animation: none; }
+}
 .js-manage-market:focus-visible, .js-open-review:focus-visible{ outline: 2px solid var(--gold); outline-offset: 2px; }
 .ticket-main{ padding: 18px 18px 16px; }
 .ticket-stub{ position:relative; padding: 14px 18px 16px; border-top: 1px dashed var(--hairline); }
@@ -520,8 +534,15 @@ button{ font-family: inherit; cursor: pointer; }
 
 @media (max-width: 520px){
   .topbar{ flex-wrap:wrap; row-gap:12px; }
-  .topnav{ order:3; width:100%; margin-right:0; }
+  .topnav{
+    order:3; width:100%; margin-right:0;
+    flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    padding-bottom:2px;
+  }
+  .topnav::-webkit-scrollbar{ display:none; }
+  .topnav a{ flex-shrink:0; white-space:nowrap; }
   .wallet{ width:100%; justify-content:flex-start; gap:8px; }
+  .wallet-balance{ flex-basis:100%; align-items:flex-start; }
   .hero-top{ flex-direction:column; }
 }
 
@@ -1043,6 +1064,20 @@ button{ font-family: inherit; cursor: pointer; }
   padding: 11px; font-weight:700; font-size:13.5px;
 }
 .profile-save-btn:hover{ background:#e6b453; }
+.login-modal-sub{ font-size:12.5px; color:var(--muted-2); line-height:1.5; margin: -6px 0 18px; }
+.btn-login-option{
+  width:100%; display:flex; align-items:center; justify-content:center; gap:8px;
+  border-radius:8px; padding:12px; font-size:14px; font-weight:700; margin-bottom:10px;
+}
+.login-option-icon{
+  width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:800; flex-shrink:0;
+}
+.btn-google{ background:#fff; border:1px solid var(--hairline); color:#1f1f1f; }
+.btn-google:hover{ filter: brightness(0.96); }
+.btn-google .login-option-icon{ background:#4285F4; color:#fff; }
+.btn-kakao.btn-login-option .login-option-icon{ background:#191919; color:#FEE500; }
+.login-modal-hint{ font-size:11px; color:var(--muted-2); text-align:center; margin: 6px 0 0; }
 .profile-status{ font-size:12.5px; color:var(--mint); margin:12px 0 0; line-height:1.6; display:none; }
 .profile-status.show{ display:block; }
 

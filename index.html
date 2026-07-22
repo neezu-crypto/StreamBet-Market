@@ -95,6 +95,21 @@
   </div>
 </div>
 
+<div class="profile-backdrop" id="login-backdrop">
+  <div class="profile-modal login-modal">
+    <button class="profile-modal-close" id="login-modal-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="profile-modal-title">로그인</h3>
+    <p class="login-modal-sub">로그인하면 배팅 · 제안 · 환전 등 실계정 기능을 이용할 수 있어요.</p>
+    <button class="btn-login-option btn-google" id="login-google-btn" type="button">
+      <span class="login-option-icon">G</span> Google로 시작하기
+    </button>
+    <button class="btn-login-option btn-kakao" id="kakao-login-btn" type="button">
+      <span class="login-option-icon">K</span> 카카오로 시작하기
+    </button>
+    <p class="login-modal-hint">Ctrl+Enter로 어디서든 Google 로그인을 열 수 있어요.</p>
+  </div>
+</div>
+
 <div class="profile-backdrop" id="profile-backdrop">
   <div class="profile-modal">
     <button class="profile-modal-close" id="profile-modal-close" type="button" aria-label="닫기">✕</button>
@@ -402,7 +417,6 @@
       </div>
       <button class="btn-exchange" id="open-exchange-modal" type="button">환전</button>
       <button class="btn-exchange" id="open-charge-modal" type="button">자산충전</button>
-      <button class="btn-kakao" id="kakao-login-btn" type="button" style="display:none;">카카오 로그인</button>
       <button class="avatar" id="open-profile-modal" type="button" title="프로필">유</button>
     </div>
   </header>
@@ -480,134 +494,16 @@
 
       <div id="feed-hero-section">
       <div class="section-label">마감 임박</div>
-      <article class="ticket hero-ticket js-manage-market" id="market-hero" role="button" tabindex="0">
-        <div class="ticket-main">
-          <div class="hero-top">
-            <div>
-              <div class="badges">
-                <span class="badge badge-live">마감임박</span>
-                <span class="badge badge-type">개인전</span>
-                <span class="badge badge-type">시청자 지표 · 자동판정</span>
-              </div>
-              <h2 class="ticket-title">유하띠가 20분 안에 동시 시청자 3,000명을 넘길 것이다</h2>
-              <div class="ticket-meta">
-                <span class="badge-verified badge" style="padding:2px 7px;">✓ 인증 스트리머</span>
-                <span class="sep">·</span>
-                <span>참여 214명</span>
-                <span class="sep">·</span>
-                <span>총 풀 <span class="num">6,840,000</span>원</span>
-              </div>
-            </div>
-            <div class="hero-timer" id="hero-timer">04:12<span>남음</span></div>
-          </div>
-        </div>
-        <div class="ticket-stub">
-          <div class="pool-bar"><i style="width:62%"></i></div>
-          <div class="odds-row">
-            <div class="odds-cell side-yes">
-              <div class="label">달성한다 · 62%</div>
-              <div class="value num">1.6x</div>
-            </div>
-            <div class="odds-cell side-no">
-              <div class="label">못한다 · 38%</div>
-              <div class="value num">2.4x</div>
-            </div>
-          </div>
-          <div class="stub-foot">
-            <span class="participants">최소 참여 인원 충족 · 정산 유효 · 카드 클릭 시 관리(관리자·인증 스트리머)</span>
-            <div class="stub-foot-actions">
-              <button class="btn-report js-open-report" data-title="유하띠가 20분 안에 동시 시청자 3,000명을 넘길 것이다" type="button">신고</button>
-              <button class="btn-bet js-open-bet" data-title="유하띠가 20분 안에 동시 시청자 3,000명을 넘길 것이다" data-outcomes='[{"label":"달성한다","odds":1.6},{"label":"못한다","odds":2.4}]'>배팅하기</button>
-            </div>
-          </div>
-        </div>
-      </article>
+      <div class="ticket hero-ticket skeleton-ticket" aria-hidden="true"></div>
       </div>
 
 
       <div id="feed-open-section">
       <div class="section-label">진행중인 마켓</div>
       <div class="grid">
-
-        <article class="ticket js-manage-market" id="market-1vs1" role="button" tabindex="0">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-open">진행중</span>
-              <span class="badge badge-type">1vs1</span>
-              <span class="badge badge-type">유저 제안</span>
-            </div>
-            <h2 class="ticket-title">봉준 vs 김민교. — 오늘 저녁 합방 미니게임 승부</h2>
-            <div class="ticket-meta"><span>마감까지 2시간 18분</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="pool-bar"><i style="width:51%"></i></div>
-            <div class="odds-row">
-              <div class="odds-cell side-yes"><div class="label">봉준 승</div><div class="value num">1.95x</div></div>
-              <div class="odds-cell side-no"><div class="label">김민교. 승</div><div class="value num">1.9x</div></div>
-            </div>
-            <div class="stub-foot">
-              <span class="participants">참여 84명 · 카드 클릭 시 관리(관리자·인증 스트리머)</span>
-              <div class="stub-foot-actions">
-                <button class="btn-report js-open-report" data-title="봉준 vs 김민교. — 오늘 저녁 합방 미니게임 승부" type="button">신고</button>
-                <button class="btn-bet ghost js-open-bet" data-title="봉준 vs 김민교. — 오늘 저녁 합방 미니게임 승부" data-outcomes='[{"label":"봉준 승","odds":1.95},{"label":"김민교. 승","odds":1.9}]'>배팅하기</button>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket js-manage-market" id="market-group" role="button" tabindex="0">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-open">진행중</span>
-              <span class="badge badge-type">단체전</span>
-              <span class="badge badge-type">합방 · 대결</span>
-            </div>
-            <h2 class="ticket-title">이번 주 시청자 랭킹 1위는 누가 될까</h2>
-            <div class="ticket-meta"><span>마감까지 1일 4시간</span> <span class="sep">·</span> <span>판정: 목요일 자정 기준 시청자 수 1위</span></div>
-            <div class="multi-outcomes">
-              <div class="outcome-row"><span class="name">봉준</span><div class="bar"><i style="width:44%"></i></div><span class="odd num">2.1x</span></div>
-              <div class="outcome-row"><span class="name">유하띠 ✓</span><div class="bar"><i style="width:26%"></i></div><span class="odd num">3.4x</span></div>
-              <div class="outcome-row"><span class="name">김민교.</span><div class="bar"><i style="width:20%"></i></div><span class="odd num">4.2x</span></div>
-              <div class="outcome-row"><span class="name">박퍼니</span><div class="bar"><i style="width:10%"></i></div><span class="odd num">8.7x</span></div>
-            </div>
-          </div>
-          <div class="ticket-stub" style="border-top:1px dashed var(--hairline);">
-            <div class="stub-foot" style="margin-top:0;">
-              <span class="participants">참여 341명 · 4인 단체전 · 카드 클릭 시 관리(관리자·인증 스트리머)</span>
-              <div class="stub-foot-actions">
-                <button class="btn-report js-open-report" data-title="이번 주 시청자 랭킹 1위는 누가 될까" type="button">신고</button>
-                <button class="btn-bet ghost js-open-bet" data-title="이번 주 시청자 랭킹 1위는 누가 될까" data-outcomes='[{"label":"봉준","odds":2.1},{"label":"유하띠 ✓","odds":3.4},{"label":"김민교.","odds":4.2},{"label":"박퍼니","odds":8.7}]'>배팅하기</button>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article class="ticket js-manage-market" id="market-solo" role="button" tabindex="0">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-open">진행중</span>
-              <span class="badge badge-type">개인전</span>
-              <span class="badge badge-type">게임 방송 · 반자동판정</span>
-            </div>
-            <h2 class="ticket-title">박퍼니가 오늘 방송 중 랭크 다이아 승급에 성공할 것이다</h2>
-            <div class="ticket-meta"><span>마감까지 5시간 40분</span></div>
-          </div>
-          <div class="ticket-stub">
-            <div class="pool-bar"><i style="width:29%"></i></div>
-            <div class="odds-row">
-              <div class="odds-cell side-yes"><div class="label">성공 · 29%</div><div class="value num">3.0x</div></div>
-              <div class="odds-cell side-no"><div class="label">실패 · 71%</div><div class="value num">1.4x</div></div>
-            </div>
-            <div class="stub-foot">
-              <span class="participants">참여 58명 · 카드 클릭 시 관리(관리자·인증 스트리머)</span>
-              <div class="stub-foot-actions">
-                <button class="btn-report js-open-report" data-title="박퍼니가 오늘 방송 중 랭크 다이아 승급에 성공할 것이다" type="button">신고</button>
-                <button class="btn-bet ghost js-open-bet" data-title="박퍼니가 오늘 방송 중 랭크 다이아 승급에 성공할 것이다" data-outcomes='[{"label":"성공","odds":3.0},{"label":"실패","odds":1.4}]'>배팅하기</button>
-              </div>
-            </div>
-          </div>
-        </article>
-
+        <div class="ticket skeleton-ticket" aria-hidden="true"></div>
+        <div class="ticket skeleton-ticket" aria-hidden="true"></div>
+        <div class="ticket skeleton-ticket" aria-hidden="true"></div>
       </div>
       </div>
 
@@ -621,31 +517,7 @@
       <div id="feed-pending-section">
       <div class="section-label">대기중인 제안</div>
       <div class="grid">
-
-        <article class="ticket js-open-review" id="pending-card" role="button" tabindex="0" style="cursor:pointer;">
-          <div class="ticket-main">
-            <div class="badges">
-              <span class="badge badge-pending">검증중</span>
-              <span class="badge badge-type">개인전</span>
-              <span class="badge badge-type">토크 · 저챗</span>
-            </div>
-            <h2 class="ticket-title">김민교.가 방송 중 실수로 자기소개를 3번 이상 할 것이다</h2>
-            <div class="verify-progress">
-              <span>좋아요 11 / 20</span>
-              <div class="track"><i style="width:55%"></i></div>
-            </div>
-          </div>
-          <div class="ticket-stub">
-            <div class="stub-foot" style="margin-top:0;">
-              <span class="participants">배팅 오픈 대기 · 검증 통과 시 자동 오픈 · 카드 클릭 시 검수(관리자 · 인증 스트리머)</span>
-              <div class="stub-foot-actions">
-                <button class="btn-report js-open-report" data-title="김민교.가 방송 중 실수로 자기소개를 3번 이상 할 것이다" type="button">신고</button>
-                <button class="btn-bet ghost" id="pending-like-btn">좋아요</button>
-              </div>
-            </div>
-          </div>
-        </article>
-
+        <div class="ticket skeleton-ticket" aria-hidden="true"></div>
       </div>
       </div>
 
@@ -785,8 +657,9 @@
 
 <script type="module" src="js/firebase-init.js"></script>
 <script defer src="https://developers.kakao.com/sdk/js/kakao.js"></script>
-<script defer src="js/kakao-login.js"></script>
 <script defer src="js/shared.js"></script>
+<script defer src="js/login-modal.js"></script>
+<script defer src="js/kakao-login.js"></script>
 <script defer src="js/wallet.js"></script>
 <script defer src="js/settlement.js"></script>
 <script defer src="js/nickname.js"></script>

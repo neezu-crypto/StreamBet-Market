@@ -57,7 +57,7 @@ function sbmRenderAttendance(wallet) {
 
   if (claimBtn) {
     claimBtn.addEventListener('click', function () {
-      if (!window.sbmRealUser) { window.sbmSignIn && window.sbmSignIn(); return; }
+      if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
       claimBtn.disabled = true;
       fb.httpsCallable('claimAttendance')({}).catch(function (e) {
         alert(e.message);

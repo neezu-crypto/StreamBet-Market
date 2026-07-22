@@ -12,10 +12,6 @@
     Kakao.init(KAKAO_JS_KEY);
   }
 
-  document.addEventListener('sbm-auth-changed', function (e) {
-    btn.style.display = e.detail.realUser ? 'none' : '';
-  });
-
   btn.addEventListener('click', function () {
     if (typeof Kakao === 'undefined' || !Kakao.isInitialized()) {
       alert('카카오 로그인을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.');
@@ -33,8 +29,10 @@
             window.location.reload();
           } else if (result.data.action === 'linked') {
             alert('카카오 연동이 완료됐습니다.');
+            window.sbmCloseLoginModal && window.sbmCloseLoginModal();
           } else {
             alert('이미 연동된 계정입니다.');
+            window.sbmCloseLoginModal && window.sbmCloseLoginModal();
           }
         } catch (err) {
           alert('카카오 연동 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err));

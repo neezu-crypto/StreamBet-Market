@@ -365,7 +365,7 @@ function sbmRenderTicker() {
     var btn = e.target.closest('.js-like-market');
     if (!btn) return;
     e.stopPropagation();
-    if (!window.sbmRealUser) { window.sbmSignIn && window.sbmSignIn(); return; }
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     var marketId = btn.getAttribute('data-market-id');
     fb.set(fb.ref(window.sbmDb, 'bettingMarket/likes/' + marketId + '/' + window.sbmRealUser.uid), true);
     btn.disabled = true;
@@ -404,8 +404,6 @@ function sbmRenderTicker() {
 })();
 
 (function () {
-  var el = document.getElementById('hero-timer');
-  if (!el) return;
   setInterval(function () {
     var hero = document.querySelector('#feed-hero-section .js-manage-market');
     var marketId = hero && hero.getAttribute('data-market-id');

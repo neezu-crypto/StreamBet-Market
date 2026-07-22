@@ -81,7 +81,11 @@
   document.addEventListener('click', function (e) {
     var card = e.target.closest('.js-manage-market');
     if (!card || e.target.closest('.stub-foot-actions')) return;
+    if (!window.sbmIsAdmin && !window.sbmIsVerifiedStreamer) return;
     openModal(card.getAttribute('data-market-id'));
+  });
+  document.addEventListener('sbm-auth-changed', function () {
+    document.body.classList.toggle('sbm-can-manage', !!(window.sbmIsAdmin || window.sbmIsVerifiedStreamer));
   });
   closeBtn.addEventListener('click', closeModal);
   backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeModal(); });

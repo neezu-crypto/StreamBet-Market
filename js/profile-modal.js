@@ -57,7 +57,7 @@
   });
 
   function openModal() {
-    if (!window.sbmRealUser) { window.sbmSignIn && window.sbmSignIn(); return; }
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     var p = currentProfile || {};
     nicknameInput.value = p.nickname || '';
     soopIdInput.value = p.soopId || '';
