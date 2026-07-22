@@ -77,24 +77,38 @@
     <label class="propose-field">
       <span>배팅 마감 시점
         <span class="field-help" tabindex="0">?
-          <span class="field-help-tip">유저가 배팅을 넣을 수 있는 마지막 시점. 이벤트가 시작되기 전에 먼저 마감될 수 있어요. 지금 시각 기준 몇 시간 뒤인지만 정하면 돼요.</span>
+          <span class="field-help-tip">유저가 배팅을 넣을 수 있는 마지막 시점. 이벤트가 시작되기 전에 먼저 마감될 수 있어요. 시간 단위로 정하거나 날짜·시각을 직접 골라도 돼요.</span>
         </span>
       </span>
-      <div class="propose-hours-row">
+      <div class="propose-deadline-mode" id="propose-bet-mode">
+        <button type="button" class="chip active" data-mode="hours">시간으로 선택</button>
+        <button type="button" class="chip" data-mode="date">날짜로 선택</button>
+      </div>
+      <div class="propose-hours-row" id="propose-bet-hours-row">
         <input type="number" id="propose-bet-hours" min="1" max="240" step="1" value="24">
         <span class="propose-hours-unit">시간 후</span>
+      </div>
+      <div class="propose-hours-row" id="propose-bet-date-row" style="display:none;">
+        <input type="datetime-local" id="propose-bet-date">
       </div>
     </label>
 
     <label class="propose-field">
       <span>이벤트 마감 시점
         <span class="field-help" tabindex="0">?
-          <span class="field-help-tip">실제 결과가 갈리는 시점. 배팅은 마감됐어도 이벤트는 계속 진행 중일 수 있어요. 배팅 마감 시점을 기준으로 몇 시간 뒤인지 정하면 돼요.</span>
+          <span class="field-help-tip">실제 결과가 갈리는 시점. 배팅은 마감됐어도 이벤트는 계속 진행 중일 수 있어요. 배팅 마감 시점 기준 시간 단위로 정하거나 날짜·시각을 직접 골라도 돼요.</span>
         </span>
       </span>
-      <div class="propose-hours-row">
+      <div class="propose-deadline-mode" id="propose-event-mode">
+        <button type="button" class="chip active" data-mode="hours">시간으로 선택</button>
+        <button type="button" class="chip" data-mode="date">날짜로 선택</button>
+      </div>
+      <div class="propose-hours-row" id="propose-event-hours-row">
         <input type="number" id="propose-event-hours" min="0" max="240" step="1" value="0">
         <span class="propose-hours-unit">시간 후 (배팅 마감 기준)</span>
+      </div>
+      <div class="propose-hours-row" id="propose-event-date-row" style="display:none;">
+        <input type="datetime-local" id="propose-event-date">
       </div>
     </label>
 
