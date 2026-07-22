@@ -60,13 +60,15 @@ button{ font-family: inherit; cursor: pointer; }
   padding:10px 11px; margin-bottom:14px; font-size:13px;
 }
 
-.devbar-game-scroll{
-  display:flex; gap:8px; overflow-x:auto; flex:1 1 auto; min-width:0;
-  -webkit-overflow-scrolling:touch; touch-action:pan-x; scrollbar-width:thin; scrollbar-color: var(--panel-raised) transparent;
+.devbar-viewport{ flex:1 1 auto; min-width:0; overflow:hidden; }
+.devbar-track{ display:flex; gap:8px; width:max-content; }
+.devbar-track.auto-scroll{ animation: devbar-scroll var(--devbar-duration, 20s) linear infinite; }
+.devbar-track.auto-scroll:hover{ animation-play-state:paused; }
+@keyframes devbar-scroll{ from{ transform: translateX(0); } to{ transform: translateX(-50%); } }
+@media (prefers-reduced-motion: reduce){
+  .devbar-track.auto-scroll{ animation:none; }
+  .devbar-viewport{ overflow-x:auto; -webkit-overflow-scrolling:touch; }
 }
-.devbar-game-scroll::-webkit-scrollbar{ height:4px; }
-.devbar-game-scroll::-webkit-scrollbar-track{ background:transparent; }
-.devbar-game-scroll::-webkit-scrollbar-thumb{ background: var(--panel-raised); border-radius:4px; }
 .dev-game-link{
   flex-shrink:0; white-space:nowrap; padding:6px 11px; border-radius:6px;
   border:none; background: var(--ink); color: var(--text);
