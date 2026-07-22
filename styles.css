@@ -281,6 +281,10 @@ button{ font-family: inherit; cursor: pointer; }
   flex-shrink:0;
 }
 .avatar:hover{ border-color: var(--gold-line); }
+.avatar.avatar-login{
+  width:auto; height:auto; border-radius:20px; padding:8px 14px;
+  font-size:13px; white-space:nowrap;
+}
 
 /* ---------- Ticker ---------- */
 .ticker{

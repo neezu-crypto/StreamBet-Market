@@ -19,6 +19,7 @@
   }
 
   function applyProfile(name, avatarSrc) {
+    openBtn.classList.remove('avatar-login');
     if (avatarSrc) {
       openBtn.innerHTML = '<img src="' + sbmEscapeHtml(avatarSrc) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
     } else {
@@ -47,6 +48,7 @@
     if (!user) {
       currentProfile = null;
       openBtn.textContent = '로그인';
+      openBtn.classList.add('avatar-login');
       return;
     }
     var fb = window.sbmFirebase;
