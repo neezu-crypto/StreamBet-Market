@@ -26,6 +26,14 @@ function requireRealAccount(request) {
   return uid;
 }
 
+// 익명 계정도 대부분 기능을 그대로 쓸 수 있게 됐지만(어뷰징 시 우회가 쉬운 만큼 대기시간·쿨다운은
+// 익명에게 그대로 적용), 실계정(비익명)으로 로그인한 유저는 대기시간·쿨다운성 제한에서는 면제한다.
+// 한도액(1회 최대 배팅, 일별 환전 한도 등)은 실계정이어도 그대로 유지한다.
+function isRealAccount(request) {
+  const provider = request.auth && request.auth.token && request.auth.token.firebase && request.auth.token.firebase.sign_in_provider;
+  return provider !== 'anonymous';
+}
+
 function requireAdmin(request) {
   const uid = requireAuth(request);
   const email = request.auth.token && request.auth.token.email;
@@ -59,6 +67,7 @@ async function requireAdminOrVerifiedStreamer(request) {
 module.exports = {
   requireAuth,
   requireRealAccount,
+  isRealAccount,
   isAdminEmail,
   requireAdmin,
   isVerifiedStreamerUid,

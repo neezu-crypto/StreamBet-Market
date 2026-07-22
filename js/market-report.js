@@ -57,7 +57,7 @@ function sbmRenderReportQueue() {
   var currentTitle = '';
 
   function openModal(marketId, title) {
-    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     currentMarketId = marketId;
     currentTitle = title;
     targetTitleEl.textContent = title;

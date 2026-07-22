@@ -6,7 +6,7 @@ function sbmRenderAttendance(wallet) {
   var btn = document.getElementById('attendance-claim-btn');
   if (!titleEl || !streakEl || !btn) return;
 
-  if (!window.sbmRealUser) {
+  if (!window.sbmUser) {
     titleEl.textContent = '출석 체크';
     btn.textContent = '로그인 후 출석 체크';
     btn.disabled = false;
@@ -42,7 +42,7 @@ function sbmRenderAttendance(wallet) {
   var claimBtn = document.getElementById('attendance-claim-btn');
 
   document.addEventListener('sbm-auth-changed', function (e) {
-    var user = e.detail.realUser;
+    var user = e.detail.user;
     if (!user) {
       if (walletAmountEl) walletAmountEl.innerHTML = '0<small>원</small>';
       sbmRenderAttendance(null);
@@ -57,7 +57,7 @@ function sbmRenderAttendance(wallet) {
 
   if (claimBtn) {
     claimBtn.addEventListener('click', function () {
-      if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+      if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
       claimBtn.disabled = true;
       fb.httpsCallable('claimAttendance')({}).catch(function (e) {
         alert(e.message);

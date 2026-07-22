@@ -275,7 +275,7 @@
   }
 
   function openModal() {
-    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     resetForm();
     backdrop.classList.add('open');
     titleInput.focus();
@@ -297,7 +297,7 @@
   renderOutcomeFields('personal');
 
   submitBtn.addEventListener('click', function () {
-    if (!window.sbmRealUser) {
+    if (!window.sbmUser) {
       errorEl.textContent = '제안하려면 로그인이 필요합니다 (Ctrl+Enter).';
       errorEl.classList.add('show');
       return;

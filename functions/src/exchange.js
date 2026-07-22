@@ -1,14 +1,12 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireRealAccount } = require('./lib/auth');
-const { ensureWallet, adjustBalance, accountAgeMs, accountDay, kstDateKey, walletRef } = require('./lib/wallet');
+const { ensureWallet, adjustBalance, accountDay, kstDateKey, walletRef } = require('./lib/wallet');
 const {
   EXCHANGE_FEE_RATE,
   EXCHANGE_RATE,
   EXCHANGE_STEP,
-  EXCHANGE_COOLDOWN_MS,
   EXCHANGE_DAILY_CAPS,
-  NEW_ACCOUNT_WAIT_MS,
 } = require('./constants');
 
 // 주식시장 users/{uid}/cash 잔액 조정 (같은 프로젝트, 다른 최상위 노드)
@@ -43,14 +41,6 @@ const exchangeCurrency = onCall(async (request) => {
   }
 
   const wallet = await ensureWallet(uid);
-  if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
-    throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 환전할 수 있습니다.');
-  }
-
-  const sinceLastExchange = Date.now() - (wallet.lastExchangeAt || 0);
-  if (sinceLastExchange < EXCHANGE_COOLDOWN_MS) {
-    throw new HttpsError('failed-precondition', '환전은 24시간에 1회만 가능합니다.');
-  }
 
   const today = kstDateKey();
   const dailyUsed = wallet.dailyExchangeDate === today ? wallet.dailyExchangeTotal || 0 : 0;

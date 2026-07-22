@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount, requireAdminOrVerifiedStreamer } = require('./lib/auth');
+const { requireAuth, isRealAccount, requireAdminOrVerifiedStreamer } = require('./lib/auth');
 const { ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const {
@@ -33,7 +33,7 @@ async function checkReportGate(uid, wallet) {
 
 // 04번 — 배팅 주제 신고 (마켓당 1회, 5분 쿨다운, 신규계정 10분 대기)
 const reportMarket = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const { marketId, reason, detail } = request.data || {};
   if (!marketId || !ALL_REASONS.includes(reason)) {
     throw new HttpsError('invalid-argument', '신고 사유를 선택해 주세요.');
@@ -49,7 +49,7 @@ const reportMarket = onCall(async (request) => {
     throw new HttpsError('failed-precondition', '이미 이 마켓을 신고했습니다.');
   }
   const wallet = await ensureWallet(uid);
-  await checkReportGate(uid, wallet);
+  if (!isRealAccount(request)) await checkReportGate(uid, wallet);
 
   const reportRef = db.ref('bettingMarket/marketReports').push();
   await reportRef.set({
@@ -82,7 +82,7 @@ const dismissMarketReport = onCall(async (request) => {
 
 // 13번 — 닉네임 신고 (본인 제외, 04번과 동일 원칙)
 const reportNickname = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const { targetId, nickname, reason, detail } = request.data || {};
   if (!targetId || targetId === uid || !nickname || !NICKNAME_REPORT_REASONS.includes(reason)) {
     throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');

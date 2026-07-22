@@ -68,7 +68,7 @@ document.addEventListener('sbm-auth-changed', sbmRenderChargeRequestsList);
   if (!openBtn || !backdrop) return;
 
   function openModal() {
-    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     nicknameInput.value = '';
     nicknameInput.disabled = false;
     errorEl.classList.remove('show');
@@ -88,7 +88,7 @@ document.addEventListener('sbm-auth-changed', sbmRenderChargeRequestsList);
   });
 
   submitBtn.addEventListener('click', function () {
-    if (!window.sbmRealUser) {
+    if (!window.sbmUser) {
       errorEl.textContent = '신청하려면 로그인이 필요합니다 (Ctrl+Enter).';
       errorEl.classList.add('show');
       return;

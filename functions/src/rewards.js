@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount } = require('./lib/auth');
+const { requireAuth, isRealAccount } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, kstDateKey, walletRef } = require('./lib/wallet');
 const {
   ATTENDANCE_SCHEDULE,
@@ -16,9 +16,9 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 // 12번 — 출석 보상 (7일 주기 스트릭, 결석 시 1일차로 초기화, KST 자정 리셋)
 const claimAttendance = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const wallet = await ensureWallet(uid);
-  if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
+  if (!isRealAccount(request) && accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
     throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 출석 보상을 받을 수 있습니다.');
   }
 

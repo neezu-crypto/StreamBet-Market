@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount, requireAdmin } = require('./lib/auth');
+const { requireAuth, isRealAccount, requireAdmin } = require('./lib/auth');
 const { adjustBalance, ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const { NICKNAME_FORBIDDEN_RE, NEW_ACCOUNT_WAIT_MS } = require('./constants');
@@ -11,7 +11,7 @@ const CHARGE_REQUEST_COOLDOWN_MS = 60 * 1000; // 매크로 방지 — 계정당 
 // 이 함수는 그 신청(닉네임 접수)만 받는다. 실제 지급은 관리자가 방송에서 후원·룰렛
 // 결과를 직접 확인한 뒤 지급액을 입력해 처리한다(grantChargeRequest).
 const submitChargeRequest = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const nickname = (request.data && request.data.nickname || '').trim();
   if (!nickname) throw new HttpsError('invalid-argument', '닉네임을 입력해 주세요.');
   if (nickname.length > 20) throw new HttpsError('invalid-argument', '닉네임은 20자 이하로 입력해 주세요.');
@@ -20,12 +20,14 @@ const submitChargeRequest = onCall(async (request) => {
   }
 
   const wallet = await ensureWallet(uid);
-  if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
-    throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 신청할 수 있습니다.');
-  }
-  const sinceLast = Date.now() - (wallet.lastChargeRequestAt || 0);
-  if (sinceLast < CHARGE_REQUEST_COOLDOWN_MS) {
-    throw new HttpsError('failed-precondition', '충전 신청은 계정당 쿨다운(1분) 중에는 할 수 없습니다.');
+  if (!isRealAccount(request)) {
+    if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
+      throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 신청할 수 있습니다.');
+    }
+    const sinceLast = Date.now() - (wallet.lastChargeRequestAt || 0);
+    if (sinceLast < CHARGE_REQUEST_COOLDOWN_MS) {
+      throw new HttpsError('failed-precondition', '충전 신청은 계정당 쿨다운(1분) 중에는 할 수 없습니다.');
+    }
   }
 
   const ref = getDatabase().ref('bettingMarket/chargeRequests').push();

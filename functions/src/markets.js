@@ -1,7 +1,8 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const {
-  requireRealAccount,
+  requireAuth,
+  isRealAccount,
   isAdminEmail,
   requireAdminOrVerifiedStreamer,
   isVerifiedStreamerUid,
@@ -43,21 +44,23 @@ async function refundAllActiveBets(marketId) {
 
 // 04번/03번 — 배팅 주제 제안 등록. stocks 참조 검증, 관리자·인증 스트리머는 즉시 오픈.
 const submitMarketProposal = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const email = request.auth.token && request.auth.token.email;
   const isPrivileged = isAdminEmail(email) || (await isVerifiedStreamerUid(uid));
 
   // 매크로 방지 — 관리자·인증 스트리머는 이미 검증 단계를 생략하는 신뢰된 주체라 제외하고(04번과 동일 원칙),
-  // 일반 유저에게만 신규 계정 대기 + 계정당 제안 쿨다운을 적용한다.
+  // 실계정으로 로그인한 유저도 대기·쿨다운에서 면제한다. 익명 계정에는 그대로 적용한다.
   let wallet = null;
   if (!isPrivileged) {
     wallet = await ensureWallet(uid);
-    if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
-      throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 배팅 주제를 제안할 수 있습니다.');
-    }
-    const sinceLast = Date.now() - (wallet.lastProposalAt || 0);
-    if (sinceLast < PROPOSAL_COOLDOWN_MS) {
-      throw new HttpsError('failed-precondition', '배팅 주제 제안은 계정당 쿨다운(1분) 중에는 할 수 없습니다.');
+    if (!isRealAccount(request)) {
+      if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
+        throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 배팅 주제를 제안할 수 있습니다.');
+      }
+      const sinceLast = Date.now() - (wallet.lastProposalAt || 0);
+      if (sinceLast < PROPOSAL_COOLDOWN_MS) {
+        throw new HttpsError('failed-precondition', '배팅 주제 제안은 계정당 쿨다운(1분) 중에는 할 수 없습니다.');
+      }
     }
   }
 

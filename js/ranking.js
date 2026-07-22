@@ -32,7 +32,7 @@ function sbmRenderRankingRow(entry, myUid, valueHtml, subHtml) {
 
 function sbmRenderRankings() {
   if (!sbmRankingsCache) return;
-  var myUid = window.sbmRealUser ? window.sbmRealUser.uid : null;
+  var myUid = window.sbmUser ? window.sbmUser.uid : null;
 
   var assetEl = document.getElementById('ranking-list-asset');
   var winrateEl = document.getElementById('ranking-list-winrate');

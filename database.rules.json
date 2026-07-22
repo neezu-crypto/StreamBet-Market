@@ -272,7 +272,7 @@
         "$marketId": {
           "$uid": {
             ".read": "auth != null",
-            ".write": "auth != null && auth.uid === $uid && auth.token.firebase.sign_in_provider !== 'anonymous'"
+            ".write": "auth != null && auth.uid === $uid"
           }
         }
       },

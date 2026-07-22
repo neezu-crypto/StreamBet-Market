@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount } = require('./lib/auth');
+const { requireAuth, isRealAccount } = require('./lib/auth');
 const { NICKNAME_CHANGE_COOLDOWN_MS, NICKNAME_MAX_LENGTH, NICKNAME_FORBIDDEN_RE, SOOP_ID_RE } = require('./constants');
 
 function avatarUrlFor(soopId) {
@@ -11,7 +11,7 @@ function avatarUrlFor(soopId) {
 
 // 13번 — 닉네임(1일 1회 제한) · SOOP 아이디 → 프로필 이미지 자동 설정
 const updateProfile = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const { nickname, soopId } = request.data || {};
   const name = (nickname || '').trim();
   if (!name || name.length > NICKNAME_MAX_LENGTH) {
@@ -30,7 +30,7 @@ const updateProfile = onCall(async (request) => {
   const current = snap.val() || {};
   const nameChanged = current.nickname !== name;
 
-  if (nameChanged && current.nicknameChangedAt) {
+  if (nameChanged && current.nicknameChangedAt && !isRealAccount(request)) {
     const remaining = NICKNAME_CHANGE_COOLDOWN_MS - (Date.now() - current.nicknameChangedAt);
     if (remaining > 0) {
       throw new HttpsError('failed-precondition', '닉네임은 하루 1회만 변경할 수 있습니다.');

@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireRealAccount } = require('./lib/auth');
+const { requireAuth, isRealAccount } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt } = require('./lib/wallet');
 const {
   BET_STEP,
@@ -31,7 +31,7 @@ async function adjustPool(marketId, outcomeId, delta) {
 
 // 09번 — 배팅 참가. 잔액 차감·쿨다운·한도는 전부 서버(Functions)가 검증한다.
 const placeBet = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const { marketId, outcomeId, amount } = request.data || {};
   const amt = Number(amount);
   if (!marketId || !outcomeId || !Number.isFinite(amt) || amt <= 0 || amt % BET_STEP !== 0) {
@@ -39,7 +39,7 @@ const placeBet = onCall(async (request) => {
   }
 
   const wallet = await ensureWallet(uid);
-  if (accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
+  if (!isRealAccount(request) && accountAgeMs(wallet) < NEW_ACCOUNT_WAIT_MS) {
     throw new HttpsError('failed-precondition', '신규 계정은 생성 후 1분이 지나야 배팅에 참여할 수 있습니다.');
   }
   const cap = Math.min(betCapForDay(accountDay(wallet)), BET_MAX_AMOUNT);
@@ -70,7 +70,7 @@ const placeBet = onCall(async (request) => {
 
 // 09번 — 취소 + 재배팅(30초 쿨다운). 취소 자체를 이 함수로 처리하고, 재배팅은 placeBet을 다시 호출한다.
 const cancelBet = onCall(async (request) => {
-  const uid = requireRealAccount(request);
+  const uid = requireAuth(request);
   const { marketId, betId } = request.data || {};
   if (!marketId || !betId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
 
@@ -89,7 +89,7 @@ const cancelBet = onCall(async (request) => {
 
   const wallet = await ensureWallet(uid);
   const sinceLast = Date.now() - (wallet.lastBetActionAt || 0);
-  if (sinceLast < BET_CANCEL_COOLDOWN_MS) {
+  if (!isRealAccount(request) && sinceLast < BET_CANCEL_COOLDOWN_MS) {
     throw new HttpsError('failed-precondition', '취소 · 재배팅은 30초 쿨다운 중에는 할 수 없습니다.');
   }
 
