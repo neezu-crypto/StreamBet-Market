@@ -90,7 +90,7 @@ function sbmRenderOpenCard(marketId, market, isHero) {
     ? '<div class="stub-foot-actions"><button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + sbmEscapeHtml(market.title) + '" type="button">신고</button></div>'
     : sbmCardStubActions(marketId, market.title);
 
-  return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
+  return '<article class="ticket js-manage-market' + (isHero ? ' hero-ticket' : '') + '" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' + badges + '</div>' +
     '<h2 class="ticket-title">' + safeTitle + '</h2>' +
     '<div class="ticket-meta">' + meta + '</div></div>' +
