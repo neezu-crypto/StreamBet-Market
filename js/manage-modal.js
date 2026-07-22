@@ -17,7 +17,13 @@
   var reasonActor = document.getElementById('manage-reason-actor');
   var reasonConfirmBtn = document.getElementById('manage-reason-confirm');
   var reasonCancelBtn = document.getElementById('manage-reason-cancel');
+  var overrideParticipantsCheckbox = document.getElementById('manage-override-participants');
   if (!backdrop) return;
+
+  var VOID_REASON_LABEL = {
+    'min-participants': '최소 참여 인원(5명) 미달로 무효 처리되어 전액 환불됩니다.',
+    'no-winning-pool': '승리한 선택지에 배팅이 없어(적중자 없음) 무효 처리되어 전액 환불됩니다.',
+  };
 
   var currentMarketId = '';
   var selectedOutcomeId = '';
@@ -49,6 +55,7 @@
     confirmBtn.disabled = !canManage;
     closeEarlyBtn.disabled = !canManage;
     voidBtn.disabled = !canManage;
+    overrideParticipantsCheckbox.disabled = !canManage;
     statusEl.classList.remove('show');
     if (!canManage) {
       statusEl.style.color = 'var(--coral)';
@@ -66,6 +73,7 @@
     titleEl.textContent = market.title;
     renderOutcomes(market);
     resetActions();
+    overrideParticipantsCheckbox.checked = !!market.minParticipantsOverride;
     backdrop.classList.add('open');
   }
   function closeModal() { backdrop.classList.remove('open'); }
@@ -106,6 +114,21 @@
     reasonPanel.classList.add('show');
   }
 
+  overrideParticipantsCheckbox.addEventListener('change', function () {
+    if (!window.sbmFirebase || !currentMarketId) return;
+    var checked = overrideParticipantsCheckbox.checked;
+    overrideParticipantsCheckbox.disabled = true;
+    window.sbmFirebase.httpsCallable('setMinParticipantsOverride')({ marketId: currentMarketId, override: checked })
+      .then(function () {
+        overrideParticipantsCheckbox.disabled = false;
+      })
+      .catch(function (e) {
+        alert(e.message);
+        overrideParticipantsCheckbox.checked = !checked;
+        overrideParticipantsCheckbox.disabled = false;
+      });
+  });
+
   confirmBtn.addEventListener('click', function () {
     if (!window.sbmFirebase || !selectedOutcomeId) return;
     confirmBtn.disabled = true;
@@ -116,11 +139,14 @@
     statusEl.classList.add('show');
     window.sbmFirebase.httpsCallable('judgeMarket')({ marketId: currentMarketId, winningOutcomeId: selectedOutcomeId })
       .then(function (res) {
-        statusEl.style.color = 'var(--mint)';
         var d = res.data;
-        statusEl.textContent = d.status === 'void'
-          ? '무효 처리되어 전액 환불됩니다.'
-          : '판정이 확정됐습니다. 배당 ' + d.payoutMultiplier.toFixed(2) + 'x로 정산 · 지급되었습니다.';
+        if (d.status === 'void') {
+          statusEl.style.color = 'var(--coral)';
+          statusEl.textContent = VOID_REASON_LABEL[d.reason] || '무효 처리되어 전액 환불됩니다.';
+        } else {
+          statusEl.style.color = 'var(--mint)';
+          statusEl.textContent = '판정이 확정됐습니다. 배당 ' + d.payoutMultiplier.toFixed(2) + 'x로 정산 · 지급되었습니다.';
+        }
       })
       .catch(function (err) {
         statusEl.style.color = 'var(--coral)';

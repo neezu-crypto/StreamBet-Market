@@ -246,6 +246,29 @@ const voidMarket = onCall(async (request) => {
   return { status: 'void' };
 });
 
+// 04번 — "참가자 미달 강제 정산" 예외는 원래 검증 대기(pendingValidation) 검수 시점에만
+// 켤 수 있었다. 관리자·인증 스트리머가 즉시 오픈된(검증 단계를 건너뛴) 마켓에도 진행중일 때
+// 미리 켜둘 수 있게 별도로 열어준다 — 그래야 09번 최소 참여자 수(5명) 미달로 판정이
+// 자동 무효 처리되기 전에 의도적으로 예외를 걸 수 있다.
+const setMinParticipantsOverride = onCall(async (request) => {
+  const { uid, role } = await requireAdminOrVerifiedStreamer(request);
+  const { marketId, override } = request.data || {};
+  if (!marketId || typeof override !== 'boolean') {
+    throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
+  }
+  const ref = marketRef(marketId);
+  const snap = await ref.get();
+  if (!snap.exists()) throw new HttpsError('not-found', '마켓을 찾을 수 없습니다.');
+  const market = snap.val();
+  if (['settled', 'void'].includes(market.status)) {
+    throw new HttpsError('failed-precondition', '이미 종료된 마켓입니다.');
+  }
+  await ref.update({ minParticipantsOverride: override });
+  const actorName = request.auth.token.name || request.auth.token.email || uid;
+  await logAudit(uid, actorName, override ? '참가자 미달 허용 설정' : '참가자 미달 허용 해제', market.title);
+  return { status: 'updated', override };
+});
+
 // 10번/08번 — 최종 승·패 판정 및 정산·배당 지급
 const judgeMarket = onCall(async (request) => {
   const { uid, role } = await requireAdminOrVerifiedStreamer(request);
@@ -360,5 +383,6 @@ module.exports = {
   reviewProposal,
   closeMarketEarly,
   voidMarket,
+  setMinParticipantsOverride,
   judgeMarket,
 };
