@@ -57,6 +57,7 @@ function sbmRenderReportQueue() {
   var currentTitle = '';
 
   function openModal(marketId, title) {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     currentMarketId = marketId;
     currentTitle = title;
     targetTitleEl.textContent = title;
@@ -74,12 +75,6 @@ function sbmRenderReportQueue() {
     submitBtn.textContent = '신고하기';
     statusEl.classList.remove('show');
     backdrop.classList.add('open');
-    if (!window.sbmRealUser) {
-      statusEl.style.color = 'var(--coral)';
-      statusEl.textContent = '신고하려면 로그인이 필요합니다 (Ctrl+Enter).';
-      statusEl.classList.add('show');
-      submitBtn.disabled = true;
-    }
   }
   function closeModal() { backdrop.classList.remove('open'); }
 

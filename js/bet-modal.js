@@ -72,6 +72,7 @@
   }
 
   async function openModal(marketId) {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     var fb = window.sbmFirebase;
     var market = window.sbmMarketsCache[marketId];
     if (!market) return;
@@ -87,16 +88,6 @@
     minusBtn.disabled = false;
     plusBtn.disabled = false;
     backdrop.classList.add('open');
-
-    if (!window.sbmRealUser) {
-      statusEl.style.color = 'var(--coral)';
-      statusEl.textContent = '배팅하려면 로그인이 필요합니다 (Ctrl+Enter).';
-      statusEl.classList.add('show');
-      walletBalance = 0;
-      balanceEl.textContent = '0원';
-      setAmount(0);
-      return;
-    }
 
     var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmRealUser.uid + '/balance'));
     // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,

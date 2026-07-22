@@ -106,6 +106,7 @@ function sbmRenderBlockedNicknames() {
   var currentName = '';
 
   function openModal(id, name) {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     currentId = id;
     currentName = name;
     targetNameEl.textContent = name;

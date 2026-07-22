@@ -275,6 +275,7 @@
   }
 
   function openModal() {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     resetForm();
     backdrop.classList.add('open');
     titleInput.focus();

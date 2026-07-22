@@ -68,6 +68,7 @@ document.addEventListener('sbm-auth-changed', sbmRenderChargeRequestsList);
   if (!openBtn || !backdrop) return;
 
   function openModal() {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     nicknameInput.value = '';
     nicknameInput.disabled = false;
     errorEl.classList.remove('show');

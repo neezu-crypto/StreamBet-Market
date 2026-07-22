@@ -86,19 +86,6 @@
     errorEl.classList.remove('show');
     submitBtn.textContent = '환전하기';
 
-    if (!window.sbmRealUser) {
-      statusEl.style.color = 'var(--coral)';
-      statusEl.textContent = '환전하려면 로그인이 필요합니다 (Ctrl+Enter).';
-      statusEl.classList.add('show');
-      amountInput.disabled = true;
-      minusBtn.disabled = true;
-      plusBtn.disabled = true;
-      submitBtn.disabled = true;
-      walletBM = 0; walletStock = 0; dailyUsed = 0; dailyCap = DAILY_CAPS[0];
-      updateDirectionUI();
-      setAmount(0);
-      return;
-    }
     amountInput.disabled = false;
     minusBtn.disabled = false;
     plusBtn.disabled = false;
@@ -125,7 +112,11 @@
     setAmount(0);
   }
 
-  function openModal() { resetForm(); backdrop.classList.add('open'); }
+  function openModal() {
+    if (!window.sbmRealUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+    resetForm();
+    backdrop.classList.add('open');
+  }
   function closeModal() { backdrop.classList.remove('open'); }
 
   openBtn.addEventListener('click', openModal);
