@@ -50,7 +50,7 @@
 
     function renderChips() {
       chips.innerHTML = selected.map(function (s) {
-        return '<span class="streamer-chip">' + s.name + '<button type="button" class="chip-remove" data-id="' + s.id + '">×</button></span>';
+        return '<span class="streamer-chip">' + sbmEscapeHtml(s.name) + '<button type="button" class="chip-remove" data-id="' + s.id + '">×</button></span>';
       }).join('');
       chips.querySelectorAll('.chip-remove').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -75,7 +75,7 @@
       });
       if (!pool.length) { suggestions.innerHTML = '<div class="streamer-suggest-empty">일치하는 스트리머가 없어요</div>'; suggestions.style.display = 'block'; return; }
       suggestions.innerHTML = pool.map(function (s) {
-        return '<button type="button" class="streamer-suggest-item" data-id="' + s.id + '" data-name="' + s.name + '">' + s.name + '</button>';
+        return '<button type="button" class="streamer-suggest-item" data-id="' + s.id + '" data-name="' + sbmEscapeHtml(s.name) + '">' + sbmEscapeHtml(s.name) + '</button>';
       }).join('');
       suggestions.style.display = 'block';
       suggestions.querySelectorAll('.streamer-suggest-item').forEach(function (btn) {
@@ -169,7 +169,7 @@
     function renderInputs() {
       inputsWrap.innerHTML = customOutcomeLabels.map(function (val, i) {
         return '<div class="propose-outcome-row">' +
-          '<input type="text" class="propose-outcome-input" data-index="' + i + '" maxlength="20" placeholder="선택지 ' + (i + 1) + '" value="' + (val || '').replace(/"/g, '&quot;') + '">' +
+          '<input type="text" class="propose-outcome-input" data-index="' + i + '" maxlength="20" placeholder="선택지 ' + (i + 1) + '" value="' + sbmEscapeHtml(val || '') + '">' +
           (customOutcomeLabels.length > 2 ? '<button type="button" class="propose-outcome-remove" data-index="' + i + '">×</button>' : '') +
           '</div>';
       }).join('') +

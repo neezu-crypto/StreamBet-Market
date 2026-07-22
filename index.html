@@ -116,7 +116,7 @@
     </label>
     <label class="profile-field">
       <span>SOOP 아이디</span>
-      <input type="text" id="profile-soopid" placeholder="예: yuhatty" autocomplete="off">
+      <input type="text" id="profile-soopid" maxlength="20" pattern="[a-z0-9]{2,20}" placeholder="예: yuhatty" autocomplete="off">
     </label>
     <p class="profile-error" id="profile-error"></p>
 
@@ -355,11 +355,11 @@
 
     <label class="verify-field">
       <span>닉네임</span>
-      <input type="text" id="verify-nickname" placeholder="예: 오목지면시그" autocomplete="off">
+      <input type="text" id="verify-nickname" maxlength="20" placeholder="예: 오목지면시그" autocomplete="off">
     </label>
     <label class="verify-field">
       <span>SOOP 아이디</span>
-      <input type="text" id="verify-soopid" placeholder="예: skftodwocks2" autocomplete="off">
+      <input type="text" id="verify-soopid" maxlength="20" pattern="[a-z0-9]{2,20}" placeholder="예: skftodwocks2" autocomplete="off">
     </label>
 
     <button class="verify-submit-btn" id="verify-submit-btn" type="button">신청하기</button>

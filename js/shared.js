@@ -1,3 +1,15 @@
+// XSS 방지 — 닉네임 · 마켓 제목 · 신고 사유 등 유저가 직접 입력한 문자열은 전부
+// innerHTML로 그리기 전에 이 함수를 거쳐야 한다. 그렇지 않으면 닉네임에
+// <img onerror=...> 같은 걸 넣어 저장형 XSS가 가능해진다.
+function sbmEscapeHtml(str) {
+  return String(str == null ? '' : str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 var PROHIBITED_TOPIC_REASONS = [
   '스트리머 비하',
   '평가 불가능한 주관적인 주제',
@@ -34,8 +46,8 @@ function sbmRenderAuditLog() {
       return;
     }
     list.innerHTML = log.map(function (entry) {
-      return '<li><b>' + entry.action + '</b> — ' + entry.detail +
-        '<span class="audit-time">' + entry.actorName + ' · ' + new Date(entry.at).toLocaleString('ko-KR') + '</span></li>';
+      return '<li><b>' + sbmEscapeHtml(entry.action) + '</b> — ' + sbmEscapeHtml(entry.detail) +
+        '<span class="audit-time">' + sbmEscapeHtml(entry.actorName) + ' · ' + new Date(entry.at).toLocaleString('ko-KR') + '</span></li>';
     }).join('');
   });
 }

@@ -58,7 +58,7 @@
         netText = '순손익 −' + fmt(e.bet.amount) + '원';
       }
       return '<div class="settlement-item"><div class="settlement-item-main">' +
-        '<div class="settlement-item-title">' + title + '</div>' +
+        '<div class="settlement-item-title">' + sbmEscapeHtml(title) + '</div>' +
         '<div class="settlement-item-meta"><span>' + dateStr + ' 정산</span><span>배팅 ' + fmt(e.bet.amount) + '원</span></div></div>' +
         '<div class="settlement-item-result">' + badge +
         '<div class="settlement-item-payout ' + payoutClass + '">' + payoutText + '</div>' +

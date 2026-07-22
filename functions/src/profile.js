@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireRealAccount } = require('./lib/auth');
-const { NICKNAME_CHANGE_COOLDOWN_MS, NICKNAME_MAX_LENGTH } = require('./constants');
+const { NICKNAME_CHANGE_COOLDOWN_MS, NICKNAME_MAX_LENGTH, NICKNAME_FORBIDDEN_RE, SOOP_ID_RE } = require('./constants');
 
 function avatarUrlFor(soopId) {
   if (!soopId) return '';
@@ -17,6 +17,13 @@ const updateProfile = onCall(async (request) => {
   if (!name || name.length > NICKNAME_MAX_LENGTH) {
     throw new HttpsError('invalid-argument', '닉네임은 1자 이상 ' + NICKNAME_MAX_LENGTH + '자 이하로 입력해 주세요.');
   }
+  if (NICKNAME_FORBIDDEN_RE.test(name)) {
+    throw new HttpsError('invalid-argument', '닉네임에 사용할 수 없는 문자가 포함되어 있습니다.');
+  }
+  const rawSoopId = (soopId || '').trim();
+  if (rawSoopId && !SOOP_ID_RE.test(rawSoopId)) {
+    throw new HttpsError('invalid-argument', 'SOOP 아이디는 영문 소문자/숫자 2~20자여야 합니다.');
+  }
 
   const ref = getDatabase().ref('bettingMarket/profiles/' + uid);
   const snap = await ref.get();
@@ -30,11 +37,10 @@ const updateProfile = onCall(async (request) => {
     }
   }
 
-  const id = (soopId || '').trim();
   const update = {
     nickname: name,
-    soopId: id,
-    avatarUrl: avatarUrlFor(id),
+    soopId: rawSoopId,
+    avatarUrl: avatarUrlFor(rawSoopId),
   };
   if (nameChanged) update.nicknameChangedAt = Date.now();
   await ref.update(update);

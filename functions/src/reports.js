@@ -7,9 +7,19 @@ const {
   NEW_ACCOUNT_REPORT_WAIT_MS,
   REPORT_COOLDOWN_MS,
   PROHIBITED_TOPIC_REASONS,
+  NICKNAME_REPORT_REASONS,
+  NICKNAME_FORBIDDEN_RE,
+  NICKNAME_MAX_LENGTH,
+  REPORT_DETAIL_MAX_LENGTH,
 } = require('./constants');
 
 const ALL_REASONS = PROHIBITED_TOPIC_REASONS.concat(['기타']);
+
+function assertValidDetail(detail) {
+  if (detail && detail.length > REPORT_DETAIL_MAX_LENGTH) {
+    throw new HttpsError('invalid-argument', '상세 사유는 ' + REPORT_DETAIL_MAX_LENGTH + '자 이하로 입력해 주세요.');
+  }
+}
 
 async function checkReportGate(uid, wallet) {
   if (accountAgeMs(wallet) < NEW_ACCOUNT_REPORT_WAIT_MS) {
@@ -28,6 +38,7 @@ const reportMarket = onCall(async (request) => {
   if (!marketId || !ALL_REASONS.includes(reason)) {
     throw new HttpsError('invalid-argument', '신고 사유를 선택해 주세요.');
   }
+  assertValidDetail(detail);
   const db = getDatabase();
   const marketSnap = await db.ref('bettingMarket/markets/' + marketId).get();
   if (!marketSnap.exists()) throw new HttpsError('not-found', '마켓을 찾을 수 없습니다.');
@@ -73,9 +84,13 @@ const dismissMarketReport = onCall(async (request) => {
 const reportNickname = onCall(async (request) => {
   const uid = requireRealAccount(request);
   const { targetId, nickname, reason, detail } = request.data || {};
-  if (!targetId || targetId === uid || !nickname || !reason) {
+  if (!targetId || targetId === uid || !nickname || !NICKNAME_REPORT_REASONS.includes(reason)) {
     throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
   }
+  if (nickname.length > NICKNAME_MAX_LENGTH || NICKNAME_FORBIDDEN_RE.test(nickname)) {
+    throw new HttpsError('invalid-argument', '닉네임 형식이 올바르지 않습니다.');
+  }
+  assertValidDetail(detail);
   const db = getDatabase();
   const reportRef = db.ref('bettingMarket/nicknameReports').push();
   await reportRef.set({ targetId, nickname, reason, detail: detail || '', reporterUid: uid, reportedAt: Date.now() });

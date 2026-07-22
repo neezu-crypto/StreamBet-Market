@@ -26,6 +26,11 @@ const NEW_ACCOUNT_REPORT_WAIT_MS = 10 * 60 * 1000; // 04번 신규 계정 신고
 
 const NICKNAME_CHANGE_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 13번 닉네임 1일 1회
 const NICKNAME_MAX_LENGTH = 12;
+// XSS 방지 — 닉네임에 <, >, 제어문자를 넣어 저장형 스크립트 주입을 시도하는 것을 서버에서부터 차단
+const NICKNAME_FORBIDDEN_RE = /[<>\x00-\x1F\x7F]/;
+// 주식시장과 동일한 SOOP 아이디 형식(소문자/숫자 2~20자) — 형식을 좁혀두면 자동으로 XSS·매크로성
+// 쓰레기 입력도 함께 막힌다
+const SOOP_ID_RE = /^[a-z0-9]{2,20}$/;
 
 const ATTENDANCE_SCHEDULE = [10000, 14000, 20000, 26000, 32000, 40000, 60000]; // 12번 7일 주기
 const PROPOSAL_REWARD_BASE = 10000;
@@ -43,6 +48,9 @@ const PROHIBITED_TOPIC_REASONS = [ // 04번 금지 주제 8종
   '불법행위 조장 · 미화',
   '차별 · 혐오 표현 포함',
 ];
+
+const NICKNAME_REPORT_REASONS = ['부적절한 표현', '사칭 · 도용', '광고 · 스팸성 닉네임', '기타']; // 13번
+const REPORT_DETAIL_MAX_LENGTH = 300; // 신고 상세 사유 자유 입력 길이 제한 (XSS·매크로성 대량 입력 방지)
 
 module.exports = {
   ADMIN_EMAIL,
@@ -65,6 +73,10 @@ module.exports = {
   NEW_ACCOUNT_REPORT_WAIT_MS,
   NICKNAME_CHANGE_COOLDOWN_MS,
   NICKNAME_MAX_LENGTH,
+  NICKNAME_FORBIDDEN_RE,
+  SOOP_ID_RE,
+  NICKNAME_REPORT_REASONS,
+  REPORT_DETAIL_MAX_LENGTH,
   ATTENDANCE_SCHEDULE,
   PROPOSAL_REWARD_BASE,
   PROPOSAL_REWARD_PER_PARTICIPANT,

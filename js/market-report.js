@@ -17,8 +17,8 @@ function sbmRenderReportQueue() {
     }
     list.innerHTML = reports.map(function (r) {
       return '<li class="report-queue-item">' +
-        '<div class="report-queue-head"><span class="report-queue-title">' + r.marketTitle + '</span><span class="report-queue-meta">' + r.reason + '</span></div>' +
-        (r.detail ? '<div class="report-queue-detail">' + r.detail + '</div>' : '') +
+        '<div class="report-queue-head"><span class="report-queue-title">' + sbmEscapeHtml(r.marketTitle) + '</span><span class="report-queue-meta">' + sbmEscapeHtml(r.reason) + '</span></div>' +
+        (r.detail ? '<div class="report-queue-detail">' + sbmEscapeHtml(r.detail) + '</div>' : '') +
         '<div class="audit-time">' + new Date(r.reportedAt).toLocaleString('ko-KR') + '</div>' +
         '<div class="report-queue-actions">' +
         '<button class="report-queue-view-btn" data-market-id="' + r.marketId + '" type="button">마켓 관리로 이동</button>' +

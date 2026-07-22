@@ -44,12 +44,13 @@ function sbmOutcomeArray(market) {
 
 function sbmCardStubActions(marketId, title) {
   return '<div class="stub-foot-actions">' +
-    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + title + '" type="button">신고</button>' +
+    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + sbmEscapeHtml(title) + '" type="button">신고</button>' +
     '<button class="btn-bet ghost js-open-bet" data-market-id="' + marketId + '">배팅하기</button>' +
     '</div>';
 }
 
 function sbmRenderOpenCard(marketId, market, isHero) {
+  var safeTitle = sbmEscapeHtml(market.title);
   var outcomes = sbmOutcomeArray(market);
   var odds = sbmComputeOdds(market);
   var total = market.totalPool || 0;
@@ -64,13 +65,13 @@ function sbmRenderOpenCard(marketId, market, isHero) {
   if (isMulti) {
     oddsHtml = '<div class="multi-outcomes">' + outcomes.map(function (o) {
       var pct = total > 0 ? Math.round(((o.pool || 0) / total) * 100) : 0;
-      return '<div class="outcome-row"><span class="name">' + o.label + '</span><div class="bar"><i style="width:' + pct + '%"></i></div><span class="odd num">' + (odds[o.id] ? odds[o.id].toFixed(1) : '-') + 'x</span></div>';
+      return '<div class="outcome-row"><span class="name">' + sbmEscapeHtml(o.label) + '</span><div class="bar"><i style="width:' + pct + '%"></i></div><span class="odd num">' + (odds[o.id] ? odds[o.id].toFixed(1) : '-') + 'x</span></div>';
     }).join('') + '</div>';
   } else {
     oddsHtml = '<div class="pool-bar"><i style="width:' + (total > 0 ? Math.round(((outcomes[0].pool || 0) / total) * 100) : 0) + '%"></i></div>' +
       '<div class="odds-row">' + outcomes.map(function (o, i) {
         var pct = total > 0 ? Math.round(((o.pool || 0) / total) * 100) : 0;
-        return '<div class="odds-cell ' + (i === 0 ? 'side-yes' : 'side-no') + '"><div class="label">' + o.label + ' · ' + pct + '%</div><div class="value num">' + (odds[o.id] ? odds[o.id].toFixed(1) : '-') + 'x</div></div>';
+        return '<div class="odds-cell ' + (i === 0 ? 'side-yes' : 'side-no') + '"><div class="label">' + sbmEscapeHtml(o.label) + ' · ' + pct + '%</div><div class="value num">' + (odds[o.id] ? odds[o.id].toFixed(1) : '-') + 'x</div></div>';
       }).join('') + '</div>';
   }
 
@@ -86,12 +87,12 @@ function sbmRenderOpenCard(marketId, market, isHero) {
 
   var participants = bettingClosed ? '배팅 마감 · 이벤트 진행중 · 카드 클릭 시 관리(관리자 · 인증 스트리머)' : '카드 클릭 시 관리(관리자 · 인증 스트리머)';
   var actions = bettingClosed
-    ? '<div class="stub-foot-actions"><button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + market.title + '" type="button">신고</button></div>'
+    ? '<div class="stub-foot-actions"><button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + sbmEscapeHtml(market.title) + '" type="button">신고</button></div>'
     : sbmCardStubActions(marketId, market.title);
 
   return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' + badges + '</div>' +
-    '<h2 class="ticket-title">' + market.title + '</h2>' +
+    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
     '<div class="ticket-meta">' + meta + '</div></div>' +
     '<div class="ticket-stub">' + oddsHtml +
     '<div class="stub-foot"><span class="participants">' + participants + '</span>' +
@@ -99,16 +100,17 @@ function sbmRenderOpenCard(marketId, market, isHero) {
 }
 
 function sbmRenderPendingCard(marketId, market) {
+  var safeTitle = sbmEscapeHtml(market.title);
   var likeCount = (market.validation && market.validation.likeCount) || 0;
   var pct = Math.min(100, Math.round((likeCount / 20) * 100));
   return '<article class="ticket js-open-review" data-market-id="' + marketId + '" role="button" tabindex="0" style="cursor:pointer;">' +
     '<div class="ticket-main"><div class="badges"><span class="badge badge-pending">검증중</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + market.title + '</h2>' +
+    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
     '<div class="verify-progress"><span>좋아요 ' + likeCount + ' / 20</span><div class="track"><i style="width:' + pct + '%"></i></div></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;"><span class="participants">배팅 오픈 대기 · 카드 클릭 시 검수(관리자 · 인증 스트리머)</span>' +
     '<div class="stub-foot-actions">' +
-    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + market.title + '" type="button">신고</button>' +
+    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + safeTitle + '" type="button">신고</button>' +
     '<button class="btn-bet ghost js-like-market" data-market-id="' + marketId + '">좋아요</button>' +
     '</div></div></div></article>';
 }
@@ -116,17 +118,18 @@ function sbmRenderPendingCard(marketId, market) {
 // 배팅 마감 시각이 지나 closeBettingScheduled가 자동으로 마감시켰지만 아직 판정 전인 마켓.
 // 이걸 안 보여주면 판정 나기 전까지 메인 화면에서 마켓이 통째로 사라져 보인다.
 function sbmRenderClosedPendingCard(marketId, market) {
+  var safeTitle = sbmEscapeHtml(market.title);
   var total = market.totalPool || 0;
   return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' +
     '<span class="badge badge-pending">정산 대기중</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + market.title + '</h2>' +
+    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
     '<div class="ticket-meta"><span>이벤트 종료 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;">' +
     '<span class="participants">판정 대기 중 · 카드 클릭 시 판정(관리자 · 인증 스트리머)</span>' +
     '<div class="stub-foot-actions">' +
-    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + market.title + '" type="button">신고</button>' +
+    '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + safeTitle + '" type="button">신고</button>' +
     '</div></div></div></article>';
 }
 
@@ -137,11 +140,11 @@ function sbmRenderClosedCard(marketId, market, batch) {
   var resultLabel, resultSmall, payout;
   if (isVoid) {
     resultLabel = '무효 처리';
-    resultSmall = (market.adminAction && market.adminAction.reason) || '전액 환불';
+    resultSmall = sbmEscapeHtml((market.adminAction && market.adminAction.reason) || '전액 환불');
     payout = '1.0x<small>원금 반환</small>';
   } else if (market.settlement) {
     var winOutcome = (market.outcomes || {})[market.settlement.winningOutcomeId] || {};
-    resultLabel = (winOutcome.label || '') + ' 적중';
+    resultLabel = sbmEscapeHtml(winOutcome.label || '') + ' 적중';
     resultSmall = '확정 배당 지급';
     payout = market.settlement.payoutMultiplier.toFixed(2) + 'x<small>확정 배당</small>';
   } else {
@@ -153,7 +156,7 @@ function sbmRenderClosedCard(marketId, market, batch) {
     '<div class="ticket-main"><div class="badges">' +
     '<span class="badge badge-settled">정산 완료' + (isVoid ? ' · 무효' : '') + '</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + market.title + '</h2>' +
+    '<h2 class="ticket-title">' + sbmEscapeHtml(market.title) + '</h2>' +
     '<div class="ticket-meta"><span>' + dateStr + ' 정산 완료</span></div></div>' +
     '<div class="ticket-stub"><div class="result-row">' +
     '<div class="result-outcome ' + (isVoid ? 'void' : 'win') + '">' + resultLabel + '<small>' + resultSmall + '</small></div>' +
@@ -172,11 +175,11 @@ function sbmRenderAdminLists() {
   });
   pendingList.innerHTML = pending.length ? pending.map(function (e) {
     return '<button class="admin-item-btn js-admin-goto-review" data-market-id="' + e[0] + '" type="button">' +
-      '<span>' + e[1].title + '</span><span class="admin-item-sub">검수하기</span></button>';
+      '<span>' + sbmEscapeHtml(e[1].title) + '</span><span class="admin-item-sub">검수하기</span></button>';
   }).join('') : '<div class="admin-item-sub">검수 대기중인 제안이 없습니다.</div>';
   openList.innerHTML = open.length ? open.map(function (e) {
     return '<button class="admin-item-btn js-admin-goto-manage" data-market-id="' + e[0] + '" type="button">' +
-      '<span>' + e[1].title + '</span><span class="admin-item-sub">관리하기</span></button>';
+      '<span>' + sbmEscapeHtml(e[1].title) + '</span><span class="admin-item-sub">관리하기</span></button>';
   }).join('') : '<div class="admin-item-sub">관리할 마켓이 없습니다.</div>';
 
   pendingList.querySelectorAll('.js-admin-goto-review').forEach(function (btn) {
@@ -323,7 +326,7 @@ function sbmRenderTicker() {
     .map(function (m) {
       var odds = sbmComputeOdds(m);
       var firstId = Object.keys(m.outcomes)[0];
-      return { text: m.title + ' · 진행중', value: (odds[firstId] || 0).toFixed(1) + 'x' };
+      return { text: sbmEscapeHtml(m.title) + ' · 진행중', value: (odds[firstId] || 0).toFixed(1) + 'x' };
     });
 
   var settled = all.filter(function (m) { return m.status === 'settled' && m.settlement; })
@@ -331,7 +334,7 @@ function sbmRenderTicker() {
     .slice(0, 5)
     .map(function (m) {
       var winLabel = (m.outcomes[m.settlement.winningOutcomeId] || {}).label || '';
-      return { text: m.title + (winLabel ? ' · ' + winLabel + ' 적중' : ''), value: m.settlement.payoutMultiplier.toFixed(1) + 'x' };
+      return { text: sbmEscapeHtml(m.title) + (winLabel ? ' · ' + sbmEscapeHtml(winLabel) + ' 적중' : ''), value: m.settlement.payoutMultiplier.toFixed(1) + 'x' };
     });
 
   var source = open.concat(settled);

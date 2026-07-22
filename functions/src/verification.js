@@ -2,6 +2,7 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireAdmin } = require('./lib/auth');
 const { logAudit } = require('./lib/audit');
+const { SOOP_ID_RE } = require('./constants');
 
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
@@ -78,6 +79,7 @@ const setVerifiedSoopId = onCall(async (request) => {
   const { recordId, soopId } = request.data || {};
   const id = (soopId || '').trim();
   if (!recordId || !id) throw new HttpsError('invalid-argument', 'SOOP 아이디를 입력해 주세요.');
+  if (!SOOP_ID_RE.test(id)) throw new HttpsError('invalid-argument', 'SOOP 아이디는 영문 소문자/숫자 2~20자여야 합니다.');
 
   const db = getDatabase();
   const ref = db.ref('streamerVerifications/' + recordId);

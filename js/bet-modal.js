@@ -37,7 +37,7 @@
       label.className = 'bet-outcome-option' + (i === 0 ? ' selected' : '');
       var oddsVal = odds[o.id] || 0;
       label.innerHTML =
-        '<span class="label"><input type="radio" name="bet-outcome" ' + (i === 0 ? 'checked' : '') + '>' + o.label + '</span>' +
+        '<span class="label"><input type="radio" name="bet-outcome" ' + (i === 0 ? 'checked' : '') + '>' + sbmEscapeHtml(o.label) + '</span>' +
         '<span class="odd num">' + (oddsVal ? oddsVal.toFixed(2) : '-') + 'x</span>';
       label.querySelector('input').addEventListener('change', function () {
         outcomesEl.querySelectorAll('.bet-outcome-option').forEach(function (el) { el.classList.remove('selected'); });

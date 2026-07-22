@@ -20,7 +20,7 @@
 
   function applyProfile(name, avatarSrc) {
     if (avatarSrc) {
-      openBtn.innerHTML = '<img src="' + avatarSrc + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
+      openBtn.innerHTML = '<img src="' + sbmEscapeHtml(avatarSrc) + '" alt="" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">';
     } else {
       openBtn.textContent = name ? name.charAt(0) : '?';
     }
@@ -104,8 +104,14 @@
       errorEl.classList.add('show');
       return;
     }
-    if (name.length > 12) {
-      errorEl.textContent = '닉네임은 12자 이하로 입력해 주세요.';
+    if (name.length > 12 || /[<>\x00-\x1F\x7F]/.test(name)) {
+      errorEl.textContent = '닉네임은 12자 이하, 사용할 수 없는 문자 없이 입력해 주세요.';
+      errorEl.classList.add('show');
+      return;
+    }
+    var soopId = soopIdInput.value.trim();
+    if (soopId && !/^[a-z0-9]{2,20}$/.test(soopId)) {
+      errorEl.textContent = 'SOOP 아이디는 영문 소문자/숫자 2~20자로 입력해 주세요.';
       errorEl.classList.add('show');
       return;
     }
@@ -113,7 +119,7 @@
     saveBtn.disabled = true;
     saveBtn.textContent = '저장중...';
 
-    window.sbmFirebase.httpsCallable('updateProfile')({ nickname: name, soopId: soopIdInput.value.trim() })
+    window.sbmFirebase.httpsCallable('updateProfile')({ nickname: name, soopId: soopId })
       .then(function () {
         saveBtn.textContent = '저장 완료';
         statusEl.style.color = 'var(--mint)';

@@ -3,10 +3,10 @@ var sbmRankingsCache = null;
 
 function sbmRankAvatarHtml(entry) {
   if (entry.avatarUrl) {
-    return '<span class="ravatar-initial" style="display:none;"></span><img class="ravatar-img" src="' + entry.avatarUrl + '" alt="">';
+    return '<span class="ravatar-initial" style="display:none;"></span><img class="ravatar-img" src="' + sbmEscapeHtml(entry.avatarUrl) + '" alt="">';
   }
   var initial = (entry.nickname || '?').charAt(0);
-  return '<span class="ravatar-initial">' + initial + '</span><img class="ravatar-img" style="display:none;" alt="">';
+  return '<span class="ravatar-initial">' + sbmEscapeHtml(initial) + '</span><img class="ravatar-img" style="display:none;" alt="">';
 }
 
 function sbmRankBadge(rank) {
@@ -19,11 +19,11 @@ function sbmRankBadge(rank) {
 function sbmRenderRankingRow(entry, myUid, valueHtml, subHtml) {
   var isMe = entry.uid === myUid;
   var reportBtn = isMe ? '' :
-    '<button class="ranking-report-btn js-open-nick-report" data-id="' + entry.uid + '" data-nickname="' + entry.nickname + '" type="button" title="닉네임 신고">신고</button>';
+    '<button class="ranking-report-btn js-open-nick-report" data-id="' + entry.uid + '" data-nickname="' + sbmEscapeHtml(entry.nickname) + '" type="button" title="닉네임 신고">신고</button>';
   return '<div class="ranking-row' + (isMe ? ' me' : '') + '" data-id="' + entry.uid + '">' +
     sbmRankBadge(entry.rank) +
     '<span class="ranking-avatar" data-id="' + entry.uid + '">' + sbmRankAvatarHtml(entry) + '</span>' +
-    '<span class="ranking-name">' + entry.nickname + (isMe ? '<span class="me-tag">나</span>' : '') + '</span>' +
+    '<span class="ranking-name">' + sbmEscapeHtml(entry.nickname) + (isMe ? '<span class="me-tag">나</span>' : '') + '</span>' +
     valueHtml +
     (subHtml || '') +
     reportBtn +

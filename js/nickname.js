@@ -39,8 +39,8 @@ function sbmRenderNicknameReportQueue() {
     }
     list.innerHTML = reports.map(function (r) {
       return '<li class="report-queue-item">' +
-        '<div class="report-queue-head"><span class="report-queue-title">' + r.nickname + '</span><span class="report-queue-meta">' + r.reason + '</span></div>' +
-        (r.detail ? '<div class="report-queue-detail">' + r.detail + '</div>' : '') +
+        '<div class="report-queue-head"><span class="report-queue-title">' + sbmEscapeHtml(r.nickname) + '</span><span class="report-queue-meta">' + sbmEscapeHtml(r.reason) + '</span></div>' +
+        (r.detail ? '<div class="report-queue-detail">' + sbmEscapeHtml(r.detail) + '</div>' : '') +
         '<div class="audit-time">' + new Date(r.reportedAt).toLocaleString('ko-KR') + '</div>' +
         '<div class="report-queue-actions">' +
         '<button class="report-queue-view-btn nick-block-btn" data-report-id="' + r.id + '" type="button">차단</button>' +
@@ -76,7 +76,7 @@ function sbmRenderBlockedNicknames() {
     }
     list.innerHTML = blocked.map(function (b) {
       return '<li class="verify-req-item">' +
-        '<div class="verify-req-info"><b>' + b.nickname + '</b><span>차단: ' + new Date(b.blockedAt).toLocaleString('ko-KR') + ' · ' + b.blockedByName + '</span></div>' +
+        '<div class="verify-req-info"><b>' + sbmEscapeHtml(b.nickname) + '</b><span>차단: ' + new Date(b.blockedAt).toLocaleString('ko-KR') + ' · ' + sbmEscapeHtml(b.blockedByName) + '</span></div>' +
         '<div class="verify-req-actions">' +
         '<button class="verify-req-approve nick-unblock-btn" data-id="' + b.id + '" type="button">차단 해제</button>' +
         '</div></li>';

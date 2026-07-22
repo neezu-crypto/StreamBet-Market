@@ -30,7 +30,7 @@ function sbmRenderChargeRequestsList() {
         '<button class="verify-req-reject charge-dismiss-btn" data-request-id="' + r.id + '" type="button">무시</button>'
       : '';
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + r.nickname + '</b><span>' + new Date(r.requestedAt).toLocaleString('ko-KR') + '</span></div>' +
+      '<div class="verify-req-info"><b>' + sbmEscapeHtml(r.nickname) + '</b><span>' + new Date(r.requestedAt).toLocaleString('ko-KR') + '</span></div>' +
       '<div class="verify-req-actions">' + actions + '</div></li>';
   }).join('');
 
@@ -95,6 +95,11 @@ document.addEventListener('sbm-auth-changed', sbmRenderChargeRequestsList);
     var nickname = nicknameInput.value.trim();
     if (!nickname) {
       errorEl.textContent = '닉네임을 입력해 주세요.';
+      errorEl.classList.add('show');
+      return;
+    }
+    if (nickname.length > 20 || /[<>\x00-\x1F\x7F]/.test(nickname)) {
+      errorEl.textContent = '닉네임은 20자 이하, 사용할 수 없는 문자 없이 입력해 주세요.';
       errorEl.classList.add('show');
       return;
     }

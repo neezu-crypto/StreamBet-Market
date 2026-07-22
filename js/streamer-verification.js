@@ -31,12 +31,12 @@ function sbmRenderVerifiedBanner() {
     var soopId = v.soopId || '';
     var avatarSrc = sbmVerifiedAvatarSrc(soopId);
     var avatarHtml = avatarSrc
-      ? '<img class="verified-avatar" src="' + avatarSrc + '" alt="' + v.nickname + '">'
-      : '<span class="verified-avatar verified-avatar-fallback">' + (v.nickname ? v.nickname.charAt(0) : '?') + '</span>';
-    var href = soopId ? 'https://www.sooplive.com/station/' + soopId : '#';
-    return '<a class="verified-item" data-soopid="' + soopId + '" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
+      ? '<img class="verified-avatar" src="' + sbmEscapeHtml(avatarSrc) + '" alt="' + sbmEscapeHtml(v.nickname) + '">'
+      : '<span class="verified-avatar verified-avatar-fallback">' + sbmEscapeHtml(v.nickname ? v.nickname.charAt(0) : '?') + '</span>';
+    var href = soopId ? 'https://www.sooplive.com/station/' + encodeURIComponent(soopId) : '#';
+    return '<a class="verified-item" data-soopid="' + sbmEscapeHtml(soopId) + '" href="' + href + '" target="_blank" rel="noopener noreferrer">' +
       '<div class="verified-avatar-ring">' + avatarHtml + '</div>' +
-      '<span class="verified-name">' + v.nickname + '<small>✓ 인증</small></span></a>';
+      '<span class="verified-name">' + sbmEscapeHtml(v.nickname) + '<small>✓ 인증</small></span></a>';
   }).join('');
   track.innerHTML = items;
   if (ctaBtn) track.appendChild(ctaBtn);
@@ -56,7 +56,7 @@ function sbmRenderVerifiedStreamers() {
     var v = sbmVerifiedCache[key];
     var soopIdField;
     if (v.soopId) {
-      soopIdField = '<span>SOOP 아이디: ' + v.soopId + '</span>';
+      soopIdField = '<span>SOOP 아이디: ' + sbmEscapeHtml(v.soopId) + '</span>';
     } else if (isAdmin) {
       soopIdField = '<span class="verify-soopid-missing">SOOP 아이디 미기재' +
         '<input type="text" class="verify-soopid-input" data-record-id="' + key + '" placeholder="SOOP 아이디 입력">' +
@@ -65,10 +65,10 @@ function sbmRenderVerifiedStreamers() {
       soopIdField = '<span>SOOP 아이디 미기재</span>';
     }
     var revokeBtn = isAdmin
-      ? '<button class="verify-req-reject" data-soopid="' + (v.soopId || '') + '" type="button">인증 해제</button>'
+      ? '<button class="verify-req-reject" data-soopid="' + sbmEscapeHtml(v.soopId || '') + '" type="button">인증 해제</button>'
       : '';
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + v.nickname + '</b>' + soopIdField + '</div>' +
+      '<div class="verify-req-info"><b>' + sbmEscapeHtml(v.nickname) + '</b>' + soopIdField + '</div>' +
       '<div class="verify-req-actions">' + revokeBtn + '</div></li>';
   }).join('');
 
@@ -122,7 +122,7 @@ function sbmRenderVerifyRequestsList() {
         '<button class="verify-req-reject" data-request-id="' + r.id + '" type="button">반려</button>'
       : '';
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + r.nickname + '</b><span>SOOP 아이디: ' + r.soopId + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span></div>' +
+      '<div class="verify-req-info"><b>' + sbmEscapeHtml(r.nickname) + '</b><span>SOOP 아이디: ' + sbmEscapeHtml(r.soopId) + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span></div>' +
       '<div class="verify-req-actions">' + actions + '</div></li>';
   }).join('');
 
@@ -221,6 +221,18 @@ document.addEventListener('sbm-auth-changed', function () {
     }
     if (!nicknameInput.value.trim() || !soopIdInput.value.trim()) {
       statusEl.textContent = '닉네임과 SOOP 아이디를 모두 입력해 주세요.';
+      statusEl.style.color = 'var(--coral)';
+      statusEl.classList.add('show');
+      return;
+    }
+    if (nicknameInput.value.trim().length > 20 || /[<>\x00-\x1F\x7F]/.test(nicknameInput.value.trim())) {
+      statusEl.textContent = '닉네임은 20자 이하, 사용할 수 없는 문자 없이 입력해 주세요.';
+      statusEl.style.color = 'var(--coral)';
+      statusEl.classList.add('show');
+      return;
+    }
+    if (!/^[a-z0-9]{2,20}$/.test(soopIdInput.value.trim())) {
+      statusEl.textContent = 'SOOP 아이디는 영문 소문자/숫자 2~20자로 입력해 주세요.';
       statusEl.style.color = 'var(--coral)';
       statusEl.classList.add('show');
       return;
