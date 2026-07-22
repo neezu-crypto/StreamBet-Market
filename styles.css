@@ -50,7 +50,6 @@ button{ font-family: inherit; cursor: pointer; }
   display:flex; align-items:center; justify-content:space-between; gap:16px;
 }
 .devbar-label{ font-size:11px; color: var(--text); letter-spacing:.04em; flex-shrink:0; }
-.devbar-links{ display:flex; gap:8px; align-items:center; flex:1 1 auto; min-width:0; justify-content:flex-end; }
 .dev-link{
   flex-shrink:0; padding: 6px 11px; border-radius:6px; border:none;
   background: var(--ink); color: var(--text); font-size:12px; font-weight:600; transition: background .12s ease;
@@ -63,7 +62,7 @@ button{ font-family: inherit; cursor: pointer; }
 
 .devbar-game-scroll{
   display:flex; gap:8px; overflow-x:auto; flex:1 1 auto; min-width:0;
-  -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color: var(--panel-raised) transparent;
+  -webkit-overflow-scrolling:touch; touch-action:pan-x; scrollbar-width:thin; scrollbar-color: var(--panel-raised) transparent;
 }
 .devbar-game-scroll::-webkit-scrollbar{ height:4px; }
 .devbar-game-scroll::-webkit-scrollbar-track{ background:transparent; }
