@@ -100,6 +100,7 @@
       Object.keys(val).forEach(function (marketId) {
         Object.keys(val[marketId]).forEach(function (betId) { trackBet(marketId, betId); });
       });
+      render();
     });
   });
 })();
