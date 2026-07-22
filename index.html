@@ -28,6 +28,15 @@
   </div>
 </div>
 
+<div class="profile-backdrop" id="reload-backdrop">
+  <div class="profile-modal reload-modal">
+    <h3 class="profile-modal-title">데이터를 불러오지 못했어요</h3>
+    <p class="login-modal-sub">네트워크 상태를 확인하고 새로고침 해주세요. 문제가 계속되면 잠시 후 다시 시도해 주세요.</p>
+    <button class="profile-save-btn" id="reload-refresh-btn" type="button">새로고침</button>
+    <button class="btn-login-option" id="reload-dismiss-btn" type="button" style="margin-top:8px;background:transparent;border:1px solid var(--hairline);color:var(--muted);">닫기</button>
+  </div>
+</div>
+
 <div class="propose-backdrop" id="propose-backdrop">
   <div class="propose-modal">
     <button class="propose-modal-close" id="propose-modal-close" type="button" aria-label="닫기">✕</button>
@@ -672,6 +681,7 @@
 <script defer src="js/review-modal.js"></script>
 <script defer src="js/manage-modal.js"></script>
 <script defer src="js/market-feed.js"></script>
+<script defer src="js/reload-guard.js"></script>
 <script defer src="js/propose-modal.js"></script>
 <script defer src="js/exchange-modal.js"></script>
 <script defer src="js/charge-modal.js"></script>

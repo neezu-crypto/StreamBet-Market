@@ -350,12 +350,15 @@ function sbmRenderTicker() {
   track.innerHTML = itemsHtml + itemsHtml;
 }
 
+window.sbmMarketsLoaded = false;
 (function () {
   if (!window.sbmFirebase || !window.sbmDb) return;
   var fb = window.sbmFirebase;
   fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/markets'), function (snap) {
     sbmMarketsCache = snap.val() || {};
     window.sbmMarketsCache = sbmMarketsCache;
+    window.sbmMarketsLoaded = true;
+    document.dispatchEvent(new CustomEvent('sbm-markets-loaded'));
     sbmRenderMarketFeed();
     sbmRenderTicker();
   });
