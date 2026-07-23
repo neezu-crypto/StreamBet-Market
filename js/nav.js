@@ -86,6 +86,20 @@
   });
 
   sbmRenderAuditLog();
+
+  // 숫자키 1~3 = 마켓/랭킹/정산 내역 탭, 4 = 관리 탭(관리자·인증 스트리머만). 입력창에
+  // 타이핑 중이거나 모달이 열려있을 때는 숫자 입력을 그대로 받아야 하므로 건드리지 않는다.
+  document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey || e.altKey || e.metaKey) return;
+    var tag = (e.target && e.target.tagName || '').toLowerCase();
+    if (tag === 'input' || tag === 'textarea' || tag === 'select' || (e.target && e.target.isContentEditable)) return;
+    if (document.querySelector('[class*="backdrop"].open')) return;
+
+    if (e.key === '1') { e.preventDefault(); navMarket.click(); }
+    else if (e.key === '2') { e.preventDefault(); navRanking.click(); }
+    else if (e.key === '3') { e.preventDefault(); navSettlement.click(); }
+    else if (e.key === '4' && sbmCanUseAdminTab()) { e.preventDefault(); navAdmin.click(); }
+  });
 })();
 
 (function () {
