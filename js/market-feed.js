@@ -36,15 +36,15 @@ function sbmTimeLeft(ms) {
   return Math.floor(hours / 24) + '일 ' + (hours % 24) + '시간';
 }
 
-// 마켓 제목 앞에 참가 스트리머를 뱃지로 표시한다. 1명이면 "(닉네임)", 2명 이상이면
-// 닉네임 이름순으로 정렬해 첫 번째만 보여주고 나머지는 "(닉네임 외 N명)"으로 축약한다.
+// 마켓 제목 앞에 참가 스트리머를 뱃지로 표시한다. 1명이면 닉네임만, 2명 이상이면
+// 닉네임 이름순으로 정렬해 첫 번째만 보여주고 나머지는 "닉네임 외 N명"으로 축약한다.
 function sbmStreamerBadgeHtml(market) {
   var ids = market.streamerIds || [];
   var names = ids.map(function (id) { return sbmStockNames[id]; }).filter(Boolean);
   if (!names.length) return '';
   names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
   var text = names.length === 1 ? names[0] : names[0] + ' 외 ' + (names.length - 1) + '명';
-  return '<span class="ticket-streamer-badge">(' + sbmEscapeHtml(text) + ')</span> ';
+  return '<span class="ticket-streamer-badge">' + sbmEscapeHtml(text) + '</span> ';
 }
 
 function sbmOutcomeArray(market) {
