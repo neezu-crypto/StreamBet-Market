@@ -36,6 +36,17 @@ function sbmTimeLeft(ms) {
   return Math.floor(hours / 24) + '일 ' + (hours % 24) + '시간';
 }
 
+// 마켓 제목 앞에 참가 스트리머를 뱃지로 표시한다. 1명이면 "(닉네임)", 2명 이상이면
+// 닉네임 이름순으로 정렬해 첫 번째만 보여주고 나머지는 "(닉네임 외 N명)"으로 축약한다.
+function sbmStreamerBadgeHtml(market) {
+  var ids = market.streamerIds || [];
+  var names = ids.map(function (id) { return sbmStockNames[id]; }).filter(Boolean);
+  if (!names.length) return '';
+  names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
+  var text = names.length === 1 ? names[0] : names[0] + ' 외 ' + (names.length - 1) + '명';
+  return '<span class="ticket-streamer-badge">(' + sbmEscapeHtml(text) + ')</span> ';
+}
+
 function sbmOutcomeArray(market) {
   return Object.keys(market.outcomes || {}).map(function (id) {
     return Object.assign({ id: id }, market.outcomes[id]);
@@ -92,7 +103,7 @@ function sbmRenderOpenCard(marketId, market, isHero) {
 
   return '<article class="ticket js-manage-market' + (isHero ? ' hero-ticket' : '') + '" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' + badges + '</div>' +
-    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
+    '<h2 class="ticket-title">' + sbmStreamerBadgeHtml(market) + safeTitle + '</h2>' +
     '<div class="ticket-meta">' + meta + '</div></div>' +
     '<div class="ticket-stub">' + oddsHtml +
     '<div class="stub-foot"><span class="participants">' + participants + '</span>' +
@@ -106,7 +117,7 @@ function sbmRenderPendingCard(marketId, market) {
   return '<article class="ticket js-open-review" data-market-id="' + marketId + '" role="button" tabindex="0" style="cursor:pointer;">' +
     '<div class="ticket-main"><div class="badges"><span class="badge badge-pending">검증중</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
+    '<h2 class="ticket-title">' + sbmStreamerBadgeHtml(market) + safeTitle + '</h2>' +
     '<div class="verify-progress"><span>좋아요 ' + likeCount + ' / ' + SBM_LIKE_THRESHOLD + '</span><div class="track"><i style="width:' + pct + '%"></i></div></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;"><span class="participants">배팅 오픈 대기 · 카드 클릭 시 검수(관리자 · 인증 스트리머)</span>' +
     '<div class="stub-foot-actions">' +
@@ -127,7 +138,7 @@ function sbmRenderClosedPendingCard(marketId, market) {
     '<div class="ticket-main"><div class="badges">' +
     '<span class="badge badge-pending">' + badge + '</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + safeTitle + '</h2>' +
+    '<h2 class="ticket-title">' + sbmStreamerBadgeHtml(market) + safeTitle + '</h2>' +
     '<div class="ticket-meta"><span>이벤트 종료 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;">' +
     '<span class="participants">' + participants + '</span>' +
@@ -159,7 +170,7 @@ function sbmRenderClosedCard(marketId, market, batch) {
     '<div class="ticket-main"><div class="badges">' +
     '<span class="badge badge-settled">정산 완료' + (isVoid ? ' · 무효' : '') + '</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
-    '<h2 class="ticket-title">' + sbmEscapeHtml(market.title) + '</h2>' +
+    '<h2 class="ticket-title">' + sbmStreamerBadgeHtml(market) + sbmEscapeHtml(market.title) + '</h2>' +
     '<div class="ticket-meta"><span>' + dateStr + ' 정산 완료</span></div></div>' +
     '<div class="ticket-stub"><div class="result-row">' +
     '<div class="result-outcome ' + (isVoid ? 'void' : 'win') + '">' + resultLabel + '<small>' + resultSmall + '</small></div>' +

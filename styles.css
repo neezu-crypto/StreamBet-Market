@@ -676,6 +676,7 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
   font-size:17px; font-weight:600; line-height:1.45; margin-bottom:9px;
   letter-spacing: -0.005em;
 }
+.ticket-streamer-badge{ font-family: var(--font-body); font-size:0.82em; font-weight:700; color: var(--gold); }
 .ticket-meta{ display:flex; align-items:center; gap:10px; font-size:12px; color: var(--muted); flex-wrap:wrap; }
 .ticket-meta .sep{ color: var(--muted-2); }
 
