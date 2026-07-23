@@ -726,6 +726,42 @@
   </ul>
 
   <div class="callout"><b>Security Rules 원칙 재확인</b> — <span class="chip">chargeRequests</span> · <span class="chip">streamerRequests</span> · <span class="chip">verifyRequests</span> · <span class="chip">bannedAccounts</span>는 관리자 이메일 계정만 읽을 수 있고, <span class="chip">marketReports</span> · <span class="chip">nicknameReports</span> · <span class="chip">auditLog</span> · <span class="chip">adminChat</span>는 관리자 또는 <span class="chip">verifiedStreamerUids</span> 미러 노드에 등록된 인증 스트리머만 읽을 수 있도록 좁혔다. 그 외 공개 열람이 필요한 <span class="chip">blockedNicknames</span> · <span class="chip">profiles</span>는 기존처럼 로그인 유저 전체에게 열려 있다.</div>
+
+  <h3>관리 탭 검수 알림 배너</h3>
+  <p>인증 스트리머 홍보 배너 바로 아래, 관리 탭 최상단에 검수가 필요한 항목(검수 대기 제안 · 마켓 신고 · 닉네임 신고, 관리자 전용으로는 인증 신청 · 충전 신청 · 스트리머 추가 요청)을 모아 알림 형태로 보여주고 총 건수를 배지로 표시한다. 각 항목 클릭 시 해당 섹션으로 스크롤 이동하며, 각 목록 DOM을 <span class="chip">MutationObserver</span>로 관찰해 검수가 완료되어 항목이 사라지는 즉시 알림도 함께 갱신된다(기존 렌더링 로직은 건드리지 않는 방식).</p>
+
+  <h3>데이터 소모 최적화 — 실시간/1회성 구독 분리</h3>
+  <p>마켓 피드가 <span class="chip">bettingMarket/markets</span> 전체를 통짜로 실시간 구독하면서, 정산 완료된(<span class="chip">settled</span>/<span class="chip">void</span>) 마켓까지 무제한으로 실시간 스트리밍하던 문제를 개선했다.</p>
+  <ul>
+    <li>아직 값이 바뀔 수 있는 4개 상태(<span class="chip">pendingValidation</span>/<span class="chip">open</span>/<span class="chip">closed</span>/<span class="chip">pendingSettlement</span>)만 상태별로 나눠 실시간 구독</li>
+    <li><span class="chip">settled</span>/<span class="chip">void</span>는 절대 다시 안 바뀌므로 상태별 최근 30개만 1회성으로 조회. 다만 실시간 구독 중이던 마켓이 이 상태로 넘어가는 순간은 즉시 1회성으로 최신값을 받아와 "정산 확정 화면이 자연스럽게 넘어가는" 경험은 유지</li>
+    <li>전체 방문자에게 걸리던 인증 스트리머 홍보 배너(<span class="chip">streamerVerifications</span>)도 1회성 조회로 전환하고, 관리 탭에 실제로 들어가는 소수(관리자 · 인증 스트리머)에게만 실시간 구독을 시작하도록 분리</li>
+    <li><span class="chip">auditLog</span>(최근 처리 내역) · <span class="chip">adminChat</span>(관리 탭 채팅)은 기록 · 전송할 때마다 서버가 최근 200개를 넘는 오래된 항목을 실제로 삭제(<span class="chip">functions/src/lib/capped-log.js</span>)하고, 클라이언트도 <span class="chip">limitToLast</span> 쿼리로 필요한 만큼만 요청하도록 변경</li>
+  </ul>
+
+  <h3>좋아요 자동 오픈 기준 완화 (04번 갱신)</h3>
+  <p>04번에서 확정했던 좋아요 20개 기준을 실제 운영 판단에 따라 <strong>10개</strong>로 낮췄다. 클라이언트 표시(진행률 · 안내 문구)와 서버 상수(<span class="chip">LIKE_THRESHOLD</span>)를 함께 갱신했다.</p>
+
+  <h3>닉네임 차단 강화 (13번 갱신)</h3>
+  <p>차단이 랭킹에서 uid를 숨기는 것에 그치지 않고, 프로필의 실제 닉네임을 <span class="chip">차단유저XXXX</span> 형태의 기본 템플릿으로 강제 변경하도록 확장했다. 24시간 닉네임 변경 쿨다운도 함께 해제해 본인이 바로 새 닉네임을 정할 수 있게 했고, 로그인 시 상단 안내 배너(사유 포함) · 프로필 모달 내 안내 문구를 추가했다. 다만 <span class="chip">blockedNicknames</span>에 등록된 계정은 관리자가 명시적으로 차단 해제하기 전까지 <span class="chip">updateProfile</span>로 스스로 닉네임을 바꿀 수 없도록 막아, 강제 초기화가 곧바로 무력화되지 않게 했다.</p>
+
+  <h3>법적 · 안내 페이지 추가</h3>
+  <p>플레이어용 <span class="chip">게임설명서.html</span>(배팅 참여 · 배당률 계산 · 재화 · 신고 등 실제 구현 기준 안내), <span class="chip">이용약관.html</span>, <span class="chip">개인정보처리방침.html</span>을 정적 페이지로 추가하고, 헤더(자산충전 버튼 옆 "설명서")와 하단 공용 푸터에서 각각 새 탭으로 연결했다.</p>
+
+  <h3>숫자키 탭 이동 단축키</h3>
+  <p>숫자키 1/2/3으로 마켓 · 랭킹 · 정산 내역 탭을, 4로 관리 탭(관리자 · 인증 스트리머만)을 바로 전환할 수 있다. 입력창 타이핑 중이거나 모달이 열려있을 때는 동작하지 않는다.</p>
+
+  <h3>정식 서비스 전 최종 점검 및 수정</h3>
+  <p>독립 검토(백엔드/보안, 프론트엔드/UX)를 통해 발견된 이슈를 배포 전 전부 수정했다.</p>
+  <ul>
+    <li><strong>cancelBet 이중 환불 레이스</strong> — "active 확인 → 환불 → cancelled 기록"이 원자적이지 않아 동시 취소 요청 시 이중 환불 · 풀 왜곡이 가능했던 TOCTOU를 트랜잭션으로 취소를 먼저 선점하도록 수정(placeBet · 정산확정 · 잭팟 · 환전한도에 이미 적용한 패턴과 동일)</li>
+    <li><strong>배팅 모달 에러 처리</strong> — 잔액 · 배팅내역 조회 실패 시 "배팅하기" 버튼이 영구히 비활성화된 채 남던 문제를 수정, 실패 시 명확한 에러와 함께 입력을 잠금</li>
+    <li><strong>스트리머 인증 신청 경고</strong> — 이미 다른 계정으로 인증된 SOOP 아이디로 재신청된 경우 검수 화면에 경고 문구를 표시하고 승인 시 확인창을 추가해, 관리자가 모르고 인증 권한을 이관하는 사고를 방지</li>
+    <li><strong>Google 로그인 실패 안내</strong> — 조용히 콘솔에만 남기던 실패를 사용자에게 알리되, 팝업을 스스로 닫은 경우는 무시</li>
+    <li><strong>검수 모달 실데이터 반영</strong> — 하드코딩된 예시 제목 · 좋아요 수 대신 실제 클릭한 마켓 데이터를 표시</li>
+    <li><strong>grantChargeRequest 이중 지급 방지</strong> — 조회 → 지급 → 삭제가 원자적이지 않던 것을 트랜잭션으로 신청 건을 먼저 선점하도록 수정</li>
+    <li>스트리머 목록(<span class="chip">stocks</span>) 로딩 실패 시 "해당 스트리머 없음"으로 오인되지 않게 별도 안내 · 재시도 버튼 추가, 좁은 화면(약 340px 미만)에서 마켓 카드가 잘리던 그리드 반응형 문제 수정, 헤더의 "테스트 중" 배지 제거</li>
+  </ul>
 </section>
 
 </div>
