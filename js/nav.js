@@ -31,6 +31,11 @@
     return !!(window.sbmIsAdmin || window.sbmIsVerifiedStreamer);
   }
 
+  // 스킨 탭은 아직 목업 단계라 관리자만 볼 수 있게 한다(인증 스트리머 제외 — 관리 탭과 다름).
+  function sbmCanUseSkinTab() {
+    return !!window.sbmIsAdmin;
+  }
+
   // 관리 탭은 관리자 · 인증 스트리머에게만 보여준다. 실제 데이터 접근·조작 권한은
   // RTDB 규칙과 Cloud Functions가 이미 막고 있지만, 일반 유저에게는 탭 버튼 자체와
   // 진입을 UX 차원에서도 차단한다.
@@ -39,6 +44,12 @@
     navAdmin.style.display = allowed ? '' : 'none';
     if (!allowed && adminView.style.display !== 'none') {
       showTab(tabs[0]); // 지금 관리 탭을 보고 있는데 권한을 잃으면 마켓 탭으로 되돌린다
+    }
+
+    var skinAllowed = sbmCanUseSkinTab();
+    navSkin.style.display = skinAllowed ? '' : 'none';
+    if (!skinAllowed && skinView.style.display !== 'none') {
+      showTab(tabs[0]); // 스킨 탭을 보고 있는데 관리자 권한을 잃으면 마켓 탭으로 되돌린다
     }
   }
   document.addEventListener('sbm-auth-changed', sbmUpdateAdminTabVisibility);
@@ -76,7 +87,11 @@
     sbmApplyNicknameBlocks();
   });
   navSettlement.addEventListener('click', function (e) { e.preventDefault(); showTab(tabs[3]); });
-  navSkin.addEventListener('click', function (e) { e.preventDefault(); showTab(tabs[4]); });
+  navSkin.addEventListener('click', function (e) {
+    e.preventDefault();
+    if (!sbmCanUseSkinTab()) return; // 버튼이 숨겨져 있어도 직접 조작될 가능성 대비
+    showTab(tabs[4]);
+  });
 
   // 스킨 탭 — 카테고리 칩으로 카드 목록만 필터링(서버 연동 전 레이아웃 단계, 목업 데이터)
   var skinCategoryFilter = document.getElementById('skin-category-filter');
@@ -112,7 +127,7 @@
 
   sbmRenderAuditLog();
 
-  // 숫자키 1~4 = 마켓/랭킹/스킨/정산 내역 탭, 5 = 관리 탭(관리자·인증 스트리머만). 입력창에
+  // 숫자키 1/2/4 = 마켓/랭킹/정산 내역 탭, 3 = 스킨 탭(관리자 전용), 5 = 관리 탭(관리자·인증 스트리머만). 입력창에
   // 타이핑 중이거나 모달이 열려있을 때는 숫자 입력을 그대로 받아야 하므로 건드리지 않는다.
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
@@ -122,7 +137,7 @@
 
     if (e.key === '1') { e.preventDefault(); navMarket.click(); }
     else if (e.key === '2') { e.preventDefault(); navRanking.click(); }
-    else if (e.key === '3') { e.preventDefault(); navSkin.click(); }
+    else if (e.key === '3' && sbmCanUseSkinTab()) { e.preventDefault(); navSkin.click(); }
     else if (e.key === '4') { e.preventDefault(); navSettlement.click(); }
     else if (e.key === '5' && sbmCanUseAdminTab()) { e.preventDefault(); navAdmin.click(); }
   });
