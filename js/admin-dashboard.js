@@ -8,14 +8,79 @@ function sbmRenderAdminDashboard() {
   if (!circEl || !window.sbmFirebase) return;
   window.sbmFirebase.httpsCallable('getAdminDashboardStats')({}).then(function (res) {
     var d = res.data;
-    circEl.textContent = sbmFmtNum(d.totalCirculation) + '원';
+    // 오늘
     document.getElementById('stat-new-wallets').textContent = d.newWalletsToday + '개';
     document.getElementById('stat-active-markets').textContent = d.activeMarkets + '개';
     document.getElementById('stat-bet-today').textContent = sbmFmtNum(d.totalBetAmountToday) + '원 · ' + d.totalBetCountToday + '건';
+    // 회원 구성
+    document.getElementById('stat-total-wallets').textContent = d.totalWallets + '개';
     document.getElementById('stat-anonymous').textContent = d.anonymousCount + '명';
     document.getElementById('stat-real-users').textContent = d.realCount + '명';
     document.getElementById('stat-verified-streamers').textContent = d.verifiedStreamerCount + '명';
+    // 누적
+    document.getElementById('stat-bet-alltime').textContent = sbmFmtNum(d.totalBetAmountAllTime) + '원 · ' + d.totalBetCountAllTime + '건';
+    document.getElementById('stat-avg-bet').textContent = sbmFmtNum(d.avgBetAmount) + '원';
+    document.getElementById('stat-avg-balance').textContent = sbmFmtNum(d.avgWalletBalance) + '원';
+    document.getElementById('stat-settled').textContent = (d.settledCount + d.voidCount) + '건 · 무효 ' + d.voidRatePercent + '%';
+    document.getElementById('stat-payout-alltime').textContent = sbmFmtNum(d.totalPayoutAllTime) + '원';
+    document.getElementById('stat-exchange-alltime').textContent = sbmFmtNum(d.totalExchangeAmountAllTime) + '원';
+    document.getElementById('stat-rake-alltime').textContent = sbmFmtNum(d.totalRakeCollected) + '원';
+    document.getElementById('stat-jackpot-wins').textContent = d.jackpotWinCount + '회 · ' + sbmFmtNum(d.jackpotTotalPaid) + '원';
+    document.getElementById('stat-attendance').textContent = d.attendanceParticipantCount + '명';
+    // 재무 건전성
+    circEl.textContent = sbmFmtNum(d.totalCirculation) + '원';
+    document.getElementById('stat-reserve').textContent = sbmFmtNum(d.reserveFundBalance) + '원';
+    document.getElementById('stat-jackpot-balance').textContent = sbmFmtNum(d.jackpotBalance) + '원';
   }).catch(function (e) { circEl.textContent = '오류: ' + e.message; });
+}
+
+var sbmStatsChartState = { granularity: 'day', metric: 'betAmount' };
+
+function sbmRenderStatsChart() {
+  var box = document.getElementById('stats-chart-box');
+  if (!box || !window.sbmFirebase) return;
+  box.innerHTML = '<div class="admin-item-sub" style="padding:24px 0;text-align:center;">불러오는 중...</div>';
+  window.sbmFirebase.httpsCallable('getStatsTimeseries')({ granularity: sbmStatsChartState.granularity })
+    .then(function (res) {
+      sbmDrawStatsChart(box, res.data.series, sbmStatsChartState.metric);
+    })
+    .catch(function (e) {
+      box.innerHTML = '<div class="admin-item-sub" style="padding:24px 0;text-align:center;">오류: ' + sbmEscapeHtml(e.message) + '</div>';
+    });
+}
+
+function sbmDrawStatsChart(box, series, metric) {
+  if (!series || !series.length) {
+    box.innerHTML = '<div class="admin-item-sub" style="padding:24px 0;text-align:center;">데이터가 없습니다.</div>';
+    return;
+  }
+  var values = series.map(function (s) { return s[metric] || 0; });
+  var max = Math.max.apply(null, values.concat([1]));
+
+  var isMoney = metric === 'betAmount';
+  function fmtValue(v) {
+    if (!v) return '0';
+    if (isMoney) return v >= 10000 ? Math.round(v / 10000) + '만' : sbmFmtNum(v);
+    return sbmFmtNum(v);
+  }
+  function fmtLabel(label) {
+    // day: YYYY-MM-DD → MM/DD, week: YYYY-MM-DD(월요일) → MM/DD주, month: YYYY-MM → MM월
+    var parts = label.split('-');
+    if (parts.length === 3) return parts[1] + '/' + parts[2] + (sbmStatsChartState.granularity === 'week' ? '주' : '');
+    return parts[1] + '월';
+  }
+
+  var cols = series.map(function (s) {
+    var v = s[metric] || 0;
+    var hPercent = max > 0 ? Math.round((v / max) * 100) : 0;
+    return '<div class="stats-chart-col">' +
+      '<div class="stats-chart-value">' + fmtValue(v) + '</div>' +
+      '<div class="stats-chart-bar-wrap"><div class="stats-chart-bar" style="height:' + hPercent + '%;"></div></div>' +
+      '<div class="stats-chart-label">' + fmtLabel(s.label) + '</div>' +
+      '</div>';
+  }).join('');
+
+  box.innerHTML = '<div class="stats-chart-bars">' + cols + '</div>';
 }
 
 function sbmRenderAnomalyMonitor() {
@@ -206,5 +271,28 @@ function sbmSubscribeBannedAccounts() {
         btn.disabled = false;
         btn.textContent = '검색';
       });
+  });
+})();
+
+(function () {
+  var granularityWrap = document.getElementById('stats-granularity-chips');
+  var metricWrap = document.getElementById('stats-metric-chips');
+  if (!granularityWrap || !metricWrap) return;
+
+  granularityWrap.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      granularityWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      sbmStatsChartState.granularity = chip.getAttribute('data-granularity');
+      sbmRenderStatsChart();
+    });
+  });
+  metricWrap.querySelectorAll('.chip').forEach(function (chip) {
+    chip.addEventListener('click', function () {
+      metricWrap.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+      chip.classList.add('active');
+      sbmStatsChartState.metric = chip.getAttribute('data-metric');
+      sbmRenderStatsChart();
+    });
   });
 })();

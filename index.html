@@ -600,15 +600,56 @@
         <span class="admin-only-tag">관리자 전용</span>이 붙은 스트리머 인증 관련 기능(승인 · 반려 · 인증 해제)은 관리자만 가능합니다.
       </div>
 
-      <div class="section-label">대시보드 요약</div>
-      <div class="admin-stats-grid" id="admin-stats-grid">
-        <div class="admin-stat-box"><span class="label">유통 재화 총량</span><span class="value" id="stat-circulation">-</span></div>
+      <div class="section-label">대시보드 요약 · 오늘</div>
+      <div class="admin-stats-grid">
         <div class="admin-stat-box"><span class="label">오늘 신규 지갑</span><span class="value" id="stat-new-wallets">-</span></div>
         <div class="admin-stat-box"><span class="label">활성 마켓</span><span class="value" id="stat-active-markets">-</span></div>
         <div class="admin-stat-box"><span class="label">오늘 배팅액 · 건수</span><span class="value" id="stat-bet-today">-</span></div>
+      </div>
+
+      <h4 class="admin-sublabel">회원 구성</h4>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-box"><span class="label">전체 지갑 수</span><span class="value" id="stat-total-wallets">-</span></div>
         <div class="admin-stat-box"><span class="label">익명 회원</span><span class="value" id="stat-anonymous">-</span></div>
         <div class="admin-stat-box"><span class="label">로그인 회원</span><span class="value" id="stat-real-users">-</span></div>
         <div class="admin-stat-box"><span class="label">인증 스트리머</span><span class="value" id="stat-verified-streamers">-</span></div>
+      </div>
+
+      <h4 class="admin-sublabel">누적(전체 기간)</h4>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-box"><span class="label">누적 배팅액 · 건수</span><span class="value" id="stat-bet-alltime">-</span></div>
+        <div class="admin-stat-box"><span class="label">평균 배팅액</span><span class="value" id="stat-avg-bet">-</span></div>
+        <div class="admin-stat-box"><span class="label">유저당 평균 잔액</span><span class="value" id="stat-avg-balance">-</span></div>
+        <div class="admin-stat-box"><span class="label">정산 마켓 수 · 무효율</span><span class="value" id="stat-settled">-</span></div>
+        <div class="admin-stat-box"><span class="label">누적 지급 배당금</span><span class="value" id="stat-payout-alltime">-</span></div>
+        <div class="admin-stat-box"><span class="label">누적 환전액</span><span class="value" id="stat-exchange-alltime">-</span></div>
+        <div class="admin-stat-box"><span class="label">누적 하우스 수익(수수료)</span><span class="value" id="stat-rake-alltime">-</span></div>
+        <div class="admin-stat-box"><span class="label">잭팟 당첨 횟수 · 총액</span><span class="value" id="stat-jackpot-wins">-</span></div>
+        <div class="admin-stat-box"><span class="label">출석체크 누적 참여자</span><span class="value" id="stat-attendance">-</span></div>
+      </div>
+
+      <h4 class="admin-sublabel">재무 건전성</h4>
+      <div class="admin-stats-grid">
+        <div class="admin-stat-box"><span class="label">유통 재화 총량</span><span class="value" id="stat-circulation">-</span></div>
+        <div class="admin-stat-box"><span class="label">준비금(reserveFund) 잔액</span><span class="value" id="stat-reserve">-</span></div>
+        <div class="admin-stat-box"><span class="label">잭팟 적립금</span><span class="value" id="stat-jackpot-balance">-</span></div>
+      </div>
+
+      <div class="section-label">일간 · 주간 · 월간 통계</div>
+      <div class="stats-chart-controls">
+        <div class="chip-row" id="stats-granularity-chips">
+          <button class="chip active" data-granularity="day">일간</button>
+          <button class="chip" data-granularity="week">주간</button>
+          <button class="chip" data-granularity="month">월간</button>
+        </div>
+        <div class="chip-row" id="stats-metric-chips">
+          <button class="chip active" data-metric="betAmount">배팅액</button>
+          <button class="chip" data-metric="betCount">배팅 건수</button>
+          <button class="chip" data-metric="newWallets">신규 지갑</button>
+        </div>
+      </div>
+      <div class="stats-chart-box" id="stats-chart-box">
+        <div class="admin-item-sub" style="padding:24px 0;text-align:center;">불러오는 중...</div>
       </div>
 
       <div class="section-label">이상 거래 모니터링</div>

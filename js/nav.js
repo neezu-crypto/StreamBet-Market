@@ -54,6 +54,7 @@
     sbmRenderNicknameReportQueue();
     sbmRenderBlockedNicknames();
     sbmRenderAdminDashboard();
+    sbmRenderStatsChart();
     sbmRenderAnomalyMonitor();
     sbmRenderExchangeLog();
     sbmSubscribeBannedAccounts();
