@@ -638,6 +638,15 @@
 
   <div id="admin-view" style="display:none;">
     <div class="admin-panel">
+      <div class="admin-alerts-banner" id="admin-alerts-banner">
+        <div class="admin-alerts-head">
+          <span class="admin-alerts-title">검수 알림</span>
+          <span class="admin-alerts-total-badge zero" id="admin-alerts-total">0</span>
+        </div>
+        <div class="admin-alerts-empty" id="admin-alerts-empty">지금 처리할 항목이 없습니다.</div>
+        <div class="admin-alerts-list" id="admin-alerts-list"></div>
+      </div>
+
       <div class="admin-tab-notice">
         <b>관리 탭 안내</b> — 이 탭은 관리자와 인증 스트리머 모두 이용할 수 있습니다.
         검수 승인 · 조기 마감 · 무효 처리 · 판정 · 신고 처리 · 닉네임 차단은 인증 스트리머도 가능하지만,
@@ -880,5 +889,6 @@
 <script defer src="js/profile-modal.js"></script>
 <script defer src="js/admin-dashboard.js"></script>
 <script defer src="js/admin-chat.js"></script>
+<script defer src="js/admin-alerts.js"></script>
 </body>
 </html>

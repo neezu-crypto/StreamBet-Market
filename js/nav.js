@@ -46,6 +46,7 @@
     e.preventDefault();
     if (!sbmCanUseAdminTab()) return; // 버튼이 숨겨져 있어도 직접 조작될 가능성 대비
     showTab(tabs[1]);
+    sbmSetupAdminAlerts();
     sbmRenderAdminChat();
     sbmRenderAuditLog();
     sbmSubscribeVerifiedStreamers(); // 관리 탭 진입 시에만 인증 목록을 실시간으로 전환
