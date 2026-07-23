@@ -752,6 +752,13 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .fab:hover{ background:#e6b453; }
 .fab .plus{ font-family: var(--font-mono); font-size:16px; }
 
+.app-footer{
+  text-align:center; padding:22px 16px 36px; margin-top:8px;
+  border-top:1px solid var(--hairline);
+}
+.app-footer a{ font-size:12.5px; color: var(--muted); text-decoration:none; }
+.app-footer a:hover{ color: var(--gold); }
+
 @media (max-width: 520px){
   .topbar{ flex-wrap:wrap; row-gap:12px; }
   .topnav{
