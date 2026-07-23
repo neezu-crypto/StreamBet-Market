@@ -33,6 +33,7 @@
       setTimeout(function () {
         overlay.classList.add('done');
         document.body.style.overflow = '';
+        document.dispatchEvent(new CustomEvent('sbm-boot-done'));
       }, 300);
       return;
     }

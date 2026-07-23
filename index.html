@@ -35,6 +35,51 @@
   </div>
 </div>
 
+<div class="profile-backdrop" id="intro-backdrop">
+  <div class="profile-modal intro-modal">
+    <button class="profile-modal-close" id="intro-modal-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="profile-modal-title">스트리머 배팅시장에 오신 것을 환영해요</h3>
+    <p class="login-modal-sub">
+      "스트리머 배팅시장"은 좋아하는 스트리머들의 승부·이벤트 결과를 예측해서 배팅하는 팬 참여형 게임이에요.
+      실제 현금이 아닌 게임 내 재화로만 즐기는 서비스예요.
+    </p>
+
+    <div class="intro-tier">
+      <div class="intro-tier-head"><span class="intro-tier-badge">비로그인</span> 이용 가능한 기능</div>
+      <ul class="intro-tier-list">
+        <li>배팅 참여, 배팅 주제 제안</li>
+        <li>마켓 · 닉네임 신고</li>
+        <li>출석 체크, 잭팟 확인하기</li>
+        <li>자산 충전 신청, 스트리머 인증 신청</li>
+      </ul>
+    </div>
+
+    <div class="intro-tier">
+      <div class="intro-tier-head"><span class="intro-tier-badge gold">로그인(구글 · 카카오)</span> 이용 가능한 기능</div>
+      <ul class="intro-tier-list">
+        <li>비로그인 기능 전부 + <b>닉네임 · 아바타 설정</b></li>
+        <li><b>환전</b>(배팅 재화 ↔ 스트리머 주식시장 재화)</li>
+        <li>신규 계정 대기시간 · 쿨다운 전부 면제</li>
+      </ul>
+    </div>
+
+    <div class="intro-tier">
+      <div class="intro-tier-head"><span class="intro-tier-badge mint">인증 스트리머</span> 이용 가능한 기능</div>
+      <ul class="intro-tier-list">
+        <li>로그인 없이도 로그인 계정과 동일한 혜택 자동 적용</li>
+        <li>본인 방송 관련 배팅 주제 <b>검수 승인 · 조기 마감 · 무효 처리 · 최종 판정</b></li>
+        <li>신고 처리, 닉네임 차단 등 마켓 관리 권한</li>
+      </ul>
+    </div>
+
+    <label class="intro-dont-show-row">
+      <input type="checkbox" id="intro-dont-show">
+      <span>다시 보지 않기</span>
+    </label>
+    <button class="profile-save-btn" id="intro-close-btn" type="button">확인했어요</button>
+  </div>
+</div>
+
 <div class="profile-backdrop" id="reload-backdrop">
   <div class="profile-modal reload-modal">
     <h3 class="profile-modal-title">데이터를 불러오지 못했어요</h3>
@@ -805,6 +850,7 @@
 <script defer src="js/streamer-verification.js"></script>
 <script defer src="js/market-report.js"></script>
 <script defer src="js/boot.js"></script>
+<script defer src="js/intro-modal.js"></script>
 <script defer src="js/nav.js"></script>
 <script defer src="js/bet-modal.js"></script>
 <script defer src="js/review-modal.js"></script>

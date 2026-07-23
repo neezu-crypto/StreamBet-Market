@@ -1231,6 +1231,22 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .login-modal-hint{ font-size:11px; color:var(--muted-2); text-align:center; margin: 6px 0 0; }
 .btn-verify-cta{ background:transparent; border:1px solid var(--gold-line); color:var(--gold); margin-bottom:0; }
 .btn-verify-cta:hover{ border-color: var(--gold); }
+
+.intro-modal{ max-width:420px; max-height:88vh; overflow-y:auto; }
+.intro-tier{ margin-bottom:16px; }
+.intro-tier-head{ font-size:12.5px; font-weight:700; color: var(--text); margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.intro-tier-badge{
+  font-family: var(--font-mono); font-size:10px; font-weight:700; padding:3px 9px; border-radius:20px;
+  background: var(--panel-raised); color: var(--muted); border:1px solid var(--hairline);
+}
+.intro-tier-badge.gold{ background: var(--gold-dim); color: var(--gold); border-color: var(--gold-line); }
+.intro-tier-badge.mint{ background: var(--mint-dim); color: var(--mint); border-color: rgba(63,182,137,0.35); }
+.intro-tier-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:6px; }
+.intro-tier-list li{ font-size:12.5px; color: var(--muted); padding-left:14px; position:relative; line-height:1.5; }
+.intro-tier-list li::before{ content:"·"; position:absolute; left:2px; color: var(--gold); font-weight:700; }
+.intro-tier-list b{ color: var(--text); }
+.intro-dont-show-row{ display:flex; align-items:center; gap:7px; font-size:12.5px; color: var(--muted); margin:14px 0 12px; cursor:pointer; }
+.intro-dont-show-row input{ accent-color: var(--gold); width:15px; height:15px; }
 .profile-status{ font-size:12.5px; color:var(--mint); margin:12px 0 0; line-height:1.6; display:none; }
 .profile-status.show{ display:block; }
 
