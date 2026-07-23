@@ -116,7 +116,13 @@ const dismissNicknameReport = onCall(async (request) => {
   return { status: 'dismissed', role };
 });
 
-// 13번 — 닉네임 차단 (관리자·인증 스트리머), 차단 시 랭킹에서 즉시 숨김
+// 차단된 유저가 계속 같은(또는 비슷한) 닉네임을 쓰는 걸 막기 위해, 차단 시 프로필의
+// 닉네임 자체를 식별 가능한 기본 템플릿으로 강제 변경한다. uid 뒷자리를 붙여 서로 겹치지 않게 한다.
+function defaultBlockedNickname(uid) {
+  return '차단유저' + uid.slice(-4).toUpperCase();
+}
+
+// 13번 — 닉네임 차단 (관리자·인증 스트리머), 차단 시 랭킹에서 즉시 숨김 + 닉네임 강제 초기화
 const blockNickname = onCall(async (request) => {
   const { uid, role } = await requireAdminOrVerifiedStreamer(request);
   const { reportId } = request.data || {};
@@ -134,6 +140,16 @@ const blockNickname = onCall(async (request) => {
     blockedBy: uid,
     blockedByName: actorName,
   });
+
+  // 차단된 유저 본인에게 안내하고 곧바로 새 닉네임을 정할 수 있도록, 강제 변경은 닉네임 변경
+  // 쿨다운(24시간)에 걸리지 않게 nicknameChangedAt은 지운다.
+  await db.ref('bettingMarket/profiles/' + report.targetId).update({
+    nickname: defaultBlockedNickname(report.targetId),
+    nicknameChangedAt: null,
+    nicknameResetReason: report.reason,
+    nicknameResetAt: Date.now(),
+  });
+
   await reportRef.remove();
   await logAudit(uid, actorName, '닉네임 차단', report.nickname + ' (' + report.reason + ')');
 

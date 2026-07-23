@@ -202,6 +202,7 @@
   <div class="profile-modal">
     <button class="profile-modal-close" id="profile-modal-close" type="button" aria-label="닫기">✕</button>
     <h3 class="profile-modal-title">프로필</h3>
+    <p class="profile-reset-notice" id="profile-reset-notice" style="display:none;"></p>
 
     <div class="profile-preview-row">
       <div class="profile-preview-ring">
@@ -490,6 +491,12 @@
 
 <div class="banned-banner" id="banned-banner" style="display:none;">
   <span>🚫 이 계정은 정지되었습니다<span id="banned-banner-reason"></span>. 문의사항은 관리자에게 연락해 주세요.</span>
+</div>
+
+<div class="nickname-reset-banner" id="nickname-reset-banner" style="display:none;">
+  <span>⚠️ 신고된 닉네임이 기본 닉네임으로 초기화되었습니다<span id="nickname-reset-banner-reason"></span>. 새 닉네임을 설정해 주세요.
+    <button id="nickname-reset-banner-btn" type="button">닉네임 설정하기</button>
+  </span>
 </div>
 
 <div class="app">

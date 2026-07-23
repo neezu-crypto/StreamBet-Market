@@ -9,6 +9,10 @@
   var errorEl = document.getElementById('profile-error');
   var saveBtn = document.getElementById('profile-save-btn');
   var statusEl = document.getElementById('profile-status');
+  var resetNoticeEl = document.getElementById('profile-reset-notice');
+  var resetBanner = document.getElementById('nickname-reset-banner');
+  var resetBannerReasonEl = document.getElementById('nickname-reset-banner-reason');
+  var resetBannerBtn = document.getElementById('nickname-reset-banner-btn');
   if (!backdrop || !openBtn) return;
 
   var currentProfile = null;
@@ -43,6 +47,19 @@
     });
   }
 
+  // 닉네임 차단으로 강제 초기화된 계정에게 상단 배너로 안내한다 — 본인이 새 닉네임을 저장하면
+  // updateProfile이 nicknameResetAt을 지워서 배너도 자동으로 사라진다.
+  function applyResetNotice() {
+    if (!resetBanner) return;
+    var reason = currentProfile && currentProfile.nicknameResetAt ? currentProfile.nicknameResetReason : null;
+    if (reason !== null && reason !== undefined) {
+      if (resetBannerReasonEl) resetBannerReasonEl.textContent = reason ? ' (사유: ' + reason + ')' : '';
+      resetBanner.style.display = '';
+    } else {
+      resetBanner.style.display = 'none';
+    }
+  }
+
   var unsubscribeProfile = null;
   document.addEventListener('sbm-auth-changed', function (e) {
     if (unsubscribeProfile) { unsubscribeProfile(); unsubscribeProfile = null; }
@@ -51,18 +68,30 @@
       currentProfile = null;
       openBtn.textContent = '로그인';
       openBtn.classList.add('avatar-login');
+      applyResetNotice();
       return;
     }
     var fb = window.sbmFirebase;
     unsubscribeProfile = fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/profiles/' + user.uid), function (snap) {
       currentProfile = snap.val() || { nickname: user.displayName || '유저', soopId: '', avatarUrl: '' };
       applyProfile(currentProfile.nickname, currentProfile.avatarUrl);
+      applyResetNotice();
     });
   });
+
+  if (resetBannerBtn) resetBannerBtn.addEventListener('click', openModal);
 
   function openModal() {
     if (!window.sbmTrusted) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
     var p = currentProfile || {};
+    if (resetNoticeEl) {
+      if (p.nicknameResetAt) {
+        resetNoticeEl.textContent = '신고로 인해 닉네임이 기본 닉네임으로 초기화되었습니다' + (p.nicknameResetReason ? ' (사유: ' + p.nicknameResetReason + ')' : '') + '. 새 닉네임을 설정해 주세요.';
+        resetNoticeEl.style.display = '';
+      } else {
+        resetNoticeEl.style.display = 'none';
+      }
+    }
     nicknameInput.value = p.nickname || '';
     soopIdInput.value = p.soopId || '';
     if (p.avatarUrl) {

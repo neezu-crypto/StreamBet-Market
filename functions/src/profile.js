@@ -43,7 +43,12 @@ const updateProfile = onCall(async (request) => {
     soopId: rawSoopId,
     avatarUrl: avatarUrlFor(rawSoopId),
   };
-  if (nameChanged) update.nicknameChangedAt = Date.now();
+  if (nameChanged) {
+    update.nicknameChangedAt = Date.now();
+    // 닉네임 차단으로 강제 초기화된 뒤 본인이 새 닉네임을 정하면, 안내 배너를 끄기 위해 지운다.
+    update.nicknameResetReason = null;
+    update.nicknameResetAt = null;
+  }
   await ref.update(update);
 
   // 13번 — 랭킹에 표시되는 닉네임·아바타가 바뀌므로 이 시점에만 랭킹 재계산
