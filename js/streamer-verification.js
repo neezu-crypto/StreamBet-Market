@@ -10,7 +10,20 @@ function sbmVerifiedAvatarSrc(soopId) {
   return 'https://stimg.sooplive.com/LOGO/' + folder + '/' + soopId + '/' + soopId + '.jpg';
 }
 
-// 05번 — 공유 streamerVerifications 노드를 실시간 구독해 홍보 배너 · 관리 목록을 그린다.
+// 05번 — 홍보 배너는 방문자 전원(로그인 여부 무관)에게 무조건 걸리는 전역 리스너라,
+// 자주 안 바뀌는 인증 목록을 실시간으로 유지할 필요가 없다. 페이지 로드 시 1회만 받아온다.
+function sbmFetchVerifiedStreamersOnce() {
+  if (!window.sbmFirebase) return;
+  var fb = window.sbmFirebase;
+  fb.get(fb.ref(window.sbmDb, 'streamerVerifications')).then(function (snap) {
+    sbmVerifiedCache = snap.val() || {};
+    sbmRenderVerifiedBanner();
+    sbmRenderVerifiedStreamers();
+  });
+}
+
+// 관리 탭에서 승인 · 반려 · 인증 해제를 실제로 다루는 소수(관리자 · 인증 스트리머)에게만
+// 실시간 구독을 시작한다 — 관리 탭 진입 시(nav.js)에만 호출되므로 전체 방문자에게 걸리지 않는다.
 function sbmSubscribeVerifiedStreamers() {
   if (sbmVerifiedSubscribed || !window.sbmFirebase) return;
   sbmVerifiedSubscribed = true;
@@ -306,5 +319,5 @@ document.addEventListener('sbm-auth-changed', function () {
   window.sbmRefreshVerifiedTrack = setup;
   window.sbmVerifiedTrackEl = track;
 
-  sbmSubscribeVerifiedStreamers();
+  sbmFetchVerifiedStreamersOnce();
 })();

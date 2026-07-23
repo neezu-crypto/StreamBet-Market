@@ -23,6 +23,7 @@ import {
   orderByChild,
   equalTo,
   limitToFirst,
+  limitToLast,
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-database.js';
 import {
   getFunctions,
@@ -48,7 +49,7 @@ const functions = getFunctions(app);
 
 window.sbmFirebase = {
   ref, get, set, update, push, remove, onValue, runTransaction, serverTimestamp,
-  query, orderByChild, equalTo, limitToFirst,
+  query, orderByChild, equalTo, limitToFirst, limitToLast,
   httpsCallable: (name) => httpsCallable(functions, name),
   GoogleAuthProvider,
 };

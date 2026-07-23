@@ -361,16 +361,70 @@ function sbmRenderTicker() {
 }
 
 window.sbmMarketsLoaded = false;
+
+// 값이 아직 바뀔 수 있는 상태만 실시간 구독한다 — 정산완료(settled)·무효(void) 마켓은
+// 다시 안 바뀌는데도 전체를 실시간으로 묶어두면 방문자 전원에게 무제한으로 쌓이는
+// 정산 이력까지 매번 스트리밍하게 된다. status에 인덱스가 걸려 있어(database.rules.json)
+// 상태별로 나눠 구독할 수 있다.
+var SBM_LIVE_MARKET_STATUSES = ['pendingValidation', 'open', 'closed', 'pendingSettlement'];
+var SBM_CLOSED_MARKET_STATUSES = ['settled', 'void'];
+var SBM_CLOSED_MARKET_LIMIT = 30; // 상태별 최근 N개만 — 지난 마켓 목록·티커용으로는 충분
+
 (function () {
   if (!window.sbmFirebase || !window.sbmDb) return;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/markets'), function (snap) {
-    sbmMarketsCache = snap.val() || {};
+  var pendingSources = SBM_LIVE_MARKET_STATUSES.length + SBM_CLOSED_MARKET_STATUSES.length;
+  var prevIdsByStatus = {};
+
+  function sourceReady() {
+    pendingSources -= 1;
+    if (pendingSources <= 0 && !window.sbmMarketsLoaded) {
+      window.sbmMarketsLoaded = true;
+      document.dispatchEvent(new CustomEvent('sbm-markets-loaded'));
+    }
+  }
+
+  function refresh() {
     window.sbmMarketsCache = sbmMarketsCache;
-    window.sbmMarketsLoaded = true;
-    document.dispatchEvent(new CustomEvent('sbm-markets-loaded'));
     sbmRenderMarketFeed();
     sbmRenderTicker();
+  }
+
+  // 이 상태를 벗어난(다음 단계로 넘어간) 마켓은 그 즉시 최신 상태를 1회성으로 받아와
+  // 화면이 자연스럽게 다음 섹션으로 넘어가게 한다 — 판정 유예시간이 끝나 settled로
+  // 확정되는 순간을 실시간으로 반영하면서도, settled/void 전체를 실시간 구독하지는 않는다.
+  function fetchLatestOnce(id) {
+    fb.get(fb.ref(window.sbmDb, 'bettingMarket/markets/' + id)).then(function (snap) {
+      if (snap.exists()) sbmMarketsCache[id] = snap.val();
+      else delete sbmMarketsCache[id];
+      refresh();
+    });
+  }
+
+  SBM_LIVE_MARKET_STATUSES.forEach(function (status) {
+    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/markets'), fb.orderByChild('status'), fb.equalTo(status));
+    var first = true;
+    fb.onValue(q, function (snap) {
+      var val = snap.val() || {};
+      var newIds = Object.keys(val);
+      (prevIdsByStatus[status] || []).forEach(function (id) {
+        if (newIds.indexOf(id) === -1) fetchLatestOnce(id);
+      });
+      prevIdsByStatus[status] = newIds;
+      Object.assign(sbmMarketsCache, val);
+      refresh();
+      if (first) { first = false; sourceReady(); }
+    });
+  });
+
+  // settled·void는 확정 후 절대 안 바뀌므로 1회성으로만, 그것도 최근 N개로 제한해서 받는다
+  SBM_CLOSED_MARKET_STATUSES.forEach(function (status) {
+    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/markets'), fb.orderByChild('status'), fb.equalTo(status), fb.limitToLast(SBM_CLOSED_MARKET_LIMIT));
+    fb.get(q).then(function (snap) {
+      Object.assign(sbmMarketsCache, snap.val() || {});
+      refresh();
+      sourceReady();
+    });
   });
 
   // 04번 — 좋아요 (다수결 라이트 검증), 재화가 걸려있지 않아 클라이언트가 직접 write

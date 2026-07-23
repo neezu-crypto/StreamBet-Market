@@ -48,6 +48,7 @@
     showTab(tabs[1]);
     sbmRenderAdminChat();
     sbmRenderAuditLog();
+    sbmSubscribeVerifiedStreamers(); // 관리 탭 진입 시에만 인증 목록을 실시간으로 전환
     sbmRenderVerifiedStreamers();
     sbmRenderReportQueue();
     sbmRenderNicknameReportQueue();

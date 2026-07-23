@@ -141,6 +141,9 @@ button{ font-family: inherit; cursor: pointer; }
 .audit-log b.negative{ color: var(--coral); }
 .audit-log .audit-time{ display:block; font-size:10.5px; color: var(--muted-2); margin-top:3px; font-family: var(--font-mono); }
 
+/* 최근 처리 내역 — 계속 쌓이는 목록이라 패널 안에서만 스크롤되게 높이를 고정한다 */
+#audit-log{ max-height:320px; overflow-y:auto; padding-right:2px; }
+
 .admin-chat-box{
   display:flex; flex-direction:column; gap:10px;
   background: var(--panel-raised); border:1px solid var(--hairline); border-radius:10px;
@@ -148,7 +151,7 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .admin-chat-messages{
   list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;
-  max-height:260px; overflow-y:auto;
+  max-height:320px; overflow-y:auto; padding-right:2px;
 }
 .admin-chat-messages li.audit-empty{ color: var(--muted-2); font-style:normal; text-align:center; padding:10px 0; }
 .admin-chat-msg{
