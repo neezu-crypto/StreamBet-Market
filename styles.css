@@ -116,11 +116,6 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .brand-name{ font-family: var(--font-display); font-weight:800; font-size:17px; letter-spacing:-0.01em; }
 .brand-name em{ font-style:normal; color: var(--gold); }
-.test-badge{
-  font-family: var(--font-mono); font-size:10px; font-weight:700; letter-spacing:.03em;
-  color: var(--gold); background: var(--gold-dim); border:1px solid var(--gold-line);
-  padding:3px 8px; border-radius:20px;
-}
 
 .topnav{ display:flex; gap:22px; margin-right:auto; }
 .topnav a{ font-size:14px; color: var(--muted); padding: 6px 2px; border-bottom:2px solid transparent; }
@@ -724,7 +719,7 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .hero-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:20px; flex-wrap:wrap; }
 
 /* Grid of remaining tickets */
-.grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap:18px; }
+.grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr)); gap:18px; }
 
 .multi-outcomes{ display:flex; flex-direction:column; gap:7px; margin: 12px 0 8px; }
 .outcome-row{ display:flex; align-items:center; gap:10px; font-size:12.5px; }

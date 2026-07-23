@@ -1,6 +1,8 @@
 (function () {
   var backdrop = document.getElementById('review-backdrop');
   var closeBtn = document.getElementById('review-modal-close');
+  var titleEl = document.getElementById('review-modal-title');
+  var metaEl = document.getElementById('review-meta');
   var approveBtn = document.getElementById('review-approve-btn');
   var rejectBtn = document.getElementById('review-reject-btn');
   var statusEl = document.getElementById('review-status');
@@ -12,6 +14,12 @@
 
   function openModal(marketId) {
     currentMarketId = marketId;
+    var market = window.sbmMarketsCache[marketId] || {};
+    titleEl.textContent = market.title || '';
+    var likeCount = (market.validation && market.validation.likeCount) || 0;
+    var passed = likeCount >= SBM_LIKE_THRESHOLD;
+    metaEl.innerHTML = sbmTypeLabel(market.type) +
+      '<br>현재 좋아요 ' + likeCount + ' / ' + SBM_LIKE_THRESHOLD + (passed ? ' (자동 통과 기준 충족)' : ' (자동 통과 기준 미달)');
     statusEl.classList.remove('show');
     var canReview = window.sbmIsAdmin || window.sbmIsVerifiedStreamer;
     approveBtn.disabled = !canReview;

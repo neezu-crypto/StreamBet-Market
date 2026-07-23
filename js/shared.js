@@ -10,6 +10,9 @@ function sbmEscapeHtml(str) {
     .replace(/'/g, '&#39;');
 }
 
+// 04번 — 좋아요 자동 오픈 기준. 서버(functions/src/constants.js LIKE_THRESHOLD)와 반드시 같은 값으로 유지한다.
+var SBM_LIKE_THRESHOLD = 10;
+
 var PROHIBITED_TOPIC_REASONS = [
   '스트리머 비하',
   '평가 불가능한 주관적인 주제',

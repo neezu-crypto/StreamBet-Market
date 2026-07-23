@@ -1,13 +1,27 @@
 (function () {
   var streamerOptions = []; // [{id, name}]
+  var streamerOptionsLoadFailed = false;
+  // 스트리머 검색창(대전 유형에 따라 1~2개)이 각자의 renderSuggestions를 여기 등록해두면,
+  // 목록을 다시 불러왔을 때(성공·실패 모두) 열려있는 검색창을 전부 새로고침할 수 있다.
+  var streamerOptionsListeners = [];
 
-  if (window.sbmFirebase && window.sbmDb) {
+  function loadStreamerOptions() {
+    if (!window.sbmFirebase || !window.sbmDb) return;
     var fb = window.sbmFirebase;
     fb.get(fb.ref(window.sbmDb, 'stocks')).then(function (snap) {
       var val = snap.val() || {};
       streamerOptions = Object.keys(val).map(function (id) { return { id: id, name: val[id].name }; });
+      streamerOptionsLoadFailed = false;
+      streamerOptionsListeners.forEach(function (fn) { fn(); });
+    }).catch(function (e) {
+      // 실패해도 조용히 빈 목록으로 남겨두지 않는다 — "그런 스트리머가 없다"와
+      // "목록을 못 불러왔다"를 구분해서 보여줘야 불필요한 중복 추가 요청을 막을 수 있다.
+      console.error('스트리머 목록을 불러오지 못했습니다', e);
+      streamerOptionsLoadFailed = true;
+      streamerOptionsListeners.forEach(function (fn) { fn(); });
     });
   }
+  loadStreamerOptions();
 
   var backdrop = document.getElementById('propose-backdrop');
   var closeBtn = document.getElementById('propose-modal-close');
@@ -103,6 +117,21 @@
       var pool = streamerOptions.filter(function (s) {
         return excludedIds.indexOf(s.id) === -1 && (q === '' || s.name.indexOf(q) > -1);
       });
+      if (streamerOptionsLoadFailed) {
+        // 목록을 못 불러온 것과 "그런 스트리머가 정말 없는 것"을 구분해야, 일시적 오류로
+        // 불필요한 중복 스트리머 추가 요청이 쌓이는 걸 막을 수 있다.
+        suggestions.innerHTML = '<div class="streamer-suggest-empty">스트리머 목록을 불러오지 못했습니다.</div>' +
+          '<button type="button" class="streamer-request-btn streamer-options-retry-btn">다시 불러오기</button>';
+        suggestions.style.display = 'block';
+        var retryBtn = suggestions.querySelector('.streamer-options-retry-btn');
+        if (retryBtn) {
+          retryBtn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            loadStreamerOptions();
+          });
+        }
+        return;
+      }
       if (!pool.length) {
         var requestBtnHtml = q
           ? '<button type="button" class="streamer-request-btn" data-name="' + sbmEscapeHtml(q) + '">"' + sbmEscapeHtml(q) + '" 스트리머 추가 요청하기</button>'
@@ -152,6 +181,10 @@
     input.addEventListener('focus', renderSuggestions);
     input.addEventListener('blur', function () {
       setTimeout(function () { suggestions.style.display = 'none'; }, 120);
+    });
+    // 목록을 다시 불러왔을 때, 지금 이 검색창을 보고 있는 사용자에게만 즉시 반영한다.
+    streamerOptionsListeners.push(function () {
+      if (document.activeElement === input) renderSuggestions();
     });
 
     picker.appendChild(chips);
@@ -399,7 +432,7 @@
       statusEl.style.color = 'var(--mint)';
       statusEl.textContent = res.data.status === 'open'
         ? '관리자 · 인증 스트리머 계정으로 제안해 검증 단계 없이 즉시 배팅이 오픈됩니다.'
-        : '제안이 접수됐습니다. 관리자 · 인증 스트리머 검증 또는 좋아요 10개 이상 중 먼저 충족되는 조건으로 자동 오픈됩니다.';
+        : '제안이 접수됐습니다. 관리자 · 인증 스트리머 검증 또는 좋아요 ' + SBM_LIKE_THRESHOLD + '개 이상 중 먼저 충족되는 조건으로 자동 오픈됩니다.';
       statusEl.classList.add('show');
     }).catch(function (err) {
       typeSelect.disabled = false;

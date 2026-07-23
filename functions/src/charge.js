@@ -49,14 +49,22 @@ const grantChargeRequest = onCall(async (request) => {
 
   const db = getDatabase();
   const reqRef = db.ref('bettingMarket/chargeRequests/' + requestId);
-  const snap = await reqRef.get();
-  if (!snap.exists()) throw new HttpsError('not-found', '신청 내역을 찾을 수 없습니다.');
-  const req = snap.val();
 
-  await ensureWallet(req.uid);
-  await adjustBalance(req.uid, amt);
-  await reqRef.remove();
-  await logAudit(adminUid, adminName, '자산 충전 지급', req.nickname + ' · +' + amt.toLocaleString('ko-KR') + '원');
+  // 지급 전에 신청 건을 트랜잭션으로 원자적으로 선점(삭제)해야, 중복 클릭·네트워크 재시도로
+  // 같은 신청에 재화가 두 번 지급되는 걸 막을 수 있다.
+  let claimedReq = null;
+  const claim = await reqRef.transaction((current) => {
+    if (!current) return; // abort — 이미 처리됨(지급 또는 무시)
+    claimedReq = current;
+    return null;
+  });
+  if (!claim.committed || !claimedReq) {
+    throw new HttpsError('not-found', '신청 내역을 찾을 수 없습니다.');
+  }
+
+  await ensureWallet(claimedReq.uid);
+  await adjustBalance(claimedReq.uid, amt);
+  await logAudit(adminUid, adminName, '자산 충전 지급', claimedReq.nickname + ' · +' + amt.toLocaleString('ko-KR') + '원');
 
   return { status: 'granted', amount: amt };
 });

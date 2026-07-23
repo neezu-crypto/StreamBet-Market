@@ -102,12 +102,12 @@ function sbmRenderOpenCard(marketId, market, isHero) {
 function sbmRenderPendingCard(marketId, market) {
   var safeTitle = sbmEscapeHtml(market.title);
   var likeCount = (market.validation && market.validation.likeCount) || 0;
-  var pct = Math.min(100, Math.round((likeCount / 10) * 100));
+  var pct = Math.min(100, Math.round((likeCount / SBM_LIKE_THRESHOLD) * 100));
   return '<article class="ticket js-open-review" data-market-id="' + marketId + '" role="button" tabindex="0" style="cursor:pointer;">' +
     '<div class="ticket-main"><div class="badges"><span class="badge badge-pending">검증중</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
     '<h2 class="ticket-title">' + safeTitle + '</h2>' +
-    '<div class="verify-progress"><span>좋아요 ' + likeCount + ' / 10</span><div class="track"><i style="width:' + pct + '%"></i></div></div></div>' +
+    '<div class="verify-progress"><span>좋아요 ' + likeCount + ' / ' + SBM_LIKE_THRESHOLD + '</span><div class="track"><i style="width:' + pct + '%"></i></div></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;"><span class="participants">배팅 오픈 대기 · 카드 클릭 시 검수(관리자 · 인증 스트리머)</span>' +
     '<div class="stub-foot-actions">' +
     '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + safeTitle + '" type="button">신고</button>' +
