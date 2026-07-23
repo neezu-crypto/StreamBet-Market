@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>게임 설명서 · STREAMBET MARKET</title>
+<style>
+  :root{
+    --ink: #0b0d10;
+    --panel: #15181d;
+    --panel-raised: #1c2027;
+    --hairline: #262b33;
+    --gold: #d9a441;
+    --gold-dim: rgba(217,164,65,0.14);
+    --gold-line: rgba(217,164,65,0.35);
+    --mint: #3fb689;
+    --mint-dim: rgba(63,182,137,0.14);
+    --coral: #e2554f;
+    --coral-dim: rgba(226,85,79,0.14);
+    --text: #eef0f2;
+    --muted: #8b93a1;
+    --muted-2: #5f6672;
+    --font-display: "Apple SD Gothic Neo", "Pretendard Variable", Pretendard, "Malgun Gothic", -apple-system, sans-serif;
+    --font-body: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--ink); color: var(--text); font-family: var(--font-body);
+    font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased;
+  }
+  a{ color: var(--gold); }
+  .top{
+    position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:12px;
+    padding:14px 24px; background:rgba(11,13,16,0.9); backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--hairline);
+  }
+  .top .back{
+    font-size:13px; color:var(--muted); text-decoration:none; padding:6px 12px;
+    border:1px solid var(--hairline); border-radius:20px; flex-shrink:0;
+  }
+  .top .back:hover{ border-color:var(--gold-line); color:var(--gold); }
+  .top .brand{ font-family:var(--font-display); font-weight:800; font-size:15px; }
+  .top .brand em{ font-style:normal; color:var(--gold); }
+
+  .hero{ padding:56px 24px 36px; text-align:center; border-bottom:1px solid var(--hairline); }
+  .hero .eyebrow{
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:.12em; color:var(--gold);
+    text-transform:uppercase; margin-bottom:12px; display:block;
+  }
+  .hero h1{ font-family:var(--font-display); font-size:clamp(26px,4vw,38px); margin:0 0 12px; font-weight:800; }
+  .hero p{ color:var(--muted); max-width:520px; margin:0 auto; font-size:14.5px; }
+
+  .layout{ max-width:1080px; margin:0 auto; padding:36px 24px 80px; display:grid; grid-template-columns:220px 1fr; gap:40px; }
+  @media (max-width:860px){ .layout{ grid-template-columns:1fr; } .toc{ position:static; order:-1; } }
+
+  .toc{ position:sticky; top:70px; align-self:start; display:flex; flex-direction:column; gap:2px; }
+  .toc a{
+    font-size:13px; color:var(--muted); text-decoration:none; padding:7px 10px; border-radius:7px;
+    border-left:2px solid transparent;
+  }
+  .toc a:hover{ color:var(--text); background:var(--panel-raised); }
+  .toc a.num{ font-family:var(--font-mono); color:var(--gold); margin-right:6px; }
+
+  section{
+    margin-bottom:40px; padding-bottom:36px; border-bottom:1px solid var(--hairline); scroll-margin-top:70px;
+  }
+  section:last-child{ border-bottom:none; }
+  .sec-head{ display:flex; align-items:baseline; gap:10px; margin-bottom:16px; }
+  .sec-num{
+    font-family:var(--font-mono); font-size:12px; color:var(--gold); background:var(--gold-dim);
+    border:1px solid var(--gold-line); padding:2px 8px; border-radius:20px;
+  }
+  h2{ font-family:var(--font-display); font-size:20px; margin:0; }
+  h3{ font-size:15px; margin:22px 0 8px; color:var(--text); }
+  p{ margin:0 0 12px; }
+  ul, ol{ margin:0 0 12px; padding-left:20px; }
+  li{ margin-bottom:6px; }
+  .muted{ color:var(--muted); font-size:13.5px; }
+  .chip{
+    font-family:var(--font-mono); font-size:12.5px; background:var(--panel-raised);
+    border:1px solid var(--hairline); padding:1px 7px; border-radius:6px;
+  }
+  .callout{
+    background:var(--panel-raised); border:1px solid var(--hairline); border-left:3px solid var(--gold);
+    border-radius:8px; padding:12px 14px; font-size:13.5px; color:var(--muted); margin:14px 0;
+  }
+  .callout b{ color:var(--gold); }
+  .callout.mint{ border-left-color:var(--mint); }
+  .callout.mint b{ color:var(--mint); }
+  .callout.coral{ border-left-color:var(--coral); }
+  .callout.coral b{ color:var(--coral); }
+  table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:13.5px; }
+  th, td{ text-align:left; padding:9px 12px; border-bottom:1px solid var(--hairline); }
+  th{ color:var(--muted); font-weight:600; font-size:12px; text-transform:uppercase; letter-spacing:.03em; }
+  .badge{
+    display:inline-block; font-family:var(--font-mono); font-size:11px; font-weight:700;
+    padding:2px 8px; border-radius:20px; margin-right:4px;
+  }
+  .badge.guest{ color:var(--muted); background:var(--panel-raised); border:1px solid var(--hairline); }
+  .badge.real{ color:var(--gold); background:var(--gold-dim); border:1px solid var(--gold-line); }
+  .badge.streamer{ color:var(--mint); background:var(--mint-dim); border:1px solid rgba(63,182,137,0.35); }
+  .tier-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:16px 0; }
+  @media (max-width:700px){ .tier-grid{ grid-template-columns:1fr; } }
+  .tier-card{ background:var(--panel-raised); border:1px solid var(--hairline); border-radius:10px; padding:14px 16px; }
+  .tier-card h4{ margin:0 0 8px; font-size:13.5px; }
+  .tier-card ul{ margin:0; padding-left:18px; font-size:12.5px; color:var(--muted); }
+  .tier-card li{ margin-bottom:4px; }
+  footer{ text-align:center; padding:30px; color:var(--muted-2); font-size:12px; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <a class="back" href="index.html">← 게임으로 돌아가기</a>
+  <span class="brand">STREAMBET <em>MARKET</em></span>
+</div>
+
+<div class="hero">
+  <span class="eyebrow">Game Guide</span>
+  <h1>게임 설명서</h1>
+  <p>스트리머 배팅시장의 배팅 방법부터 재화 · 랭킹 · 신고 규정까지, 플레이에 필요한 모든 내용을 정리했습니다.</p>
+</div>
+
+<div class="layout">
+  <nav class="toc">
+    <a href="#sec-01"><span class="num">01</span>기본 개념</a>
+    <a href="#sec-02"><span class="num">02</span>계정 단계</a>
+    <a href="#sec-03"><span class="num">03</span>배팅 참여</a>
+    <a href="#sec-04"><span class="num">04</span>배당률 계산</a>
+    <a href="#sec-05"><span class="num">05</span>마켓 제안</a>
+    <a href="#sec-06"><span class="num">06</span>정산 · 판정</a>
+    <a href="#sec-07"><span class="num">07</span>재화 · 환전</a>
+    <a href="#sec-08"><span class="num">08</span>출석 · 잭팟</a>
+    <a href="#sec-09"><span class="num">09</span>랭킹 · 정산내역</a>
+    <a href="#sec-10"><span class="num">10</span>신고 · 제재</a>
+    <a href="#sec-11"><span class="num">11</span>스트리머 인증</a>
+    <a href="#sec-12"><span class="num">12</span>FAQ</a>
+  </nav>
+
+  <div class="content">
+
+    <section id="sec-01">
+      <div class="sec-head"><span class="sec-num">01</span><h2>기본 개념</h2></div>
+      <p>스트리머 배팅시장은 <b>스트리머의 방송 · 대회 결과를 두고 유저들이 가상 재화로 배팅하는 예측 게임</b>입니다. 실제 돈이 오가지 않으며, 배팅에 쓰이는 재화는 이 게임 안에서만 통용됩니다.</p>
+      <ol>
+        <li>누군가 <b>배팅 주제</b>를 제안한다 ("OO 스트리머가 노래대회에서 3등 이상 할 것이다" 등)</li>
+        <li>다른 유저들이 각 결과(outcome)에 재화를 배팅한다</li>
+        <li>배팅이 마감되고 실제 결과가 나오면, 인증 스트리머 또는 관리자가 <b>판정</b>한다</li>
+        <li>맞춘 유저들에게 배당금이 지급된다</li>
+      </ol>
+      <div class="callout"><b>실제 도박이 아닙니다</b> — 여기서 쓰는 재화는 현금으로 교환되지 않으며, 스트리머 주식시장 서비스의 재화와만 서로 환전할 수 있습니다.</div>
+    </section>
+
+    <section id="sec-02">
+      <div class="sec-head"><span class="sec-num">02</span><h2>계정 단계</h2></div>
+      <p>로그인 여부와 인증 상태에 따라 이용 가능한 기능이 달라집니다.</p>
+      <div class="tier-grid">
+        <div class="tier-card">
+          <h4><span class="badge guest">비로그인</span></h4>
+          <ul>
+            <li>마켓 열람, 배팅 참여</li>
+            <li>마켓 제안, 신고</li>
+            <li>일부 기능은 대기시간 · 쿨다운 적용</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <h4><span class="badge real">로그인 계정</span></h4>
+          <ul>
+            <li>비로그인 기능 전부</li>
+            <li>닉네임 · 아바타 설정</li>
+            <li>환전 기능 이용</li>
+            <li>대기시간 · 쿨다운 전부 면제</li>
+          </ul>
+        </div>
+        <div class="tier-card">
+          <h4><span class="badge streamer">인증 스트리머</span></h4>
+          <ul>
+            <li>로그인 없이도 로그인 계정과 동일한 혜택</li>
+            <li>본인 방송 관련 주제 검수 · 판정 권한</li>
+            <li>신고 처리, 닉네임 차단 등 관리 권한</li>
+          </ul>
+        </div>
+      </div>
+      <p class="muted">우측 상단 아바타 아이콘(또는 Ctrl+Enter 단축키)으로 언제든 로그인할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-03">
+      <div class="sec-head"><span class="sec-num">03</span><h2>배팅 참여</h2></div>
+      <h3>대전 유형</h3>
+      <table>
+        <tr><th>유형</th><th>설명</th></tr>
+        <tr><td>개인전</td><td>한 명의 스트리머에 대한 예측 (예: "OO가 클리어할 것이다")</td></tr>
+        <tr><td>1vs1</td><td>두 스트리머 · 진영의 대결 결과 예측</td></tr>
+        <tr><td>단체전</td><td>여러 명 중 결과를 맞히는 예측</td></tr>
+      </table>
+      <h3>배팅 방법</h3>
+      <ul>
+        <li>마켓 카드에서 원하는 결과를 선택하고 금액을 입력합니다 (<b>10,000원 단위</b>)</li>
+        <li>1회 최대 배팅 한도가 있으며, <b>신규 계정은 낮은 한도</b>부터 시작해 며칠에 걸쳐 늘어납니다</li>
+        <li>이미 배팅한 마켓에 다시 배팅하면 기존 배팅이 취소되고 새 배팅으로 대체됩니다 (재배팅 사이 <b>30초 쿨다운</b>)</li>
+        <li>배팅은 <b>배팅 마감 전까지만</b> 취소 · 변경할 수 있습니다</li>
+      </ul>
+      <div class="callout"><b>신규 계정 대기시간</b> — 막 만든 계정은 1분간 배팅에 참여할 수 없습니다. 어뷰징(즉석 다중 계정 생성)을 막기 위한 장치입니다.</div>
+    </section>
+
+    <section id="sec-04">
+      <div class="sec-head"><span class="sec-num">04</span><h2>배당률 계산</h2></div>
+      <p>배당률은 고정되어 있지 않고, <b>같은 마켓에 걸린 전체 배팅 금액에 따라 실시간으로 바뀝니다</b>.</p>
+      <ol>
+        <li>마켓에 걸린 전체 금액(총 풀)에서 <b>수수료 5%</b>를 뗀 금액이 실제로 분배될 금액입니다</li>
+        <li>내가 고른 결과에 걸린 금액이 적을수록, 맞혔을 때 배당률이 높아집니다</li>
+        <li>배당률 = (총 풀 × 0.95) ÷ 내가 고른 결과에 걸린 금액</li>
+      </ol>
+      <div class="callout mint"><b>최소 배당 보장</b> — 한쪽에 배팅이 몰려 배당률이 지나치게 낮아지면(1.1배 미만), 운영 준비금에서 보전해 <b>최소 1.1배</b>는 보장합니다.</div>
+      <p class="muted">마켓 카드와 배팅 모달에서 각 결과의 예상 배당률을 실시간으로 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-05">
+      <div class="sec-head"><span class="sec-num">05</span><h2>마켓 제안</h2></div>
+      <p>원하는 배팅 주제가 없다면 직접 제안할 수 있습니다. 하단 <b>+</b> 버튼으로 제안 모달을 엽니다.</p>
+      <h3>검수 통과 조건 (둘 중 하나)</h3>
+      <ul>
+        <li>다른 유저들의 <b>좋아요 20개</b> 이상</li>
+        <li>관리자 또는 인증 스트리머의 <b>직접 승인</b></li>
+      </ul>
+      <p>검수 통과 후 최소 <b>5명 이상</b> 참여해야 정상적으로 정산됩니다. 미달 시 무효 처리되어 참여자 전원에게 전액 환불됩니다.</p>
+      <h3>제안 시 필수 입력</h3>
+      <ul>
+        <li>대전 유형, 참가 스트리머(상장된 스트리머 중 선택), 배팅 결과 항목</li>
+        <li>배팅 마감 시점 · 이벤트 종료 시점</li>
+      </ul>
+      <div class="callout coral"><b>사전 경고 없이 삭제되는 주제</b> — 스트리머 비하, 평가 불가능한 주관적 주제, 사회 · 정치 뉴스, 방송 주의가 필요한 주제(선정성 · 혐오 표현), 스트리머 외 개인 사생활 · 명예훼손 소지, 금전 · 도박 암시, 불법행위 조장 · 미화, 차별 · 혐오 표현.</div>
+      <p class="muted">제안한 마켓이 실제로 진행되면(최소 참여자 충족 시) 제안 보상 재화를 받을 수 있습니다.</p>
+    </section>
+
+    <section id="sec-06">
+      <div class="sec-head"><span class="sec-num">06</span><h2>정산 · 판정</h2></div>
+      <ul>
+        <li>배팅 마감과 이벤트 종료는 별개 시점입니다 — 배팅은 마감됐지만 이벤트가 진행 중일 수 있습니다</li>
+        <li>이벤트가 끝나면 관리자 또는 해당 스트리머(인증된 경우)가 결과를 판정합니다</li>
+        <li>판정 후 <b>1분의 유예시간</b> 동안은 재판정 · 취소가 가능합니다 — 이 시간이 지나야 배당금이 최종 지급됩니다</li>
+        <li>최소 참여자(5명) 미달, 판정 불가 등의 사유로 <b>무효 처리</b>되면 참여자 전원에게 배팅 원금이 환불됩니다</li>
+      </ul>
+      <p class="muted">진행중인 마켓 카드에서 실시간으로 상태("마감임박", "정산 대기중" 등)를 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-07">
+      <div class="sec-head"><span class="sec-num">07</span><h2>재화 · 환전</h2></div>
+      <p>배팅시장 재화는 같은 서비스 계정으로 연결된 <b>스트리머 주식시장 재화와 1:1로 환전</b>할 수 있습니다 (환전 수수료 10%, 로그인 계정만 가능).</p>
+      <table>
+        <tr><th>계정 경과일</th><th>일일 환전 한도</th></tr>
+        <tr><td>1일차</td><td>200,000원</td></tr>
+        <tr><td>2일차</td><td>500,000원</td></tr>
+        <tr><td>3일차 이후</td><td>1,000,000원</td></tr>
+      </table>
+      <p class="muted">우측 상단 <b>환전</b> 버튼에서 방향(배팅시장 ↔ 주식시장)을 선택해 진행합니다. 그 외 자산충전(운영자 지급)은 <b>자산충전</b> 버튼으로 신청할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-08">
+      <div class="sec-head"><span class="sec-num">08</span><h2>출석 · 잭팟</h2></div>
+      <h3>출석 체크</h3>
+      <p>매일 출석하면 재화를 받습니다. <b>7일 연속 출석 시 보상이 점점 커지고</b>, 하루라도 빠지면 1일차로 초기화됩니다.</p>
+      <h3>잭팟</h3>
+      <p>배팅 마켓이 정산될 때마다 발생하는 수수료 일부가 잭팟에 쌓입니다.</p>
+      <ul>
+        <li><b>오늘 배팅에 1회 이상 참여</b>해야 그날 잭팟에 도전할 수 있습니다</li>
+        <li>하루 <b>1회</b>, <b>1/50 확률</b>로 도전할 수 있습니다</li>
+        <li>당첨되면 그 시점까지 쌓인 잭팟 <b>전액</b>을 받고, 잭팟은 다시 0부터 쌓입니다</li>
+      </ul>
+      <p class="muted">마켓 목록 우측 패널에서 출석 체크 · 잭팟 도전 버튼과 지난 당첨 내역을 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-09">
+      <div class="sec-head"><span class="sec-num">09</span><h2>랭킹 · 정산내역</h2></div>
+      <p>상단 <b>랭킹</b> 탭에서 세 가지 기준으로 순위를 볼 수 있습니다.</p>
+      <ul>
+        <li><b>자산 랭킹</b> — 현재 보유 재화 기준</li>
+        <li><b>승률 랭킹</b> — 배팅 적중률 기준</li>
+        <li><b>누적 수익 랭킹</b> — 지금까지 배팅으로 번(또는 잃은) 총액 기준</li>
+      </ul>
+      <p><b>정산 내역</b> 탭에서는 내가 참여한 모든 배팅의 결과(적중 · 미적중 · 무효환불)와 잔액 변동 내역을 확인할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-10">
+      <div class="sec-head"><span class="sec-num">10</span><h2>신고 · 제재</h2></div>
+      <p>부적절한 배팅 주제나 닉네임은 신고할 수 있습니다.</p>
+      <ul>
+        <li>마켓 신고는 <b>마켓당 1회</b>만 가능하며, 신고 사이 <b>5분 쿨다운</b>이 있습니다</li>
+        <li>닉네임도 부적절한 표현 · 사칭 · 광고성일 경우 신고할 수 있으며, 신고가 접수되면 관리자 · 인증 스트리머가 검토 후 차단합니다</li>
+        <li>신고는 신규 계정(생성 10분 이내)은 이용할 수 없습니다</li>
+      </ul>
+      <p class="muted">규정을 반복적으로 위반하는 계정은 관리자에 의해 정지될 수 있으며, 정지된 계정은 배팅 · 환전 · 제안 등 모든 재화 관련 기능을 이용할 수 없습니다.</p>
+    </section>
+
+    <section id="sec-11">
+      <div class="sec-head"><span class="sec-num">11</span><h2>스트리머 인증</h2></div>
+      <p>본인이 스트리머라면 인증을 신청해 방송 관련 배팅 주제를 직접 관리할 수 있습니다.</p>
+      <ol>
+        <li>닉네임과 SOOP 아이디를 입력해 인증을 신청합니다 (로그인 없이도 가능)</li>
+        <li>관리자가 검토 후 승인하면, 즉시 인증 스트리머 권한이 적용됩니다</li>
+      </ol>
+      <p>인증되면 <b>메인 페이지 홍보 배너에 노출</b>되고, 본인 방송과 관련된 배팅 주제의 <b>검수 · 판정 권한</b>을 갖게 되며, 로그인 계정과 동일한 혜택(대기시간 · 쿨다운 면제, 환전 등)을 자동으로 이용할 수 있습니다.</p>
+    </section>
+
+    <section id="sec-12">
+      <div class="sec-head"><span class="sec-num">12</span><h2>자주 묻는 질문</h2></div>
+      <h3>Q. 배팅에 쓰는 재화는 현금인가요?</h3>
+      <p>아니요. 실제 돈이 아니며, 이 게임과 스트리머 주식시장 서비스 안에서만 통용되는 가상 재화입니다.</p>
+      <h3>Q. 배팅을 취소하고 싶어요.</h3>
+      <p>배팅 마감 전이라면 같은 마켓에 다시 배팅하는 방식으로 기존 배팅을 취소하고 새로 배팅할 수 있습니다 (30초 쿨다운).</p>
+      <h3>Q. 판정 결과가 잘못된 것 같아요.</h3>
+      <p>판정 직후 1분의 유예시간 동안은 재판정이 가능합니다. 그 이후에는 마켓을 신고해 관리자의 확인을 요청해 주세요.</p>
+      <h3>Q. 인증 스트리머가 되려면?</h3>
+      <p>본문 11번 항목을 참고해 인증을 신청해 주세요. 승인은 관리자가 직접 검토합니다.</p>
+    </section>
+
+  </div>
+</div>
+
+<footer>STREAMER BETTING MARKET · GAME GUIDE</footer>
+
+</body>
+</html>
