@@ -494,11 +494,6 @@ button{ font-family: inherit; cursor: pointer; }
 .toggle-row{ display:flex; align-items:center; gap:8px; font-size:13px; color: var(--muted); cursor:pointer; }
 .toggle-row input{ accent-color: var(--gold); width:15px; height:15px; }
 
-.jackpot-note{
-  display:flex; align-items:center; gap:8px; font-size:12px; color: var(--muted-2);
-  padding: 12px 14px; border:1px dashed var(--hairline); border-radius:10px;
-}
-.jackpot-note .dot{ width:6px; height:6px; border-radius:50%; background: var(--muted-2); flex-shrink:0; }
 
 /* ---------- Feed ---------- */
 .feed{ display:flex; flex-direction:column; gap:22px; min-width:0; }
