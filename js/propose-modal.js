@@ -103,7 +103,32 @@
       var pool = streamerOptions.filter(function (s) {
         return excludedIds.indexOf(s.id) === -1 && (q === '' || s.name.indexOf(q) > -1);
       });
-      if (!pool.length) { suggestions.innerHTML = '<div class="streamer-suggest-empty">일치하는 스트리머가 없어요</div>'; suggestions.style.display = 'block'; return; }
+      if (!pool.length) {
+        var requestBtnHtml = q
+          ? '<button type="button" class="streamer-request-btn" data-name="' + sbmEscapeHtml(q) + '">"' + sbmEscapeHtml(q) + '" 스트리머 추가 요청하기</button>'
+          : '';
+        suggestions.innerHTML = '<div class="streamer-suggest-empty">일치하는 스트리머가 없어요</div>' + requestBtnHtml;
+        suggestions.style.display = 'block';
+        var requestBtn = suggestions.querySelector('.streamer-request-btn');
+        if (requestBtn) {
+          requestBtn.addEventListener('mousedown', function (e) {
+            e.preventDefault();
+            var name = requestBtn.getAttribute('data-name');
+            requestBtn.disabled = true;
+            requestBtn.textContent = '요청 처리중...';
+            window.sbmFirebase.httpsCallable('submitStreamerRequest')({ name: name })
+              .then(function () {
+                requestBtn.textContent = '요청 완료! 관리자 확인 후 등록됩니다.';
+              })
+              .catch(function (err) {
+                alert(err.message || '요청 처리 중 오류가 발생했습니다.');
+                requestBtn.disabled = false;
+                requestBtn.textContent = '"' + name + '" 스트리머 추가 요청하기';
+              });
+          });
+        }
+        return;
+      }
       suggestions.innerHTML = pool.map(function (s) {
         return '<button type="button" class="streamer-suggest-item" data-id="' + s.id + '" data-name="' + sbmEscapeHtml(s.name) + '">' + sbmEscapeHtml(s.name) + '</button>';
       }).join('');

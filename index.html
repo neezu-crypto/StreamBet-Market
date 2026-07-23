@@ -775,6 +775,12 @@
         <li class="audit-empty">대기 중인 충전 신청이 없습니다.</li>
       </ul>
 
+      <div class="section-label">스트리머 추가 요청 <span class="admin-only-tag">관리자 전용</span></div>
+      <p class="admin-item-sub" style="margin-bottom:10px;">승인해도 stocks에 자동 등록되지 않습니다 — 주식시장 쪽에 스트리머를 별도로 등록한 뒤 처리 완료로 표시해 주세요.</p>
+      <ul class="audit-log verify-req-list" id="streamer-requests-list">
+        <li class="audit-empty">대기 중인 스트리머 추가 요청이 없습니다.</li>
+      </ul>
+
       <div class="section-label">최근 처리 내역</div>
       <ul class="audit-log" id="audit-log">
         <li class="audit-empty">아직 처리 내역이 없습니다.</li>
@@ -860,6 +866,7 @@
 <script defer src="js/propose-modal.js"></script>
 <script defer src="js/exchange-modal.js"></script>
 <script defer src="js/charge-modal.js"></script>
+<script defer src="js/streamer-requests.js"></script>
 <script defer src="js/profile-modal.js"></script>
 <script defer src="js/admin-dashboard.js"></script>
 </body>

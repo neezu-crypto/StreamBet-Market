@@ -300,6 +300,11 @@
         "$requestId": { ".write": false }
       },
 
+      "streamerRequests": {
+        ".read": "auth != null",
+        "$requestId": { ".write": false }
+      },
+
       "bannedAccounts": {
         ".read": "auth != null",
         "$uid": { ".write": false }

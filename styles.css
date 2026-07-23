@@ -889,6 +889,13 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 }
 .streamer-suggest-item:hover{ background: var(--gold-dim); color: var(--gold); }
 .streamer-suggest-empty{ font-size:12px; color: var(--muted-2); padding:8px 10px; text-align:center; }
+.streamer-request-btn{
+  display:block; width:100%; text-align:center; font-family:inherit; font-weight:600;
+  background: transparent; border:1px dashed var(--gold-line); color: var(--gold);
+  font-size:12px; padding:8px 10px; border-radius:6px; margin-top:4px;
+}
+.streamer-request-btn:hover{ background: var(--gold-dim); }
+.streamer-request-btn:disabled{ opacity:.7; cursor:default; }
 .propose-error{ font-size:12px; color:var(--coral); margin: -4px 0 12px; display:none; }
 .propose-error.show{ display:block; }
 .propose-submit-btn{

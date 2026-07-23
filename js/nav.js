@@ -51,6 +51,7 @@
     sbmRenderVerifiedStreamers();
     sbmRenderReportQueue();
     sbmRenderChargeRequests();
+    sbmRenderStreamerRequests();
     sbmRenderNicknameReportQueue();
     sbmRenderBlockedNicknames();
     sbmRenderAdminDashboard();
