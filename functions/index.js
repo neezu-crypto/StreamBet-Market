@@ -1,7 +1,7 @@
 const { initializeApp } = require('firebase-admin/app');
 initializeApp();
 
-const { claimAttendance, distributeJackpotWeekly } = require('./src/rewards');
+const { claimAttendance, claimJackpotDraw } = require('./src/rewards');
 const {
   submitMarketProposal,
   reviewProposal,
@@ -26,7 +26,7 @@ module.exports = {
   ...require('./src/exchange'),
   ...require('./src/verification'),
   claimAttendance,
-  distributeJackpotWeekly,
+  claimJackpotDraw,
   ...require('./src/reports'),
   ...require('./src/profile'),
   ...require('./src/charge'),

@@ -46,12 +46,14 @@ function sbmRenderAttendance(wallet) {
     if (!user) {
       if (walletAmountEl) walletAmountEl.innerHTML = '0<small>원</small>';
       sbmRenderAttendance(null);
+      if (window.sbmRenderJackpotEligibility) window.sbmRenderJackpotEligibility(null);
       return;
     }
     fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + user.uid), function (snap) {
       var wallet = snap.val() || { balance: 1000000 };
       if (walletAmountEl) walletAmountEl.innerHTML = Math.round(wallet.balance || 0).toLocaleString('ko-KR') + '<small>원</small>';
       sbmRenderAttendance(wallet);
+      if (window.sbmRenderJackpotEligibility) window.sbmRenderJackpotEligibility(wallet);
     });
   });
 

@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
-const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt } = require('./lib/wallet');
+const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt, kstDateKey, walletRef } = require('./lib/wallet');
 const {
   BET_STEP,
   BET_MAX_AMOUNT,
@@ -65,6 +65,7 @@ const placeBet = onCall(async (request) => {
   await getDatabase().ref('bettingMarket/userBets/' + uid + '/' + marketId + '/' + betRef.key).set(true);
   await adjustPool(marketId, outcomeId, amt);
   await setLastBetActionAt(uid, Date.now());
+  await walletRef(uid).child('dailyBetDate').set(kstDateKey()); // 14번 — 잭팟 확인 참여 자격(당일 배팅 1회 이상) 판정용
 
   return { betId: betRef.key };
 });

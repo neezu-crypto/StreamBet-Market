@@ -276,7 +276,7 @@
       },
 
       "jackpot": {
-        ".read": false,
+        ".read": "auth != null",
         ".write": false
       },
 

@@ -55,6 +55,7 @@ const REPORT_DETAIL_MAX_LENGTH = 300; // 신고 상세 사유 자유 입력 길�
 const JUDGE_GRACE_MS = 60 * 1000; // 판정 유예시간 — 확정 전 1분간 취소·재판정 가능
 
 const JACKPOT_RAKE_SHARE = 0.2; // 14번 — 마켓 정산 시 수수료의 20%는 잭팟, 나머지 80%는 reserveFund로 적립
+const JACKPOT_WIN_CHANCE = 1 / 50; // 14번 — 1일 1회 확인, 당첨 확률 1/50, 당첨 시 적립금 전액 지급 후 리셋
 
 module.exports = {
   ADMIN_EMAIL,
@@ -89,4 +90,5 @@ module.exports = {
   PROHIBITED_TOPIC_REASONS,
   JUDGE_GRACE_MS,
   JACKPOT_RAKE_SHARE,
+  JACKPOT_WIN_CHANCE,
 };
