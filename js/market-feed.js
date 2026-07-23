@@ -120,14 +120,17 @@ function sbmRenderPendingCard(marketId, market) {
 function sbmRenderClosedPendingCard(marketId, market) {
   var safeTitle = sbmEscapeHtml(market.title);
   var total = market.totalPool || 0;
+  var isPendingSettlement = market.status === 'pendingSettlement';
+  var badge = isPendingSettlement ? '판정 유예 중' : '정산 대기중';
+  var participants = isPendingSettlement ? '판정 유예 중(취소·변경 가능) · 카드 클릭 시 확인(관리자 · 인증 스트리머)' : '판정 대기 중 · 카드 클릭 시 판정(관리자 · 인증 스트리머)';
   return '<article class="ticket js-manage-market" data-market-id="' + marketId + '" role="button" tabindex="0">' +
     '<div class="ticket-main"><div class="badges">' +
-    '<span class="badge badge-pending">정산 대기중</span>' +
+    '<span class="badge badge-pending">' + badge + '</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
     '<h2 class="ticket-title">' + safeTitle + '</h2>' +
     '<div class="ticket-meta"><span>이벤트 종료 · 총 풀 <span class="num">' + sbmFmtNum(total) + '</span>원</span></div></div>' +
     '<div class="ticket-stub"><div class="stub-foot" style="margin-top:0;">' +
-    '<span class="participants">판정 대기 중 · 카드 클릭 시 판정(관리자 · 인증 스트리머)</span>' +
+    '<span class="participants">' + participants + '</span>' +
     '<div class="stub-foot-actions">' +
     '<button class="btn-report js-open-report" data-market-id="' + marketId + '" data-title="' + safeTitle + '" type="button">신고</button>' +
     '</div></div></div></article>';
@@ -233,6 +236,7 @@ function sbmRenderMarketFeed() {
       if (Date.now() < (m.timing.eventEndsAt || 0)) rawOpen.push([id, m]);
       else rawClosedPending.push([id, m]);
     }
+    else if (m.status === 'pendingSettlement') rawClosedPending.push([id, m]); // 판정 유예시간(1분) 중
     else if (m.status === 'settled' || m.status === 'void') closed.push([id, m]);
   });
   closed.sort(function (a, b) {

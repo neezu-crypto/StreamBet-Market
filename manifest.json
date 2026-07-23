@@ -1,0 +1,16 @@
+{
+  "name": "스트리머 배팅시장",
+  "short_name": "STREAMBET",
+  "description": "스트리머 배팅시장 — 좋아하는 스트리머의 방송 이벤트에 배팅하는 팬 예측 게임",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

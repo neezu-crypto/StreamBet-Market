@@ -8,6 +8,7 @@
   var titleEl = document.getElementById('manage-modal-title');
   var outcomesEl = document.getElementById('manage-outcomes');
   var confirmBtn = document.getElementById('manage-confirm-btn');
+  var cancelJudgmentBtn = document.getElementById('manage-cancel-judgment-btn');
   var closeEarlyBtn = document.getElementById('manage-close-early-btn');
   var voidBtn = document.getElementById('manage-void-btn');
   var statusEl = document.getElementById('manage-status');
@@ -20,24 +21,21 @@
   var overrideParticipantsCheckbox = document.getElementById('manage-override-participants');
   if (!backdrop) return;
 
-  var VOID_REASON_LABEL = {
-    'min-participants': '최소 참여 인원(5명) 미달로 무효 처리되어 전액 환불됩니다.',
-    'no-winning-pool': '승리한 선택지에 배팅이 없어(적중자 없음) 무효 처리되어 전액 환불됩니다.',
-  };
-
   var currentMarketId = '';
   var selectedOutcomeId = '';
   var pendingAction = null;
+  var judgeCountdownTimer = null;
 
-  function renderOutcomes(market) {
+  function renderOutcomes(market, preselectId) {
     var odds = window.sbmComputeOdds(market);
     outcomesEl.innerHTML = '';
     Object.keys(market.outcomes).forEach(function (id, i) {
       var o = market.outcomes[id];
+      var isSelected = preselectId ? id === preselectId : i === 0;
       var label = document.createElement('label');
-      label.className = 'bet-outcome-option' + (i === 0 ? ' selected' : '');
+      label.className = 'bet-outcome-option' + (isSelected ? ' selected' : '');
       label.innerHTML =
-        '<span class="label"><input type="radio" name="manage-outcome" ' + (i === 0 ? 'checked' : '') + '>' + sbmEscapeHtml(o.label) + '</span>' +
+        '<span class="label"><input type="radio" name="manage-outcome" ' + (isSelected ? 'checked' : '') + '>' + sbmEscapeHtml(o.label) + '</span>' +
         '<span class="odd num">' + (odds[id] ? odds[id].toFixed(2) : '-') + 'x</span>';
       label.querySelector('input').addEventListener('change', function () {
         outcomesEl.querySelectorAll('.bet-outcome-option').forEach(function (el) { el.classList.remove('selected'); });
@@ -46,8 +44,28 @@
       });
       outcomesEl.appendChild(label);
     });
-    var firstId = Object.keys(market.outcomes)[0];
-    selectedOutcomeId = firstId;
+    selectedOutcomeId = preselectId || Object.keys(market.outcomes)[0];
+  }
+
+  function stopJudgeCountdown() {
+    if (judgeCountdownTimer) { clearInterval(judgeCountdownTimer); judgeCountdownTimer = null; }
+  }
+
+  function startJudgeCountdown(finalizeAt) {
+    stopJudgeCountdown();
+    function tick() {
+      var remaining = Math.max(0, Math.round((finalizeAt - Date.now()) / 1000));
+      statusEl.style.color = 'var(--gold)';
+      statusEl.textContent = '판정이 접수됐습니다. ' + remaining + '초 후 자동 확정됩니다. 그 전까지 다시 판정하거나 취소할 수 있어요.';
+      statusEl.classList.add('show');
+      if (remaining <= 0) {
+        stopJudgeCountdown();
+        statusEl.textContent = '판정이 확정 처리되었습니다.';
+        cancelJudgmentBtn.style.display = 'none';
+      }
+    }
+    tick();
+    judgeCountdownTimer = setInterval(tick, 1000);
   }
 
   function resetActions() {
@@ -56,6 +74,10 @@
     closeEarlyBtn.disabled = !canManage;
     voidBtn.disabled = !canManage;
     overrideParticipantsCheckbox.disabled = !canManage;
+    cancelJudgmentBtn.style.display = 'none';
+    cancelJudgmentBtn.disabled = !canManage;
+    confirmBtn.textContent = '판정하기';
+    stopJudgeCountdown();
     statusEl.classList.remove('show');
     if (!canManage) {
       statusEl.style.color = 'var(--coral)';
@@ -71,12 +93,19 @@
     if (!market) return;
     currentMarketId = marketId;
     titleEl.textContent = market.title;
-    renderOutcomes(market);
     resetActions();
+    if (market.status === 'pendingSettlement' && market.pendingSettlement) {
+      renderOutcomes(market, market.pendingSettlement.winningOutcomeId);
+      confirmBtn.textContent = '판정 변경';
+      if (window.sbmIsAdmin || window.sbmIsVerifiedStreamer) cancelJudgmentBtn.style.display = '';
+      startJudgeCountdown(market.pendingSettlement.finalizeAt);
+    } else {
+      renderOutcomes(market);
+    }
     overrideParticipantsCheckbox.checked = !!market.minParticipantsOverride;
     backdrop.classList.add('open');
   }
-  function closeModal() { backdrop.classList.remove('open'); }
+  function closeModal() { backdrop.classList.remove('open'); stopJudgeCountdown(); }
 
   document.addEventListener('click', function (e) {
     var card = e.target.closest('.js-manage-market');
@@ -135,22 +164,23 @@
 
   confirmBtn.addEventListener('click', function () {
     if (!window.sbmFirebase || !selectedOutcomeId) return;
+    stopJudgeCountdown();
     confirmBtn.disabled = true;
     closeEarlyBtn.disabled = true;
     voidBtn.disabled = true;
+    cancelJudgmentBtn.disabled = true;
     statusEl.style.color = 'var(--gold)';
     statusEl.textContent = '판정 처리중...';
     statusEl.classList.add('show');
     window.sbmFirebase.httpsCallable('judgeMarket')({ marketId: currentMarketId, winningOutcomeId: selectedOutcomeId })
       .then(function (res) {
-        var d = res.data;
-        if (d.status === 'void') {
-          statusEl.style.color = 'var(--coral)';
-          statusEl.textContent = VOID_REASON_LABEL[d.reason] || '무효 처리되어 전액 환불됩니다.';
-        } else {
-          statusEl.style.color = 'var(--mint)';
-          statusEl.textContent = '판정이 확정됐습니다. 배당 ' + d.payoutMultiplier.toFixed(2) + 'x로 정산 · 지급되었습니다.';
-        }
+        confirmBtn.disabled = false;
+        closeEarlyBtn.disabled = false;
+        voidBtn.disabled = false;
+        cancelJudgmentBtn.disabled = false;
+        confirmBtn.textContent = '판정 변경';
+        cancelJudgmentBtn.style.display = '';
+        startJudgeCountdown(res.data.finalizeAt);
       })
       .catch(function (err) {
         statusEl.style.color = 'var(--coral)';
@@ -158,6 +188,30 @@
         confirmBtn.disabled = false;
         closeEarlyBtn.disabled = false;
         voidBtn.disabled = false;
+        cancelJudgmentBtn.disabled = false;
+      });
+  });
+  cancelJudgmentBtn.addEventListener('click', function () {
+    if (!window.sbmFirebase) return;
+    stopJudgeCountdown();
+    cancelJudgmentBtn.disabled = true;
+    confirmBtn.disabled = true;
+    statusEl.style.color = 'var(--gold)';
+    statusEl.textContent = '판정 취소 처리중...';
+    statusEl.classList.add('show');
+    window.sbmFirebase.httpsCallable('cancelPendingJudgment')({ marketId: currentMarketId })
+      .then(function () {
+        statusEl.style.color = 'var(--mint)';
+        statusEl.textContent = '판정이 취소됐습니다. 다시 판정할 수 있습니다.';
+        confirmBtn.disabled = false;
+        confirmBtn.textContent = '판정하기';
+        cancelJudgmentBtn.style.display = 'none';
+      })
+      .catch(function (err) {
+        statusEl.style.color = 'var(--coral)';
+        statusEl.textContent = err.message || '판정 취소 중 오류가 발생했습니다.';
+        confirmBtn.disabled = false;
+        cancelJudgmentBtn.disabled = false;
       });
   });
   closeEarlyBtn.addEventListener('click', function () { openReasonPanel('closeEarly'); });

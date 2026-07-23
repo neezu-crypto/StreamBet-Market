@@ -18,6 +18,7 @@ const {
   PROHIBITED_TOPIC_REASONS,
   NEW_ACCOUNT_WAIT_MS,
   PROPOSAL_COOLDOWN_MS,
+  JUDGE_GRACE_MS,
 } = require('./constants');
 
 function marketRef(marketId) {
@@ -274,7 +275,10 @@ const setMinParticipantsOverride = onCall(async (request) => {
   return { status: 'updated', override };
 });
 
-// 10번/08번 — 최종 승·패 판정 및 정산·배당 지급
+// 10번/08번 — 승·패 판정 접수. 즉시 확정하지 않고 1분 유예시간을 두어, 그 사이 관리자·인증
+// 스트리머가 실수를 발견하면 재판정하거나 취소할 수 있게 한다. 실제 지급은 유예시간이 지난 뒤
+// finalizeMarketSettlement(scheduled.js에서 매분 스캔)가 처리한다 — 그래야 "이미 지급된 돈을
+// 회수"하는 위험한 되돌리기 없이, 지급 전 단계에서 안전하게 취소·정정할 수 있다.
 const judgeMarket = onCall(async (request) => {
   const { uid, role } = await requireAdminOrVerifiedStreamer(request);
   const { marketId, winningOutcomeId } = request.data || {};
@@ -285,12 +289,57 @@ const judgeMarket = onCall(async (request) => {
   const snap = await ref.get();
   if (!snap.exists()) throw new HttpsError('not-found', '마켓을 찾을 수 없습니다.');
   const market = snap.val();
-  if (market.status !== 'closed') {
+  if (market.status !== 'closed' && market.status !== 'pendingSettlement') {
     throw new HttpsError('failed-precondition', '배팅 마감 후에만 판정할 수 있습니다.');
   }
   if (!market.outcomes || !market.outcomes[winningOutcomeId]) {
     throw new HttpsError('invalid-argument', '존재하지 않는 outcome입니다.');
   }
+
+  const actorName = request.auth.token.name || request.auth.token.email || uid;
+  const finalizeAt = Date.now() + JUDGE_GRACE_MS;
+  const isCorrection = market.status === 'pendingSettlement';
+  await ref.update({
+    status: 'pendingSettlement',
+    pendingSettlement: {
+      winningOutcomeId,
+      decidedBy: uid,
+      decidedByName: actorName,
+      decidedByRole: role,
+      decidedAt: Date.now(),
+      finalizeAt,
+    },
+  });
+  await logAudit(uid, actorName, isCorrection ? '판정 변경(유예 중)' : '판정 접수(유예 중)',
+    market.title + ' → "' + market.outcomes[winningOutcomeId].label + '" (' + Math.round(JUDGE_GRACE_MS / 1000) + '초 후 확정)');
+
+  return { status: 'pendingSettlement', finalizeAt };
+});
+
+// 판정 유예 중 취소 — 지급 전이라 그냥 마감(closed) 상태로 되돌리기만 하면 된다.
+const cancelPendingJudgment = onCall(async (request) => {
+  const { uid, role } = await requireAdminOrVerifiedStreamer(request);
+  const { marketId } = request.data || {};
+  if (!marketId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
+  const ref = marketRef(marketId);
+  const snap = await ref.get();
+  if (!snap.exists()) throw new HttpsError('not-found', '마켓을 찾을 수 없습니다.');
+  const market = snap.val();
+  if (market.status !== 'pendingSettlement') {
+    throw new HttpsError('failed-precondition', '유예 중인 판정이 없습니다.');
+  }
+  const actorName = request.auth.token.name || request.auth.token.email || uid;
+  await ref.update({ status: 'closed', pendingSettlement: null });
+  await logAudit(uid, actorName, '판정 취소', market.title);
+  return { status: 'closed' };
+});
+
+// 유예시간이 지난 뒤 실제 지급을 확정한다 (scheduled.js가 매분 스캔해서 호출).
+async function finalizeMarketSettlement(marketId, market) {
+  const pending = market.pendingSettlement;
+  if (!pending) return;
+  const { winningOutcomeId, decidedBy: uid, decidedByName: actorName, decidedByRole: role } = pending;
+  const ref = marketRef(marketId);
 
   const betsSnap = await betsRef(marketId).get();
   const bets = betsSnap.val() || {};
@@ -302,16 +351,10 @@ const judgeMarket = onCall(async (request) => {
     await refundAllActiveBets(marketId);
     await ref.update({
       status: 'void',
-      adminAction: {
-        type: 'void',
-        reason: '최소 참여 인원 미달',
-        actorUid: uid,
-        actorName: request.auth.token.name || request.auth.token.email || uid,
-        actorRole: role,
-        at: Date.now(),
-      },
+      pendingSettlement: null,
+      adminAction: { type: 'void', reason: '최소 참여 인원 미달', actorUid: uid, actorName, actorRole: role, at: Date.now() },
     });
-    return { status: 'void', reason: 'min-participants' };
+    return;
   }
 
   const totalPool = market.totalPool || 0;
@@ -328,16 +371,10 @@ const judgeMarket = onCall(async (request) => {
     await refundAllActiveBets(marketId);
     await ref.update({
       status: 'void',
-      adminAction: {
-        type: 'void',
-        reason: '이벤트 자체 무산 · 승자 없음',
-        actorUid: uid,
-        actorName: request.auth.token.name || request.auth.token.email || uid,
-        actorRole: role,
-        at: Date.now(),
-      },
+      pendingSettlement: null,
+      adminAction: { type: 'void', reason: '이벤트 자체 무산 · 승자 없음', actorUid: uid, actorName, actorRole: role, at: Date.now() },
     });
-    return { status: 'void', reason: result.reason };
+    return;
   }
 
   const betUpdates = {};
@@ -360,6 +397,7 @@ const judgeMarket = onCall(async (request) => {
   const now = Date.now();
   await ref.update({
     status: 'settled',
+    pendingSettlement: null,
     settlement: {
       winningOutcomeId,
       payoutMultiplier: result.multiplier,
@@ -374,14 +412,12 @@ const judgeMarket = onCall(async (request) => {
     await payoutProposalReward(market.proposerUid, uniqueParticipants.size);
   }
 
-  await logAudit(uid, request.auth.token.name, '판정 확정', market.title + ' → "' + market.outcomes[winningOutcomeId].label + '" 적중');
+  await logAudit(uid, actorName, '판정 확정', market.title + ' → "' + market.outcomes[winningOutcomeId].label + '" 적중');
 
   // 13번 — 정산으로 잔액·승패 기록이 바뀌므로 랭킹을 이 시점에만 재계산 (고정 주기 폴링 대신)
   const { recomputeRankingsAfter } = require('./rankings');
   await recomputeRankingsAfter('judgeMarket');
-
-  return { status: 'settled', payoutMultiplier: result.multiplier };
-});
+}
 
 module.exports = {
   submitMarketProposal,
@@ -390,4 +426,6 @@ module.exports = {
   voidMarket,
   setMinParticipantsOverride,
   judgeMarket,
+  cancelPendingJudgment,
+  finalizeMarketSettlement,
 };

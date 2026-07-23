@@ -5,6 +5,13 @@
 <title>스트리머 배팅시장</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%230b0d10'/%3E%3Ctext x='50' y='68' font-size='52' font-family='sans-serif' font-weight='700' fill='%23d9a441' text-anchor='middle'%3ESB%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="theme-color" content="#0b0d10">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="STREAMBET">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -219,7 +226,10 @@
         <input type="checkbox" id="manage-override-participants">
         <span><b>참가자 미달이어도 정산 진행</b> — 최소 참여자 5명을 못 채워도 무효 처리하지 않고 정산합니다</span>
       </label>
-      <button class="manage-confirm-btn" id="manage-confirm-btn" type="button">판정 확정</button>
+      <div class="manage-action-row">
+        <button class="manage-confirm-btn" id="manage-confirm-btn" type="button">판정하기</button>
+        <button class="manage-void-btn" id="manage-cancel-judgment-btn" type="button" style="display:none;">판정 취소</button>
+      </div>
     </div>
 
     <div class="manage-section">
@@ -420,6 +430,10 @@
       </div>
     </div>
   </div>
+</div>
+
+<div class="banned-banner" id="banned-banner" style="display:none;">
+  <span>🚫 이 계정은 정지되었습니다<span id="banned-banner-reason"></span>. 문의사항은 관리자에게 연락해 주세요.</span>
 </div>
 
 <div class="app">
@@ -709,6 +723,9 @@
       <div class="settlement-list" id="settlement-list">
         <div class="settlement-empty">로그인하면 나의 배팅 정산 내역을 확인할 수 있습니다.</div>
       </div>
+
+      <div class="section-label" id="wallet-ledger-label" style="display:none;">잔액 조정 내역</div>
+      <ul class="audit-log" id="wallet-ledger-list"></ul>
     </div>
   </div>
 
@@ -722,6 +739,7 @@
 <script defer src="js/login-modal.js"></script>
 <script defer src="js/kakao-login.js"></script>
 <script defer src="js/wallet.js"></script>
+<script defer src="js/ban-banner.js"></script>
 <script defer src="js/settlement.js"></script>
 <script defer src="js/nickname.js"></script>
 <script defer src="js/ranking.js"></script>

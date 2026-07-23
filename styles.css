@@ -43,6 +43,13 @@ button{ font-family: inherit; cursor: pointer; }
 
 .app{ max-width: 1180px; margin: 0 auto; padding: 0 20px 96px; }
 
+/* ---------- Banned account banner ---------- */
+.banned-banner{
+  background: var(--coral-dim); border-bottom: 1px solid rgba(226,85,79,0.35);
+  color: var(--coral); font-size: 13px; font-weight:600; text-align:center;
+  padding: 10px 16px;
+}
+
 /* ---------- Dev bar ---------- */
 .devbar{ background: #0e1116; border-bottom: 1px solid var(--hairline); position: relative; z-index: 30; }
 .devbar-inner{
@@ -130,6 +137,8 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .audit-log li.audit-empty{ color: var(--muted-2); font-style:normal; text-align:center; }
 .audit-log b{ color: var(--text); }
+.audit-log b.positive{ color: var(--mint); }
+.audit-log b.negative{ color: var(--coral); }
 .audit-log .audit-time{ display:block; font-size:10.5px; color: var(--muted-2); margin-top:3px; font-family: var(--font-mono); }
 
 .admin-tab-notice{

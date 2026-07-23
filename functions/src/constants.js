@@ -52,6 +52,8 @@ const PROHIBITED_TOPIC_REASONS = [ // 04번 금지 주제 8종
 const NICKNAME_REPORT_REASONS = ['부적절한 표현', '사칭 · 도용', '광고 · 스팸성 닉네임', '기타']; // 13번
 const REPORT_DETAIL_MAX_LENGTH = 300; // 신고 상세 사유 자유 입력 길이 제한 (XSS·매크로성 대량 입력 방지)
 
+const JUDGE_GRACE_MS = 60 * 1000; // 판정 유예시간 — 확정 전 1분간 취소·재판정 가능
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -83,4 +85,5 @@ module.exports = {
   PROPOSAL_REWARD_CAP,
   PROPOSAL_REWARD_DAILY_MAX,
   PROHIBITED_TOPIC_REASONS,
+  JUDGE_GRACE_MS,
 };

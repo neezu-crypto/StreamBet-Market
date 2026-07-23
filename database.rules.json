@@ -249,6 +249,13 @@
         }
       },
 
+      "walletLedger": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$entryId": { ".write": false }
+        }
+      },
+
       "exchanges": {
         "$uid": {
           ".read": "auth != null && auth.uid === $uid",

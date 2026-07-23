@@ -2,9 +2,24 @@ const { initializeApp } = require('firebase-admin/app');
 initializeApp();
 
 const { claimAttendance, distributeJackpotWeekly } = require('./src/rewards');
+const {
+  submitMarketProposal,
+  reviewProposal,
+  closeMarketEarly,
+  voidMarket,
+  setMinParticipantsOverride,
+  judgeMarket,
+  cancelPendingJudgment,
+} = require('./src/markets');
 
 module.exports = {
-  ...require('./src/markets'),
+  submitMarketProposal,
+  reviewProposal,
+  closeMarketEarly,
+  voidMarket,
+  setMinParticipantsOverride,
+  judgeMarket,
+  cancelPendingJudgment,
   ...require('./src/bets'),
   ...require('./src/likes'),
   ...require('./src/scheduled'),

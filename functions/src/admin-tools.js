@@ -214,6 +214,13 @@ const adminAdjustBalance = onCall(async (request) => {
   const wallet = await adjustBalance(uid, d);
   await logAudit(adminUid, adminName, '수동 잔액 조정', uid + ' · ' + (d > 0 ? '+' : '') + d.toLocaleString('ko-KR') + '원 · ' + reason.trim());
 
+  // 당사자도 왜 잔액이 바뀌었는지 알 수 있게 본인 전용 내역에도 남긴다 (정산 내역 탭에 노출).
+  await getDatabase().ref('bettingMarket/walletLedger/' + uid).push({
+    delta: d,
+    reason: reason.trim(),
+    at: Date.now(),
+  });
+
   const { recomputeRankingsAfter } = require('./rankings');
   await recomputeRankingsAfter('adminAdjustBalance');
 

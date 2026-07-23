@@ -5,6 +5,8 @@
   var totalBetEl = document.getElementById('settlement-total-bet');
   var totalPayoutEl = document.getElementById('settlement-total-payout');
   var netEl = document.getElementById('settlement-net');
+  var ledgerLabelEl = document.getElementById('wallet-ledger-label');
+  var ledgerListEl = document.getElementById('wallet-ledger-list');
   if (!listEl || !window.sbmFirebase) return;
   var fb = window.sbmFirebase;
 
@@ -66,6 +68,23 @@
     }).join('');
   }
 
+  function renderLedger(entriesObj) {
+    if (!ledgerListEl || !ledgerLabelEl) return;
+    var entries = Object.values(entriesObj || {}).sort(function (a, b) { return b.at - a.at; });
+    if (!entries.length) {
+      ledgerLabelEl.style.display = 'none';
+      ledgerListEl.innerHTML = '';
+      return;
+    }
+    ledgerLabelEl.style.display = '';
+    ledgerListEl.innerHTML = entries.map(function (e) {
+      var sign = e.delta > 0 ? '+' : '';
+      var cls = e.delta > 0 ? 'positive' : 'negative';
+      return '<li><b class="' + cls + '">' + sign + fmt(e.delta) + '원</b> · ' + sbmEscapeHtml(e.reason || '') +
+        '<span class="audit-time">' + new Date(e.at).toLocaleString('ko-KR') + '</span></li>';
+    }).join('');
+  }
+
   function trackBet(marketId, betId) {
     var key = marketId + '/' + betId;
     if (trackedKeys[key]) return;
@@ -93,8 +112,12 @@
       totalBetEl.textContent = '0원';
       totalPayoutEl.textContent = '0원';
       netEl.textContent = '0원';
+      renderLedger(null);
       return;
     }
+    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/walletLedger/' + user.uid), function (snap) {
+      renderLedger(snap.val());
+    });
     fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + user.uid), function (snap) {
       var val = snap.val() || {};
       Object.keys(val).forEach(function (marketId) {
