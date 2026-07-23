@@ -2,7 +2,19 @@ const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireAuth, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { logAudit } = require('./lib/audit');
+const { avatarUrlFor } = require('./lib/avatar');
 const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
+
+// 인증 스트리머가 이 배팅시장에서 인게임 닉네임을 한 번도 설정한 적이 없으면(프로필 없음),
+// 랭킹 등에 "유저XXXXXX" 폴백 대신 방송 닉네임이 바로 보이도록 초기값을 채워준다. 이미 본인이
+// 직접 정한 닉네임이 있으면 절대 덮어쓰지 않는다 — 자동 채움은 "빈 프로필 채우기"로만 한정한다.
+async function fillProfileIfEmpty(db, uid, nickname, soopId) {
+  const profileRef = db.ref('bettingMarket/profiles/' + uid);
+  const snap = await profileRef.get();
+  const current = snap.val();
+  if (current && current.nickname) return;
+  await profileRef.update({ nickname, soopId, avatarUrl: avatarUrlFor(soopId) });
+}
 
 // 05번 — 스트리머 인증 신청은 로그인 없이도 가능해야 한다(익명 계정 포함). 방송 인증은
 // 재화가 걸린 행위가 아니라 관리자가 수기로 검수하는 절차라 requireRealAccount를 쓰지 않는다.
@@ -87,7 +99,10 @@ const approveVerification = onCall(async (request) => {
     if (oldUid && oldUid !== uid) await db.ref('bettingMarket/verifiedStreamerUids/' + oldUid).remove();
     await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
     await reqRef.remove();
+    await fillProfileIfEmpty(db, uid, nickname, soopId);
     await logAudit(adminUid, adminName, '스트리머 인증 재신청 승인 (uid 갱신)', nickname + ' (' + soopId + ')');
+    const { recomputeRankingsAfter } = require('./rankings');
+    await recomputeRankingsAfter('approveVerification');
     return { status: 'approved', mode: 'uid-updated' };
   }
 
@@ -95,7 +110,10 @@ const approveVerification = onCall(async (request) => {
   await newRef.set({ nickname, soopId, uid, verifiedAt: Date.now() });
   await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
   await reqRef.remove();
+  await fillProfileIfEmpty(db, uid, nickname, soopId);
   await logAudit(adminUid, adminName, '스트리머 인증 승인', nickname + ' (' + soopId + ')');
+  const { recomputeRankingsAfter } = require('./rankings');
+  await recomputeRankingsAfter('approveVerification');
   return { status: 'approved', mode: 'created' };
 });
 
