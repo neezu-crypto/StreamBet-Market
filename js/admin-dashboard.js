@@ -138,8 +138,10 @@ function sbmRenderBannedAccounts() {
 
   listEl.querySelectorAll('.admin-unban-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      var uid = btn.getAttribute('data-uid');
+      if (!confirm('이 계정(' + uid + ')의 정지를 해제할까요?')) return;
       btn.disabled = true;
-      window.sbmFirebase.httpsCallable('unbanAccount')({ uid: btn.getAttribute('data-uid') })
+      window.sbmFirebase.httpsCallable('unbanAccount')({ uid: uid })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
     });
   });
@@ -224,6 +226,7 @@ function sbmSubscribeBannedAccounts() {
         var reason = document.getElementById('admin-adjust-reason').value.trim();
         if (!amount) { alert('조정 금액을 입력해 주세요.'); return; }
         if (!reason) { alert('사유를 입력해 주세요.'); return; }
+        if (!confirm((amount > 0 ? '+' : '') + amount.toLocaleString('ko-KR') + '원을 조정할까요?\n사유: ' + reason)) return;
         adjustBtn.disabled = true;
         window.sbmFirebase.httpsCallable('adminAdjustBalance')({ uid: data.uid, delta: amount, reason: reason })
           .then(function () { btn.click(); })
@@ -235,6 +238,7 @@ function sbmSubscribeBannedAccounts() {
       banBtn.addEventListener('click', function () {
         var reason = document.getElementById('admin-ban-reason').value.trim();
         if (!reason) { alert('정지 사유를 입력해 주세요.'); return; }
+        if (!confirm('이 계정을 정지할까요?\n사유: ' + reason)) return;
         banBtn.disabled = true;
         window.sbmFirebase.httpsCallable('banAccount')({ uid: data.uid, reason: reason })
           .then(function () { btn.click(); })
@@ -244,6 +248,7 @@ function sbmSubscribeBannedAccounts() {
     var unbanBtn = document.getElementById('admin-unban-btn');
     if (unbanBtn) {
       unbanBtn.addEventListener('click', function () {
+        if (!confirm('이 계정의 정지를 해제할까요?')) return;
         unbanBtn.disabled = true;
         window.sbmFirebase.httpsCallable('unbanAccount')({ uid: data.uid })
           .then(function () { btn.click(); })

@@ -104,12 +104,14 @@ function sbmRenderVerifiedStreamers() {
 
   list.querySelectorAll('.verify-req-reject').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      if (!btn.getAttribute('data-soopid')) {
+      var soopId = btn.getAttribute('data-soopid');
+      if (!soopId) {
         alert('SOOP 아이디가 없어서 인증 해제할 수 없습니다. 먼저 SOOP 아이디를 입력해 주세요.');
         return;
       }
+      if (!confirm('SOOP 아이디 "' + soopId + '"의 인증을 해제할까요? 판정 권한과 배너 노출이 즉시 사라집니다.')) return;
       btn.disabled = true;
-      window.sbmFirebase.httpsCallable('revokeVerification')({ soopId: btn.getAttribute('data-soopid') })
+      window.sbmFirebase.httpsCallable('revokeVerification')({ soopId: soopId })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
     });
   });

@@ -25,8 +25,8 @@ function sbmRenderStreamerRequestsList() {
   }
   list.innerHTML = reqs.map(function (r) {
     var actions = isAdmin
-      ? '<button class="verify-req-approve streamer-req-approve" data-request-id="' + r.id + '" type="button">처리 완료</button>' +
-        '<button class="verify-req-reject streamer-req-reject" data-request-id="' + r.id + '" type="button">반려</button>'
+      ? '<button class="verify-req-approve streamer-req-approve" data-request-id="' + r.id + '" data-name="' + sbmEscapeHtml(r.name) + '" type="button">처리 완료</button>' +
+        '<button class="verify-req-reject streamer-req-reject" data-request-id="' + r.id + '" data-name="' + sbmEscapeHtml(r.name) + '" type="button">반려</button>'
       : '';
     return '<li class="verify-req-item">' +
       '<div class="verify-req-info"><b>' + sbmEscapeHtml(r.name) + '</b><span>' + new Date(r.requestedAt).toLocaleString('ko-KR') + '</span></div>' +
@@ -35,6 +35,8 @@ function sbmRenderStreamerRequestsList() {
 
   list.querySelectorAll('.streamer-req-approve').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-name');
+      if (!confirm('"' + name + '" 요청을 처리 완료로 표시할까요?\n먼저 주식시장 쪽 stocks에 실제로 등록했는지 확인해 주세요 — 처리 완료 시 이 요청 내역은 복구할 수 없습니다.')) return;
       btn.disabled = true;
       window.sbmFirebase.httpsCallable('approveStreamerRequest')({ requestId: btn.getAttribute('data-request-id') })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
@@ -42,6 +44,8 @@ function sbmRenderStreamerRequestsList() {
   });
   list.querySelectorAll('.streamer-req-reject').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      var name = btn.getAttribute('data-name');
+      if (!confirm('"' + name + '" 요청을 반려할까요? 요청 내역은 복구할 수 없습니다.')) return;
       btn.disabled = true;
       window.sbmFirebase.httpsCallable('dismissStreamerRequest')({ requestId: btn.getAttribute('data-request-id') })
         .catch(function (e) { alert(e.message); btn.disabled = false; });

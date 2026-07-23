@@ -40,6 +40,7 @@ function sbmRenderChargeRequestsList() {
       var input = list.querySelector('.charge-amount-input[data-request-id="' + requestId + '"]');
       var amount = parseInt((input.value || '').replace(/[^0-9]/g, ''), 10);
       if (!amount || amount <= 0) { alert('지급액을 입력해 주세요.'); return; }
+      if (!confirm(amount.toLocaleString('ko-KR') + '원을 지급할까요?')) return;
       btn.disabled = true;
       input.disabled = true;
       window.sbmFirebase.httpsCallable('grantChargeRequest')({ requestId: requestId, amount: amount })
@@ -48,6 +49,7 @@ function sbmRenderChargeRequestsList() {
   });
   list.querySelectorAll('.charge-dismiss-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      if (!confirm('이 충전 신청을 무시할까요? 지급 없이 신청 내역이 사라지며 복구할 수 없습니다.')) return;
       btn.disabled = true;
       window.sbmFirebase.httpsCallable('dismissChargeRequest')({ requestId: btn.getAttribute('data-request-id') })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
