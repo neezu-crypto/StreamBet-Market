@@ -758,6 +758,7 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 }
 .app-footer a{ font-size:12.5px; color: var(--muted); text-decoration:none; }
 .app-footer a:hover{ color: var(--gold); }
+.app-footer-sep{ font-size:12.5px; color: var(--muted-2); margin:0 8px; }
 
 @media (max-width: 520px){
   .topbar{ flex-wrap:wrap; row-gap:12px; }
