@@ -17,7 +17,7 @@ const BET_MIN_PARTICIPANTS = 5; // 09번 최소 참여자 수
 const BET_CANCEL_COOLDOWN_MS = 30 * 1000; // 09번 취소+재배팅 쿨다운
 const NEW_ACCOUNT_BET_CAPS = [500000, 1000000]; // 09번 1일차 / 2일차 이후 배팅 한도
 
-const LIKE_THRESHOLD = 20; // 04번 좋아요 다수결 통과 기준
+const LIKE_THRESHOLD = 10; // 04번 좋아요 다수결 통과 기준
 
 const PROPOSAL_COOLDOWN_MS = 60 * 1000; // 배팅 주제 제안 매크로 방지 — 계정당 쿨다운 (관리자·인증 스트리머 제외)
 

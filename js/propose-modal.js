@@ -399,7 +399,7 @@
       statusEl.style.color = 'var(--mint)';
       statusEl.textContent = res.data.status === 'open'
         ? '관리자 · 인증 스트리머 계정으로 제안해 검증 단계 없이 즉시 배팅이 오픈됩니다.'
-        : '제안이 접수됐습니다. 관리자 · 인증 스트리머 검증 또는 좋아요 20개 이상 중 먼저 충족되는 조건으로 자동 오픈됩니다.';
+        : '제안이 접수됐습니다. 관리자 · 인증 스트리머 검증 또는 좋아요 10개 이상 중 먼저 충족되는 조건으로 자동 오픈됩니다.';
       statusEl.classList.add('show');
     }).catch(function (err) {
       typeSelect.disabled = false;
