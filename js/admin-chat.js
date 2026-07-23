@@ -22,10 +22,15 @@ function sbmRenderAdminChat() {
     list.innerHTML = messages.map(function (m) {
       var roleTag = m.role === 'admin' ? '<span class="admin-chat-role admin">관리자</span>' : '<span class="admin-chat-role streamer">인증 스트리머</span>';
       var mine = m.uid === myUid;
+      var avatarHtml = m.avatarUrl
+        ? '<img class="admin-chat-avatar" src="' + sbmEscapeHtml(m.avatarUrl) + '" alt="">'
+        : '<span class="admin-chat-avatar-fallback">' + sbmEscapeHtml((m.name || '?').charAt(0)) + '</span>';
       return '<li class="admin-chat-msg' + (mine ? ' mine' : '') + '">' +
+        avatarHtml +
+        '<div class="admin-chat-bubble">' +
         '<div class="admin-chat-msg-head"><b>' + sbmEscapeHtml(m.name) + '</b>' + roleTag +
         '<span class="audit-time">' + new Date(m.at).toLocaleString('ko-KR') + '</span></div>' +
-        '<div class="admin-chat-msg-text">' + sbmEscapeHtml(m.text) + '</div></li>';
+        '<div class="admin-chat-msg-text">' + sbmEscapeHtml(m.text) + '</div></div></li>';
     }).join('');
     if (atBottom) list.scrollTop = list.scrollHeight;
   });

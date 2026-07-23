@@ -15,11 +15,12 @@ const sendAdminChatMessage = onCall(async (request) => {
   }
 
   const db = getDatabase();
-  const profileSnap = await db.ref('bettingMarket/profiles/' + uid + '/nickname').get();
-  const name = profileSnap.val() || request.auth.token.name || request.auth.token.email || uid;
+  const profileSnap = await db.ref('bettingMarket/profiles/' + uid).get();
+  const profile = profileSnap.val() || {};
+  const name = profile.nickname || request.auth.token.name || request.auth.token.email || uid;
 
   const ref = db.ref('bettingMarket/adminChat').push();
-  await ref.set({ uid, name, role, text, at: Date.now() });
+  await ref.set({ uid, name, avatarUrl: profile.avatarUrl || '', role, text, at: Date.now() });
   return { messageId: ref.key };
 });
 
