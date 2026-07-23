@@ -13,14 +13,18 @@ function sbmRenderAdminChat() {
   var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/adminChat'), fb.limitToLast(200));
   fb.onValue(q, function (snap) {
     var val = snap.val() || {};
+    // 컨테이너가 flex-direction:column-reverse라 DOM상 첫 항목이 화면 맨 아래에 온다 —
+    // 최신 메시지가 아래에 쌓이도록 최신순(내림차순)으로 정렬해서 넣는다.
     var messages = Object.keys(val).map(function (k) { return val[k]; })
-      .sort(function (a, b) { return a.at - b.at; });
+      .sort(function (a, b) { return b.at - a.at; });
     if (!messages.length) {
       list.innerHTML = '<li class="audit-empty">아직 대화가 없습니다. 첫 메시지를 남겨보세요.</li>';
       return;
     }
     var myUid = window.sbmUser && window.sbmUser.uid;
-    var atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 40;
+    // column-reverse에서는 scrollTop 0이 맨 아래(최신)다 — 사용자가 위로 스크롤해 과거를
+    // 보고 있지 않을 때만 새 메시지가 와도 계속 맨 아래에 붙어있게 한다.
+    var atBottom = list.scrollTop <= 40;
     list.innerHTML = messages.map(function (m) {
       var roleTag = m.role === 'admin' ? '<span class="admin-chat-role admin">관리자</span>' : '<span class="admin-chat-role streamer">인증 스트리머</span>';
       var mine = m.uid === myUid;
@@ -34,7 +38,7 @@ function sbmRenderAdminChat() {
         '<span class="audit-time">' + new Date(m.at).toLocaleString('ko-KR') + '</span></div>' +
         '<div class="admin-chat-msg-text">' + sbmEscapeHtml(m.text) + '</div></div></li>';
     }).join('');
-    if (atBottom) list.scrollTop = list.scrollHeight;
+    if (atBottom) list.scrollTop = 0;
   });
 }
 
