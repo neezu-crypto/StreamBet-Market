@@ -38,13 +38,17 @@ function sbmTimeLeft(ms) {
 
 // 마켓 제목 앞에 참가 스트리머를 뱃지로 표시한다. 1명이면 닉네임만, 2명 이상이면
 // 닉네임 이름순으로 정렬해 첫 번째만 보여주고 나머지는 "닉네임 외 N명"으로 축약한다.
+// 뱃지에 마우스를 올리면 전체 참가자 목록을 볼 수 있다(배팅 모달에서도 동일하게 재사용).
 function sbmStreamerBadgeHtml(market) {
   var ids = market.streamerIds || [];
   var names = ids.map(function (id) { return sbmStockNames[id]; }).filter(Boolean);
   if (!names.length) return '';
   names.sort(function (a, b) { return a.localeCompare(b, 'ko'); });
   var text = names.length === 1 ? names[0] : names[0] + ' 외 ' + (names.length - 1) + '명';
-  return '<span class="ticket-streamer-badge">' + sbmEscapeHtml(text) + '</span> ';
+  var list = '<span class="ticket-streamer-badge-list">' +
+    names.map(function (n) { return '<span>' + sbmEscapeHtml(n) + '</span>'; }).join('') +
+    '</span>';
+  return '<span class="ticket-streamer-badge">' + sbmEscapeHtml(text) + list + '</span> ';
 }
 
 function sbmOutcomeArray(market) {

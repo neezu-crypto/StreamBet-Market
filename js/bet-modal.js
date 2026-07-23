@@ -4,6 +4,7 @@
   var backdrop = document.getElementById('bet-backdrop');
   var closeBtn = document.getElementById('bet-modal-close');
   var titleEl = document.getElementById('bet-modal-title');
+  var streamerBadgeEl = document.getElementById('bet-modal-streamer-badge');
   var proposerEl = document.getElementById('bet-modal-proposer');
   var outcomesEl = document.getElementById('bet-outcomes');
   var balanceEl = document.getElementById('bet-wallet-balance');
@@ -39,7 +40,9 @@
       label.className = 'bet-outcome-option' + (i === 0 ? ' selected' : '');
       var oddsVal = odds[o.id] || 0;
       label.innerHTML =
-        '<span class="label"><input type="radio" name="bet-outcome" ' + (i === 0 ? 'checked' : '') + '>' + sbmEscapeHtml(o.label) + '</span>' +
+        '<span class="label"><input type="radio" name="bet-outcome" ' + (i === 0 ? 'checked' : '') + '>' +
+        '<span class="bet-outcome-text"><span class="bet-outcome-name">' + sbmEscapeHtml(o.label) + '</span>' +
+        '<span class="bet-outcome-pool">배팅액 ' + fmt(o.pool || 0) + '원</span></span></span>' +
         '<span class="odd num">' + (oddsVal ? oddsVal.toFixed(2) : '-') + 'x</span>';
       label.querySelector('input').addEventListener('change', function () {
         outcomesEl.querySelectorAll('.bet-outcome-option').forEach(function (el) { el.classList.remove('selected'); });
@@ -82,6 +85,11 @@
     currentMarketId = marketId;
     currentActiveBet = null;
     titleEl.textContent = market.title;
+    if (streamerBadgeEl) {
+      var badgeHtml = typeof sbmStreamerBadgeHtml === 'function' ? sbmStreamerBadgeHtml(market) : '';
+      streamerBadgeEl.innerHTML = badgeHtml;
+      streamerBadgeEl.style.display = badgeHtml ? '' : 'none';
+    }
     proposerEl.style.display = 'none';
     proposerEl.textContent = '';
     renderOutcomes(market);
