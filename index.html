@@ -644,6 +644,15 @@
         <span class="admin-only-tag">관리자 전용</span>이 붙은 스트리머 인증 관련 기능(승인 · 반려 · 인증 해제)은 관리자만 가능합니다.
       </div>
 
+      <div class="section-label">관리자 · 인증 스트리머 채팅</div>
+      <div class="admin-chat-box">
+        <ul class="admin-chat-messages" id="admin-chat-messages"><li class="audit-empty">불러오는 중...</li></ul>
+        <div class="admin-chat-composer">
+          <input type="text" id="admin-chat-input" placeholder="메시지를 입력하세요" maxlength="300">
+          <button class="verify-req-approve" id="admin-chat-send-btn" type="button">전송</button>
+        </div>
+      </div>
+
       <div class="section-label">대시보드 요약 · 오늘</div>
       <div class="admin-stats-grid">
         <div class="admin-stat-box"><span class="label">오늘 신규 지갑</span><span class="value" id="stat-new-wallets">-</span></div>
@@ -870,5 +879,6 @@
 <script defer src="js/streamer-requests.js"></script>
 <script defer src="js/profile-modal.js"></script>
 <script defer src="js/admin-dashboard.js"></script>
+<script defer src="js/admin-chat.js"></script>
 </body>
 </html>

@@ -57,6 +57,8 @@ const JUDGE_GRACE_MS = 60 * 1000; // 판정 유예시간 — 확정 전 1분간 
 const JACKPOT_RAKE_SHARE = 0.2; // 14번 — 마켓 정산 시 수수료의 20%는 잭팟, 나머지 80%는 reserveFund로 적립
 const JACKPOT_WIN_CHANCE = 1 / 50; // 14번 — 1일 1회 확인, 당첨 확률 1/50, 당첨 시 적립금 전액 지급 후 리셋
 
+const CHAT_MESSAGE_MAX_LENGTH = 300; // 관리 탭 채팅 — 자유 입력 길이 제한 (XSS·매크로성 대량 입력 방지)
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -91,4 +93,5 @@ module.exports = {
   JUDGE_GRACE_MS,
   JACKPOT_RAKE_SHARE,
   JACKPOT_WIN_CHANCE,
+  CHAT_MESSAGE_MAX_LENGTH,
 };

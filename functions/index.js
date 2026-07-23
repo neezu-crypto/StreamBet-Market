@@ -32,4 +32,5 @@ module.exports = {
   ...require('./src/charge'),
   ...require('./src/admin-tools'),
   ...require('./src/streamer-requests'),
+  ...require('./src/chat'),
 };

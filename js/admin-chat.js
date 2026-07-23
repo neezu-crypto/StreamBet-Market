@@ -1,0 +1,60 @@
+// 관리 탭 채팅 — 관리자 · 인증 스트리머끼리 실시간으로 대화. 메시지는 항상
+// sendAdminChatMessage 함수를 거쳐 기록되며, 여기서는 읽기 구독과 전송 UI만 담당한다.
+var sbmAdminChatSubscribed = false;
+
+function sbmRenderAdminChat() {
+  var list = document.getElementById('admin-chat-messages');
+  if (!list || sbmAdminChatSubscribed || !window.sbmFirebase) return;
+  sbmAdminChatSubscribed = true;
+  var fb = window.sbmFirebase;
+
+  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/adminChat'), function (snap) {
+    var val = snap.val() || {};
+    var messages = Object.keys(val).map(function (k) { return val[k]; })
+      .sort(function (a, b) { return a.at - b.at; })
+      .slice(-200);
+    if (!messages.length) {
+      list.innerHTML = '<li class="audit-empty">아직 대화가 없습니다. 첫 메시지를 남겨보세요.</li>';
+      return;
+    }
+    var myUid = window.sbmUser && window.sbmUser.uid;
+    var atBottom = list.scrollTop + list.clientHeight >= list.scrollHeight - 40;
+    list.innerHTML = messages.map(function (m) {
+      var roleTag = m.role === 'admin' ? '<span class="admin-chat-role admin">관리자</span>' : '<span class="admin-chat-role streamer">인증 스트리머</span>';
+      var mine = m.uid === myUid;
+      return '<li class="admin-chat-msg' + (mine ? ' mine' : '') + '">' +
+        '<div class="admin-chat-msg-head"><b>' + sbmEscapeHtml(m.name) + '</b>' + roleTag +
+        '<span class="audit-time">' + new Date(m.at).toLocaleString('ko-KR') + '</span></div>' +
+        '<div class="admin-chat-msg-text">' + sbmEscapeHtml(m.text) + '</div></li>';
+    }).join('');
+    if (atBottom) list.scrollTop = list.scrollHeight;
+  });
+}
+
+(function () {
+  var input = document.getElementById('admin-chat-input');
+  var sendBtn = document.getElementById('admin-chat-send-btn');
+  if (!input || !sendBtn) return;
+
+  function send() {
+    var text = input.value.trim();
+    if (!text || !window.sbmFirebase) return;
+    input.disabled = true;
+    sendBtn.disabled = true;
+    window.sbmFirebase.httpsCallable('sendAdminChatMessage')({ text: text })
+      .then(function () {
+        input.value = '';
+      })
+      .catch(function (e) { alert(e.message); })
+      .then(function () {
+        input.disabled = false;
+        sendBtn.disabled = false;
+        input.focus();
+      });
+  }
+
+  sendBtn.addEventListener('click', send);
+  input.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); send(); }
+  });
+})();

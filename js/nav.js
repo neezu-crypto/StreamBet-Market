@@ -46,6 +46,7 @@
     e.preventDefault();
     if (!sbmCanUseAdminTab()) return; // 버튼이 숨겨져 있어도 직접 조작될 가능성 대비
     showTab(tabs[1]);
+    sbmRenderAdminChat();
     sbmRenderAuditLog();
     sbmRenderVerifiedStreamers();
     sbmRenderReportQueue();

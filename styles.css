@@ -141,6 +141,38 @@ button{ font-family: inherit; cursor: pointer; }
 .audit-log b.negative{ color: var(--coral); }
 .audit-log .audit-time{ display:block; font-size:10.5px; color: var(--muted-2); margin-top:3px; font-family: var(--font-mono); }
 
+.admin-chat-box{
+  display:flex; flex-direction:column; gap:10px;
+  background: var(--panel-raised); border:1px solid var(--hairline); border-radius:10px;
+  padding:12px; margin-bottom:8px;
+}
+.admin-chat-messages{
+  list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;
+  max-height:260px; overflow-y:auto;
+}
+.admin-chat-messages li.audit-empty{ color: var(--muted-2); font-style:normal; text-align:center; padding:10px 0; }
+.admin-chat-msg{
+  font-size:12.5px; line-height:1.5; padding:9px 11px;
+  background: var(--panel); border:1px solid var(--hairline); border-radius:9px; align-self:flex-start; max-width:88%;
+}
+.admin-chat-msg.mine{ align-self:flex-end; background: var(--gold-dim); border-color: var(--gold-line); }
+.admin-chat-msg-head{ display:flex; align-items:center; gap:6px; margin-bottom:3px; }
+.admin-chat-msg-head b{ color: var(--text); font-size:12.5px; }
+.admin-chat-msg-head .audit-time{ margin-left:auto; font-size:10px; }
+.admin-chat-role{
+  font-family: var(--font-mono); font-size:9.5px; font-weight:700; letter-spacing:.02em;
+  padding:1px 6px; border-radius:20px;
+}
+.admin-chat-role.admin{ color: var(--gold); background: var(--gold-dim); border:1px solid var(--gold-line); }
+.admin-chat-role.streamer{ color: var(--mint); background: var(--mint-dim); border:1px solid rgba(63,182,137,0.35); }
+.admin-chat-msg-text{ color: var(--muted); white-space:pre-wrap; word-break:break-word; }
+.admin-chat-msg.mine .admin-chat-msg-text{ color: var(--text); }
+.admin-chat-composer{ display:flex; gap:8px; }
+.admin-chat-composer input{
+  flex:1; font-family:inherit; font-size:13px; padding:9px 11px;
+  border-radius:7px; border:1px solid var(--hairline); background: var(--panel); color: var(--text);
+}
+
 .admin-tab-notice{
   font-size:12.5px; line-height:1.6; color: var(--muted);
   background: var(--gold-dim); border:1px solid var(--gold-line); border-radius:8px;

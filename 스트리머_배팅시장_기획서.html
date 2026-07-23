@@ -722,9 +722,10 @@
   <ul>
     <li>관리자 전용 대시보드(가입 · 배팅 · 재화 통계, 시계열 차트, 이상 거래 모니터링, 환전 로그 열람)가 추가되어 관리 탭에서 열람 가능하다</li>
     <li>닉네임 신고 처리에 "무시" 액션이 추가되어(<span class="chip">dismissNicknameReport</span>), 마켓 신고와 동일한 방식으로 신고 건을 종료 · 감사 로그에 기록할 수 있다</li>
+    <li><strong>관리자 · 인증 스트리머 채팅</strong>이 추가되어(<span class="chip">sendAdminChatMessage</span>), 관리 탭 상단에서 서로 실시간으로 대화할 수 있다. 재화가 걸린 기능은 아니지만 다른 관리 전용 데이터와 동일한 원칙으로, 클라이언트가 <span class="chip">bettingMarket/adminChat</span>에 직접 쓰지 못하게 막고 Cloud Function을 거치도록 해 정지 계정 차단 · 메시지 길이 제한(300자)을 서버에서 항상 보장한다. 읽기 권한도 관리자 · 인증 스트리머로 한정된다</li>
   </ul>
 
-  <div class="callout"><b>Security Rules 원칙 재확인</b> — <span class="chip">chargeRequests</span> · <span class="chip">streamerRequests</span> · <span class="chip">verifyRequests</span> · <span class="chip">bannedAccounts</span>는 관리자 이메일 계정만 읽을 수 있고, <span class="chip">marketReports</span> · <span class="chip">nicknameReports</span> · <span class="chip">auditLog</span>는 관리자 또는 <span class="chip">verifiedStreamerUids</span> 미러 노드에 등록된 인증 스트리머만 읽을 수 있도록 좁혔다. 그 외 공개 열람이 필요한 <span class="chip">blockedNicknames</span> · <span class="chip">profiles</span>는 기존처럼 로그인 유저 전체에게 열려 있다.</div>
+  <div class="callout"><b>Security Rules 원칙 재확인</b> — <span class="chip">chargeRequests</span> · <span class="chip">streamerRequests</span> · <span class="chip">verifyRequests</span> · <span class="chip">bannedAccounts</span>는 관리자 이메일 계정만 읽을 수 있고, <span class="chip">marketReports</span> · <span class="chip">nicknameReports</span> · <span class="chip">auditLog</span> · <span class="chip">adminChat</span>는 관리자 또는 <span class="chip">verifiedStreamerUids</span> 미러 노드에 등록된 인증 스트리머만 읽을 수 있도록 좁혔다. 그 외 공개 열람이 필요한 <span class="chip">blockedNicknames</span> · <span class="chip">profiles</span>는 기존처럼 로그인 유저 전체에게 열려 있다.</div>
 </section>
 
 </div>

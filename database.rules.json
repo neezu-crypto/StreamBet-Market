@@ -353,6 +353,11 @@
         "$entryId": { ".write": false }
       },
 
+      "adminChat": {
+        ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
+        "$messageId": { ".write": false }
+      },
+
       "rankings": {
         ".read": "auth != null",
         ".write": false
