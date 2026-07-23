@@ -59,6 +59,9 @@ const JACKPOT_WIN_CHANCE = 1 / 50; // 14번 — 1일 1회 확인, 당첨 확률 
 
 const CHAT_MESSAGE_MAX_LENGTH = 300; // 관리 탭 채팅 — 자유 입력 길이 제한 (XSS·매크로성 대량 입력 방지)
 
+const AUDIT_LOG_CAP = 200; // 관리 탭 "최근 처리 내역" — 이 개수를 넘는 오래된 항목은 매 기록 시 삭제
+const ADMIN_CHAT_CAP = 200; // 관리 탭 채팅 — 이 개수를 넘는 오래된 메시지는 매 전송 시 삭제
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -94,4 +97,6 @@ module.exports = {
   JACKPOT_RAKE_SHARE,
   JACKPOT_WIN_CHANCE,
   CHAT_MESSAGE_MAX_LENGTH,
+  AUDIT_LOG_CAP,
+  ADMIN_CHAT_CAP,
 };

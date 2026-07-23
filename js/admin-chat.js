@@ -1,5 +1,7 @@
 // 관리 탭 채팅 — 관리자 · 인증 스트리머끼리 실시간으로 대화. 메시지는 항상
 // sendAdminChatMessage 함수를 거쳐 기록되며, 여기서는 읽기 구독과 전송 UI만 담당한다.
+// 서버가 매 전송마다 최근 ADMIN_CHAT_CAP개로 잘라내지만(functions/src/chat.js), 클라이언트도
+// 전체를 내려받지 않고 최근 200개만 쿼리로 요청한다.
 var sbmAdminChatSubscribed = false;
 
 function sbmRenderAdminChat() {
@@ -8,11 +10,11 @@ function sbmRenderAdminChat() {
   sbmAdminChatSubscribed = true;
   var fb = window.sbmFirebase;
 
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/adminChat'), function (snap) {
+  var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/adminChat'), fb.limitToLast(200));
+  fb.onValue(q, function (snap) {
     var val = snap.val() || {};
     var messages = Object.keys(val).map(function (k) { return val[k]; })
-      .sort(function (a, b) { return a.at - b.at; })
-      .slice(-200);
+      .sort(function (a, b) { return a.at - b.at; });
     if (!messages.length) {
       list.innerHTML = '<li class="audit-empty">아직 대화가 없습니다. 첫 메시지를 남겨보세요.</li>';
       return;

@@ -32,15 +32,19 @@ function sbmActorLabel() {
 }
 
 // 10번 — 감사 로그는 서버(Cloud Functions)가 기록한다. 클라이언트는 bettingMarket/auditLog를 읽기만 한다.
+// 서버가 매 기록마다 최근 AUDIT_LOG_CAP개로 잘라내지만(functions/src/lib/audit.js), 클라이언트도
+// 전체를 내려받지 않고 최근 20개만 쿼리로 요청한다 — 화면에도 20개만 보여줄 거라 더 받을 이유가 없다.
+var sbmAuditLogSubscribed = false;
 function sbmRenderAuditLog() {
   var list = document.getElementById('audit-log');
-  if (!list || !window.sbmFirebase || !window.sbmDb) return;
+  if (!list || sbmAuditLogSubscribed || !window.sbmFirebase || !window.sbmDb) return;
+  sbmAuditLogSubscribed = true;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/auditLog'), function (snap) {
+  var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/auditLog'), fb.limitToLast(20));
+  fb.onValue(q, function (snap) {
     var val = snap.val() || {};
     var log = Object.keys(val).map(function (k) { return val[k]; })
-      .sort(function (a, b) { return b.at - a.at; })
-      .slice(0, 20);
+      .sort(function (a, b) { return b.at - a.at; });
     if (!log.length) {
       list.innerHTML = '<li class="audit-empty">아직 처리 내역이 없습니다.</li>';
       return;

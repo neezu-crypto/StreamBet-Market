@@ -1,7 +1,8 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireAdminOrVerifiedStreamer } = require('./lib/auth');
-const { CHAT_MESSAGE_MAX_LENGTH } = require('./constants');
+const { trimToLast } = require('./lib/capped-log');
+const { CHAT_MESSAGE_MAX_LENGTH, ADMIN_CHAT_CAP } = require('./constants');
 
 // 관리 탭 채팅 — 관리자 · 인증 스트리머끼리 실시간으로 소통하는 용도. 재화가 걸려있지 않지만
 // bettingMarket 아래 다른 관리자 전용 데이터와 동일하게 클라이언트 직접 쓰기는 막고
@@ -19,8 +20,10 @@ const sendAdminChatMessage = onCall(async (request) => {
   const profile = profileSnap.val() || {};
   const name = profile.nickname || request.auth.token.name || request.auth.token.email || uid;
 
-  const ref = db.ref('bettingMarket/adminChat').push();
+  const chatRef = db.ref('bettingMarket/adminChat');
+  const ref = chatRef.push();
   await ref.set({ uid, name, avatarUrl: profile.avatarUrl || '', role, text, at: Date.now() });
+  await trimToLast(chatRef, ADMIN_CHAT_CAP);
   return { messageId: ref.key };
 });
 
