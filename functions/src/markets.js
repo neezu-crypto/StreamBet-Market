@@ -19,6 +19,7 @@ const {
   NEW_ACCOUNT_WAIT_MS,
   PROPOSAL_COOLDOWN_MS,
   JUDGE_GRACE_MS,
+  JACKPOT_RAKE_SHARE,
 } = require('./constants');
 
 function marketRef(marketId) {
@@ -365,7 +366,7 @@ async function finalizeMarketSettlement(marketId, market) {
   const reserveSnap = await getDatabase().ref('bettingMarket/reserveFund/balance').get();
   const reserveBalance = reserveSnap.val() || 0;
 
-  const result = computeSettlement({ totalPool, winningPool, rakeRate, minPayoutMultiplier, reserveBalance });
+  const result = computeSettlement({ totalPool, winningPool, rakeRate, minPayoutMultiplier, reserveBalance, jackpotRakeShare: JACKPOT_RAKE_SHARE });
 
   if (result.void) {
     await refundAllActiveBets(marketId);
@@ -393,6 +394,9 @@ async function finalizeMarketSettlement(marketId, market) {
   if (Object.keys(betUpdates).length) await betsRef(marketId).update(betUpdates);
 
   await getDatabase().ref('bettingMarket/reserveFund/balance').transaction((bal) => (bal || 0) + result.reserveDelta);
+  if (result.jackpotDelta) {
+    await getDatabase().ref('bettingMarket/jackpot/balance').transaction((bal) => (bal || 0) + result.jackpotDelta);
+  }
 
   const now = Date.now();
   await ref.update({
