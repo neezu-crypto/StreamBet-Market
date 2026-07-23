@@ -402,6 +402,12 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .ranking-report-btn:hover{ color: var(--coral); }
 .ranking-row.blocked{ display:none; }
+.ranking-more-btn{
+  font-family:inherit; font-size:12.5px; font-weight:600; color: var(--muted);
+  background: var(--panel-raised); border:1px solid var(--hairline); border-radius:10px;
+  padding:10px; margin-top:2px; text-align:center; transition: border-color .15s ease, color .15s ease;
+}
+.ranking-more-btn:hover{ border-color: var(--gold-line); color: var(--gold); }
 
 /* ---------- Settlement history tab ---------- */
 .settlement-panel{ display:flex; flex-direction:column; gap:16px; margin-top:26px; }

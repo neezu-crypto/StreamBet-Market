@@ -1,4 +1,5 @@
 const { getDatabase } = require('firebase-admin/database');
+const { RANKING_DISPLAY_CAP } = require('./constants');
 
 // 13번 — 자산 · 승률 · 누적수익 랭킹. 클라이언트는 다른 유저의 wallets/bets를
 // 직접 읽을 수 없으므로(본인 uid만 허용), 서버가 주기적으로 집계해 공개 노드에 기록한다.
@@ -42,9 +43,12 @@ async function computeRankings() {
   // 13번 — 차단된 닉네임은 랭킹 전체에서 제외
   const uids = Object.keys(wallets).filter((uid) => !blocked[uid]);
 
+  // 랭킹 밖(100등 이후)은 아무도 찾아보지 않으므로, 계산·저장·전송 비용을 줄이기 위해
+  // 상위 RANKING_DISPLAY_CAP명까지만 남긴다 — 유저가 아무리 늘어나도 랭킹 데이터 크기는 고정된다.
   const assetRanking = uids
     .map((uid) => ({ uid, nickname: displayName(uid), avatarUrl: avatarUrl(uid), value: wallets[uid].balance || 0 }))
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value)
+    .slice(0, RANKING_DISPLAY_CAP);
 
   const winrateRanking = uids
     .filter((uid) => stats[uid] && stats[uid].settledCount > 0)
@@ -59,7 +63,8 @@ async function computeRankings() {
         winCount: s.winCount,
       };
     })
-    .sort((a, b) => b.value - a.value || b.totalCount - a.totalCount);
+    .sort((a, b) => b.value - a.value || b.totalCount - a.totalCount)
+    .slice(0, RANKING_DISPLAY_CAP);
 
   const profitRanking = uids
     .filter((uid) => stats[uid])
@@ -67,7 +72,8 @@ async function computeRankings() {
       const s = stats[uid];
       return { uid, nickname: displayName(uid), avatarUrl: avatarUrl(uid), value: s.totalPayout - s.totalBet };
     })
-    .sort((a, b) => b.value - a.value);
+    .sort((a, b) => b.value - a.value)
+    .slice(0, RANKING_DISPLAY_CAP);
 
   function toRanked(list) {
     const out = {};

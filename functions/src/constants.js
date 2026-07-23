@@ -62,6 +62,8 @@ const CHAT_MESSAGE_MAX_LENGTH = 300; // 관리 탭 채팅 — 자유 입력 길�
 const AUDIT_LOG_CAP = 200; // 관리 탭 "최근 처리 내역" — 이 개수를 넘는 오래된 항목은 매 기록 시 삭제
 const ADMIN_CHAT_CAP = 200; // 관리 탭 채팅 — 이 개수를 넘는 오래된 메시지는 매 전송 시 삭제
 
+const RANKING_DISPLAY_CAP = 100; // 13번 — 자산·승률·누적수익 랭킹은 상위 100명까지만 계산·저장
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -99,4 +101,5 @@ module.exports = {
   CHAT_MESSAGE_MAX_LENGTH,
   AUDIT_LOG_CAP,
   ADMIN_CHAT_CAP,
+  RANKING_DISPLAY_CAP,
 };

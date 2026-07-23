@@ -1,5 +1,9 @@
 // 13번 — 랭킹 탭. 서버(functions/src/rankings.js)가 5분마다 집계해 공개 노드에 기록한 결과를 읽기만 한다.
+// 서버가 이미 상위 100명까지만 보내주지만(RANKING_DISPLAY_CAP), 화면에는 한 번에 20명씩만
+// 그리고 "더보기"를 누를 때마다 20명씩 추가로 펼쳐서 렌더링 비용을 줄인다.
 var sbmRankingsCache = null;
+var SBM_RANKING_PAGE_SIZE = 20;
+var sbmRankingShown = { asset: SBM_RANKING_PAGE_SIZE, winrate: SBM_RANKING_PAGE_SIZE, profit: SBM_RANKING_PAGE_SIZE };
 
 function sbmRankAvatarHtml(entry) {
   if (entry.avatarUrl) {
@@ -30,6 +34,27 @@ function sbmRenderRankingRow(entry, myUid, valueHtml, subHtml) {
     '</div>';
 }
 
+function sbmRenderRankingList(el, type, sorted, emptyMsg, rowFn) {
+  if (!el) return;
+  if (!sorted.length) {
+    el.innerHTML = '<div class="audit-empty">' + emptyMsg + '</div>';
+    return;
+  }
+  var shown = Math.min(sbmRankingShown[type], sorted.length);
+  var html = sorted.slice(0, shown).map(rowFn).join('');
+  if (shown < sorted.length) {
+    html += '<button class="ranking-more-btn" data-type="' + type + '" type="button">더보기 (' + shown + ' / ' + sorted.length + ')</button>';
+  }
+  el.innerHTML = html;
+  var moreBtn = el.querySelector('.ranking-more-btn');
+  if (moreBtn) {
+    moreBtn.addEventListener('click', function () {
+      sbmRankingShown[type] += SBM_RANKING_PAGE_SIZE;
+      sbmRenderRankings();
+    });
+  }
+}
+
 function sbmRenderRankings() {
   if (!sbmRankingsCache) return;
   var myUid = window.sbmUser ? window.sbmUser.uid : null;
@@ -42,35 +67,20 @@ function sbmRenderRankings() {
     return Object.values(obj || {}).sort(function (a, b) { return a.rank - b.rank; });
   }
 
-  if (assetEl) {
-    var asset = toSortedArray(sbmRankingsCache.asset);
-    assetEl.innerHTML = asset.length
-      ? asset.map(function (e) {
-          return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
-        }).join('')
-      : '<div class="audit-empty">아직 랭킹 데이터가 없습니다.</div>';
-  }
+  sbmRenderRankingList(assetEl, 'asset', toSortedArray(sbmRankingsCache.asset), '아직 랭킹 데이터가 없습니다.', function (e) {
+    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
+  });
 
-  if (winrateEl) {
-    var winrate = toSortedArray(sbmRankingsCache.winrate);
-    winrateEl.innerHTML = winrate.length
-      ? winrate.map(function (e) {
-          var sub = '<div class="ranking-sub">' + e.totalCount + '전 ' + e.winCount + '승</div>';
-          return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + e.value + '%</span>', sub);
-        }).join('')
-      : '<div class="audit-empty">아직 정산된 배팅이 없습니다.</div>';
-  }
+  sbmRenderRankingList(winrateEl, 'winrate', toSortedArray(sbmRankingsCache.winrate), '아직 정산된 배팅이 없습니다.', function (e) {
+    var sub = '<div class="ranking-sub">' + e.totalCount + '전 ' + e.winCount + '승</div>';
+    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + e.value + '%</span>', sub);
+  });
 
-  if (profitEl) {
-    var profit = toSortedArray(sbmRankingsCache.profit);
-    profitEl.innerHTML = profit.length
-      ? profit.map(function (e) {
-          var cls = e.value > 0 ? 'positive' : e.value < 0 ? 'negative' : '';
-          var sign = e.value > 0 ? '+' : '';
-          return sbmRenderRankingRow(e, myUid, '<span class="ranking-value ' + cls + '">' + sign + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
-        }).join('')
-      : '<div class="audit-empty">아직 정산된 배팅이 없습니다.</div>';
-  }
+  sbmRenderRankingList(profitEl, 'profit', toSortedArray(sbmRankingsCache.profit), '아직 정산된 배팅이 없습니다.', function (e) {
+    var cls = e.value > 0 ? 'positive' : e.value < 0 ? 'negative' : '';
+    var sign = e.value > 0 ? '+' : '';
+    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value ' + cls + '">' + sign + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
+  });
 
   if (typeof sbmReapplyNicknameBlocks === 'function') sbmReapplyNicknameBlocks();
 }
