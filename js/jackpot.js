@@ -64,3 +64,56 @@ function sbmRenderJackpotEligibility(wallet) {
       });
   });
 })();
+
+// 지난 잭팟 당첨내역 모달 — 닉네임·아바타는 프로필 노드와 uid로 조인해서 표시한다.
+(function () {
+  var openBtn = document.getElementById('open-jackpot-history');
+  var backdrop = document.getElementById('jackpot-history-backdrop');
+  var closeBtn = document.getElementById('jackpot-history-close');
+  var listEl = document.getElementById('jackpot-history-list');
+  if (!openBtn || !backdrop) return;
+
+  function renderList(wins, profiles) {
+    if (!wins.length) {
+      listEl.innerHTML = '<li class="settlement-empty">아직 잭팟 당첨 내역이 없습니다.</li>';
+      return;
+    }
+    listEl.innerHTML = wins.map(function (w) {
+      var profile = profiles[w.uid] || {};
+      var nickname = profile.nickname || '유저';
+      var avatarHtml = profile.avatarUrl
+        ? '<img class="jackpot-history-avatar" src="' + sbmEscapeHtml(profile.avatarUrl) + '" alt="">'
+        : '<span class="jackpot-history-avatar-fallback">' + sbmEscapeHtml(nickname.charAt(0)) + '</span>';
+      return '<li class="jackpot-history-item">' + avatarHtml +
+        '<div class="jackpot-history-info"><span class="jackpot-history-name">' + sbmEscapeHtml(nickname) + '</span>' +
+        '<span class="jackpot-history-time">' + new Date(w.at).toLocaleString('ko-KR') + '</span></div>' +
+        '<span class="jackpot-history-amount">' + Math.round(w.amount).toLocaleString('ko-KR') + '원</span></li>';
+    }).join('');
+  }
+
+  function openModal() {
+    backdrop.classList.add('open');
+    listEl.innerHTML = '<li class="settlement-empty">불러오는 중...</li>';
+    if (!window.sbmFirebase) return;
+    var fb = window.sbmFirebase;
+    Promise.all([
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/jackpotWins')),
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/profiles')),
+    ]).then(function (results) {
+      var winsVal = results[0].val() || {};
+      var profiles = results[1].val() || {};
+      var wins = Object.values(winsVal).sort(function (a, b) { return b.at - a.at; }).slice(0, 50);
+      renderList(wins, profiles);
+    }).catch(function (e) {
+      listEl.innerHTML = '<li class="settlement-empty">오류: ' + sbmEscapeHtml(e.message) + '</li>';
+    });
+  }
+  function closeModal() { backdrop.classList.remove('open'); }
+
+  openBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', function (e) { if (e.target === backdrop) closeModal(); });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && backdrop.classList.contains('open')) closeModal();
+  });
+})();

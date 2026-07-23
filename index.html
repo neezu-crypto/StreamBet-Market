@@ -143,6 +143,16 @@
   </div>
 </div>
 
+<div class="profile-backdrop" id="jackpot-history-backdrop">
+  <div class="profile-modal jackpot-history-modal">
+    <button class="profile-modal-close" id="jackpot-history-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="profile-modal-title">지난 잭팟 당첨내역</h3>
+    <ul class="jackpot-history-list" id="jackpot-history-list">
+      <li class="settlement-empty">불러오는 중...</li>
+    </ul>
+  </div>
+</div>
+
 <div class="profile-backdrop" id="profile-backdrop">
   <div class="profile-modal">
     <button class="profile-modal-close" id="profile-modal-close" type="button" aria-label="닫기">✕</button>
@@ -507,6 +517,7 @@
         <p class="jackpot-desc">오늘 배팅에 1회 이상 참여하면 하루 한 번, 1/50 확률로 잭팟 전액에 도전할 수 있어요.</p>
         <button class="btn-claim" id="jackpot-claim-btn">잭팟 확인하기</button>
         <p class="jackpot-status" id="jackpot-status"></p>
+        <button class="btn-jackpot-history" id="open-jackpot-history" type="button">지난 당첨내역 확인</button>
       </div>
 
       <div class="rail-block">

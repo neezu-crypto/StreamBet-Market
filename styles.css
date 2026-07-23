@@ -430,6 +430,31 @@ button{ font-family: inherit; cursor: pointer; }
 .jackpot-desc{ font-size:11.5px; color: var(--muted-2); line-height:1.5; margin-bottom:12px; }
 .jackpot-status{ font-size:12px; text-align:center; margin-top:10px; display:none; }
 .jackpot-status.show{ display:block; }
+.btn-jackpot-history{
+  width:100%; background:transparent; border:1px solid var(--hairline); color: var(--muted);
+  border-radius:7px; padding:9px; font-size:12.5px; font-weight:600; margin-top:8px;
+}
+.btn-jackpot-history:hover{ border-color: var(--gold-line); color: var(--gold); }
+
+.jackpot-history-modal{ max-width:420px; }
+.jackpot-history-list{
+  list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px;
+  max-height:60vh; overflow-y:auto;
+}
+.jackpot-history-item{ display:flex; align-items:center; gap:12px; }
+.jackpot-history-avatar{
+  width:40px; height:40px; border-radius:50%; flex-shrink:0; object-fit:cover;
+  border:2px solid var(--ink); background: var(--panel-raised);
+}
+.jackpot-history-avatar-fallback{
+  width:40px; height:40px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  background: var(--panel-raised); color: var(--gold); font-weight:700; font-size:15px;
+}
+.jackpot-history-info{ flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+.jackpot-history-name{ font-size:13px; font-weight:700; color: var(--text); }
+.jackpot-history-time{ font-size:10.5px; color: var(--muted-2); font-family: var(--font-mono); }
+.jackpot-history-amount{ font-size:14px; font-weight:800; color: var(--gold); font-family: var(--font-mono); flex-shrink:0; }
 
 .feed-search-input{
   width:100%; background: var(--panel-raised); border:1px solid var(--hairline); border-radius:8px;

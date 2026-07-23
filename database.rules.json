@@ -280,6 +280,12 @@
         ".write": false
       },
 
+      "jackpotWins": {
+        ".read": "auth != null",
+        ".indexOn": ["at"],
+        "$winId": { ".write": false }
+      },
+
       "likes": {
         "$marketId": {
           "$uid": {

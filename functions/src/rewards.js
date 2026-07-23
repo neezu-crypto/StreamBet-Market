@@ -92,6 +92,8 @@ const claimJackpotDraw = onCall(async (request) => {
   await adjustBalance(uid, paidAmount);
   const actorName = request.auth.token.name || request.auth.token.email || uid;
   await logAudit(uid, actorName, '잭팟 당첨', paidAmount.toLocaleString('ko-KR') + '원');
+  // 지난 당첨 내역 화면에 표시할 전용 로그 (닉네임·아바타는 프로필 노드와 조인해서 프론트에서 표시)
+  await getDatabase().ref('bettingMarket/jackpotWins').push({ uid, amount: paidAmount, at: Date.now() });
 
   const { recomputeRankingsAfter } = require('./rankings');
   await recomputeRankingsAfter('claimJackpotDraw');
