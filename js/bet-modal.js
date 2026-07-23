@@ -103,30 +103,42 @@
       });
     }
 
-    var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmUser.uid + '/balance'));
-    if (myToken !== openToken) return; // 그 사이 다른 마켓이 열림 — 이 응답은 폐기
-    // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,
-    // 화면에도 0원이 아니라 그 초기 자산을 그대로 보여줘야 한다 (07번).
-    walletBalance = walletSnap.exists() ? walletSnap.val() : 1000000;
-    balanceEl.textContent = fmt(walletBalance) + '원';
+    try {
+      var walletSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmUser.uid + '/balance'));
+      if (myToken !== openToken) return; // 그 사이 다른 마켓이 열림 — 이 응답은 폐기
+      // 지갑 문서가 아직 없으면(배팅시장 첫 이용) 서버가 처음 액션 시 1,000,000원으로 만들어주므로,
+      // 화면에도 0원이 아니라 그 초기 자산을 그대로 보여줘야 한다 (07번).
+      walletBalance = walletSnap.exists() ? walletSnap.val() : 1000000;
+      balanceEl.textContent = fmt(walletBalance) + '원';
 
-    var idxSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + window.sbmUser.uid + '/' + marketId));
-    if (myToken !== openToken) return;
-    var idx = idxSnap.val() || {};
-    for (var betId in idx) {
-      var betSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/bets/' + marketId + '/' + betId));
+      var idxSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + window.sbmUser.uid + '/' + marketId));
       if (myToken !== openToken) return;
-      var bet = betSnap.val();
-      if (bet && bet.status === 'active') {
-        currentActiveBet = { betId: betId, amount: bet.amount, outcomeId: bet.outcomeId };
-        statusEl.style.color = 'var(--gold)';
-        statusEl.textContent = '이미 ' + fmt(bet.amount) + '원을 배팅 중입니다. 다시 배팅하면 기존 배팅을 취소하고 새로 배팅합니다(30초 쿨다운 적용).';
-        statusEl.classList.add('show');
-        break;
+      var idx = idxSnap.val() || {};
+      for (var betId in idx) {
+        var betSnap = await fb.get(fb.ref(window.sbmDb, 'bettingMarket/bets/' + marketId + '/' + betId));
+        if (myToken !== openToken) return;
+        var bet = betSnap.val();
+        if (bet && bet.status === 'active') {
+          currentActiveBet = { betId: betId, amount: bet.amount, outcomeId: bet.outcomeId };
+          statusEl.style.color = 'var(--gold)';
+          statusEl.textContent = '이미 ' + fmt(bet.amount) + '원을 배팅 중입니다. 다시 배팅하면 기존 배팅을 취소하고 새로 배팅합니다(30초 쿨다운 적용).';
+          statusEl.classList.add('show');
+          break;
+        }
       }
+      if (myToken !== openToken) return;
+      setAmount(0);
+    } catch (e) {
+      // 잔액·배팅 내역 조회가 실패하면(오프라인 등) 잘못된 잔액으로 배팅하지 못하게 막고,
+      // 버튼이 영원히 비활성 상태로만 남지 않도록 명확한 에러를 보여준다.
+      if (myToken !== openToken) return;
+      amountInput.disabled = true;
+      minusBtn.disabled = true;
+      plusBtn.disabled = true;
+      submitBtn.disabled = true;
+      errorEl.textContent = '정보를 불러오지 못했습니다. 창을 닫고 다시 시도해 주세요.';
+      errorEl.classList.add('show');
     }
-    if (myToken !== openToken) return;
-    setAmount(0);
   }
   function closeModal() { backdrop.classList.remove('open'); }
 

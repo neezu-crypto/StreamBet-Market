@@ -96,9 +96,20 @@ const cancelBet = onCall(async (request) => {
     throw new HttpsError('failed-precondition', '취소 · 재배팅은 30초 쿨다운 중에는 할 수 없습니다.');
   }
 
-  await adjustBalance(uid, bet.amount);
-  await betRef.update({ status: 'cancelled' });
-  await adjustPool(marketId, bet.outcomeId, -bet.amount);
+  // 취소 자체를 트랜잭션으로 원자적으로 선점해야 한다 — "active 확인 → 환불 → cancelled 기록"이
+  // 분리되어 있으면 동시에 두 번 취소 요청이 와도 둘 다 active로 읽고 통과해 환불이 이중으로 나갈 수 있다.
+  const claim = await betRef.transaction((current) => {
+    if (!current || current.status !== 'active') return; // abort — 이미 처리됨
+    current.status = 'cancelled';
+    return current;
+  });
+  if (!claim.committed) {
+    throw new HttpsError('failed-precondition', '이미 처리된 배팅입니다.');
+  }
+  const claimedBet = claim.snapshot.val();
+
+  await adjustBalance(uid, claimedBet.amount);
+  await adjustPool(marketId, claimedBet.outcomeId, -claimedBet.amount);
   await setLastBetActionAt(uid, Date.now());
 
   return { status: 'cancelled' };

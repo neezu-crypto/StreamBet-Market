@@ -26,10 +26,21 @@ const updateProfile = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'SOOP 아이디는 영문 소문자/숫자 2~20자여야 합니다.');
   }
 
-  const ref = getDatabase().ref('bettingMarket/profiles/' + uid);
+  const db = getDatabase();
+  const ref = db.ref('bettingMarket/profiles/' + uid);
   const snap = await ref.get();
   const current = snap.val() || {};
   const nameChanged = current.nickname !== name;
+
+  // 닉네임 차단(blockNickname)으로 강제 초기화된 계정은, 본인이 마음대로 새 닉네임을
+  // 골라 차단 직전의(또는 또 다른 부적절한) 닉네임으로 즉시 되돌리지 못하게 막는다.
+  // 관리자가 unblockNickname으로 명시적으로 해제해야만 다시 닉네임을 바꿀 수 있다.
+  if (nameChanged) {
+    const blockedSnap = await db.ref('bettingMarket/blockedNicknames/' + uid).get();
+    if (blockedSnap.exists()) {
+      throw new HttpsError('permission-denied', '닉네임이 신고로 차단된 계정입니다. 관리자의 차단 해제 후 다시 시도해 주세요.');
+    }
+  }
 
   if (nameChanged && current.nicknameChangedAt && !(await isTrustedAccount(request))) {
     const remaining = NICKNAME_CHANGE_COOLDOWN_MS - (Date.now() - current.nicknameChangedAt);

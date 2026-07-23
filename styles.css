@@ -248,6 +248,10 @@ button{ font-family: inherit; cursor: pointer; }
 .verify-req-info{ display:flex; flex-direction:column; gap:2px; }
 .verify-req-info b{ font-size:13px; }
 .verify-req-info span{ font-size:11px; color: var(--muted-2); }
+.verify-req-warning{
+  font-size:11px; color: var(--coral); background: var(--coral-dim); border:1px solid rgba(226,85,79,0.35);
+  border-radius:6px; padding:5px 8px; margin-top:4px; max-width:340px;
+}
 .verify-req-actions{ display:flex; gap:6px; flex-shrink:0; }
 .verify-req-approve, .verify-req-reject{
   font-family:inherit; font-size:11.5px; font-weight:700; border-radius:6px; padding:7px 12px;

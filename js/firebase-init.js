@@ -65,6 +65,9 @@ function signIn() {
   const provider = new GoogleAuthProvider();
   return signInWithPopup(auth, provider).catch((err) => {
     console.error('Google 로그인 실패', err);
+    // 사용자가 스스로 팝업을 닫거나 중복 요청을 취소한 경우는 실패가 아니라 조용히 무시한다.
+    if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
+    alert('Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
   });
 }
 window.sbmSignIn = signIn;

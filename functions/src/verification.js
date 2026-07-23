@@ -32,8 +32,29 @@ const submitVerificationRequest = onCall(async (request) => {
     .get();
   const finalUid = existingSnap.exists() ? Object.values(existingSnap.val())[0].uid : uid;
 
+  // 이미 다른 uid로 인증된 SOOP 아이디로 신청하는 경우(공개 정보라 누구나 입력 가능) —
+  // 승인 시 기존 인증 스트리머의 판정 권한이 신청자에게 그대로 넘어가므로, 관리자가 검수
+  // 화면에서 이 사실을 명확히 인지할 수 있도록 플래그를 남긴다.
+  const soopIdMatchSnap = await db
+    .ref('streamerVerifications')
+    .orderByChild('soopId')
+    .equalTo(trimmedSoopId)
+    .limitToFirst(1)
+    .get();
+  let soopIdAlreadyVerifiedByOther = false;
+  if (soopIdMatchSnap.exists()) {
+    const existingRecord = Object.values(soopIdMatchSnap.val())[0];
+    soopIdAlreadyVerifiedByOther = existingRecord.uid !== finalUid;
+  }
+
   const newRef = db.ref('bettingMarket/verifyRequests').push();
-  await newRef.set({ nickname: trimmedNickname, soopId: trimmedSoopId, uid: finalUid, submittedAt: Date.now() });
+  await newRef.set({
+    nickname: trimmedNickname,
+    soopId: trimmedSoopId,
+    uid: finalUid,
+    submittedAt: Date.now(),
+    soopIdAlreadyVerifiedByOther,
+  });
   return { status: 'submitted' };
 });
 

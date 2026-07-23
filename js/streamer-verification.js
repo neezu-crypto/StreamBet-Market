@@ -133,16 +133,23 @@ function sbmRenderVerifyRequestsList() {
   }
   list.innerHTML = reqs.map(function (r) {
     var actions = isAdmin
-      ? '<button class="verify-req-approve" data-request-id="' + r.id + '" type="button">승인</button>' +
+      ? '<button class="verify-req-approve" data-request-id="' + r.id + '" data-collision="' + (r.soopIdAlreadyVerifiedByOther ? '1' : '') + '" type="button">승인</button>' +
         '<button class="verify-req-reject" data-request-id="' + r.id + '" type="button">반려</button>'
       : '';
+    var warning = r.soopIdAlreadyVerifiedByOther
+      ? '<div class="verify-req-warning">⚠️ 이미 다른 계정으로 인증된 SOOP 아이디입니다 — 본인의 재신청이 맞는지 반드시 확인 후 승인하세요.</div>'
+      : '';
     return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + sbmEscapeHtml(r.nickname) + '</b><span>SOOP 아이디: ' + sbmEscapeHtml(r.soopId) + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span></div>' +
+      '<div class="verify-req-info"><b>' + sbmEscapeHtml(r.nickname) + '</b><span>SOOP 아이디: ' + sbmEscapeHtml(r.soopId) + ' · ' + new Date(r.submittedAt).toLocaleString('ko-KR') + '</span>' + warning + '</div>' +
       '<div class="verify-req-actions">' + actions + '</div></li>';
   }).join('');
 
   list.querySelectorAll('.verify-req-approve').forEach(function (btn) {
     btn.addEventListener('click', function () {
+      if (btn.getAttribute('data-collision') === '1' &&
+        !confirm('이미 다른 계정으로 인증된 SOOP 아이디입니다. 승인하면 기존 인증(판정 권한 등)이 이 신청자의 계정으로 넘어갑니다. 본인이 맞는지 확인했나요?')) {
+        return;
+      }
       btn.disabled = true;
       fb.httpsCallable('approveVerification')({ requestId: btn.getAttribute('data-request-id') })
         .catch(function (e) { alert(e.message); btn.disabled = false; });
