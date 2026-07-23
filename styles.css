@@ -188,10 +188,11 @@ button{ font-family: inherit; cursor: pointer; }
 .stats-chart-box{
   background: var(--panel-raised); border:1px solid var(--hairline); border-radius:10px;
   padding: 16px 12px 8px; margin-bottom: 22px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
 }
-.stats-chart-bars{ display:flex; align-items:flex-end; gap:4px; height:220px; }
+.stats-chart-bars{ display:flex; align-items:flex-end; gap:4px; height:220px; min-width:max-content; }
 .stats-chart-col{
-  flex:1; min-width:0; height:100%;
+  flex:0 0 auto; width:46px; height:100%;
   display:flex; flex-direction:column; align-items:center; justify-content:flex-end;
 }
 .stats-chart-value{
