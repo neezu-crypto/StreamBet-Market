@@ -99,6 +99,23 @@ const reportNickname = onCall(async (request) => {
   return { reportId: reportRef.key };
 });
 
+// 13번 — 닉네임 신고 접수함 처리 (관리자·인증 스트리머 모두 가능, "무시"로 종료 — 04번의
+// dismissMarketReport와 동일 원칙). 예전에는 클라이언트가 이 노드를 직접 지우려 했는데
+// 규칙상 write:false라 항상 조용히 실패했었다.
+const dismissNicknameReport = onCall(async (request) => {
+  const { uid, role } = await requireAdminOrVerifiedStreamer(request);
+  const { reportId } = request.data || {};
+  if (!reportId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
+  const db = getDatabase();
+  const ref = db.ref('bettingMarket/nicknameReports/' + reportId);
+  const snap = await ref.get();
+  const report = snap.val();
+  await ref.remove();
+  const actorName = request.auth.token.name || request.auth.token.email || uid;
+  await logAudit(uid, actorName, '닉네임 신고 무시', report ? report.nickname + ' (' + report.reason + ')' : reportId);
+  return { status: 'dismissed', role };
+});
+
 // 13번 — 닉네임 차단 (관리자·인증 스트리머), 차단 시 랭킹에서 즉시 숨김
 const blockNickname = onCall(async (request) => {
   const { uid, role } = await requireAdminOrVerifiedStreamer(request);
@@ -147,4 +164,4 @@ const unblockNickname = onCall(async (request) => {
   return { status: 'unblocked' };
 });
 
-module.exports = { reportMarket, dismissMarketReport, reportNickname, blockNickname, unblockNickname };
+module.exports = { reportMarket, dismissMarketReport, reportNickname, dismissNicknameReport, blockNickname, unblockNickname };

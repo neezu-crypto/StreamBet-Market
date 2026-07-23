@@ -296,27 +296,32 @@
       },
 
       "chargeRequests": {
-        ".read": "auth != null",
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$requestId": { ".write": false }
       },
 
       "streamerRequests": {
-        ".read": "auth != null",
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$requestId": { ".write": false }
       },
 
       "bannedAccounts": {
-        ".read": "auth != null",
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$uid": { ".write": false }
       },
 
       "verifyRequests": {
-        ".read": "auth != null",
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$pushId": { ".write": false }
       },
 
+      "verifiedStreamerUids": {
+        ".read": false,
+        "$uid": { ".write": false }
+      },
+
       "marketReports": {
-        ".read": "auth != null",
+        ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
         "$reportId": { ".write": false }
       },
 
@@ -328,7 +333,7 @@
       },
 
       "nicknameReports": {
-        ".read": "auth != null",
+        ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
         "$reportId": { ".write": false }
       },
 
@@ -344,7 +349,7 @@
       },
 
       "auditLog": {
-        ".read": "auth != null",
+        ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
         "$entryId": { ".write": false }
       },
 

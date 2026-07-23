@@ -13,6 +13,7 @@
   var marketTitles = {};
   var betEntries = {}; // key "marketId/betId" -> { marketId, betId, bet }
   var trackedKeys = {};
+  var activeUnsubscribers = []; // 계정 전환 시 이전 uid에 걸린 모든 리스너를 정리하기 위함
 
   function fmt(n) { return Math.round(n).toLocaleString('ko-KR'); }
 
@@ -95,14 +96,16 @@
         render();
       });
     }
-    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/bets/' + marketId + '/' + betId), function (snap) {
+    activeUnsubscribers.push(fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/bets/' + marketId + '/' + betId), function (snap) {
       if (!snap.exists()) return;
       betEntries[key] = { marketId: marketId, betId: betId, bet: snap.val() };
       render();
-    });
+    }));
   }
 
   document.addEventListener('sbm-auth-changed', function (e) {
+    activeUnsubscribers.forEach(function (unsub) { unsub(); });
+    activeUnsubscribers = [];
     var user = e.detail.user;
     betEntries = {};
     trackedKeys = {};
@@ -115,15 +118,15 @@
       renderLedger(null);
       return;
     }
-    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/walletLedger/' + user.uid), function (snap) {
+    activeUnsubscribers.push(fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/walletLedger/' + user.uid), function (snap) {
       renderLedger(snap.val());
-    });
-    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + user.uid), function (snap) {
+    }));
+    activeUnsubscribers.push(fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/userBets/' + user.uid), function (snap) {
       var val = snap.val() || {};
       Object.keys(val).forEach(function (marketId) {
         Object.keys(val[marketId]).forEach(function (betId) { trackBet(marketId, betId); });
       });
       render();
-    });
+    }));
   });
 })();

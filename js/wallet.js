@@ -40,8 +40,10 @@ function sbmRenderAttendance(wallet) {
   var fb = window.sbmFirebase;
   var walletAmountEl = document.getElementById('wallet-amount');
   var claimBtn = document.getElementById('attendance-claim-btn');
+  var unsubscribeWallet = null;
 
   document.addEventListener('sbm-auth-changed', function (e) {
+    if (unsubscribeWallet) { unsubscribeWallet(); unsubscribeWallet = null; }
     var user = e.detail.user;
     if (!user) {
       if (walletAmountEl) walletAmountEl.innerHTML = '0<small>원</small>';
@@ -49,7 +51,7 @@ function sbmRenderAttendance(wallet) {
       if (window.sbmRenderJackpotEligibility) window.sbmRenderJackpotEligibility(null);
       return;
     }
-    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + user.uid), function (snap) {
+    unsubscribeWallet = fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + user.uid), function (snap) {
       var wallet = snap.val() || { balance: 1000000 };
       if (walletAmountEl) walletAmountEl.innerHTML = Math.round(wallet.balance || 0).toLocaleString('ko-KR') + '<small>원</small>';
       sbmRenderAttendance(wallet);

@@ -153,9 +153,19 @@ function sbmRenderVerifyRequests() {
   });
 }
 
+// 이미 인증 승인된 스트리머에게는 "인증하기" 버튼이 의미가 없으니 숨긴다.
+function sbmUpdateVerifyCtaVisibility() {
+  var alreadyVerified = !!window.sbmIsVerifiedStreamer;
+  var bannerCta = document.getElementById('open-verify-modal');
+  var loginModalCta = document.getElementById('login-verify-btn');
+  if (bannerCta) bannerCta.style.display = alreadyVerified ? 'none' : '';
+  if (loginModalCta) loginModalCta.style.display = alreadyVerified ? 'none' : '';
+}
+
 document.addEventListener('sbm-auth-changed', function () {
   sbmRenderVerifyRequestsList();
   sbmRenderVerifiedStreamers();
+  sbmUpdateVerifyCtaVisibility();
 });
 
 (function () {

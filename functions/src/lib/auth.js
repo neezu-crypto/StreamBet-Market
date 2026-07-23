@@ -55,9 +55,11 @@ async function isVerifiedStreamerUid(uid) {
   return snap.exists();
 }
 
-// 10번 — 판정/검증 권한은 관리자 또는 인증 스트리머만 가능.
+// 10번 — 판정/검증 권한은 관리자 또는 인증 스트리머만 가능. 정지된 계정은 admin/인증
+// 스트리머라도 이 권한을 쓸 수 없어야 하므로 여기서 항상 확인한다.
 async function requireAdminOrVerifiedStreamer(request) {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const email = request.auth.token && request.auth.token.email;
   if (isAdminEmail(email)) return { uid, role: 'admin' };
   if (await isVerifiedStreamerUid(uid)) return { uid, role: 'streamer' };

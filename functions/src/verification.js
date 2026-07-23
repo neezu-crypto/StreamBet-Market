@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
-const { requireAuth, requireAdmin } = require('./lib/auth');
+const { requireAuth, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { logAudit } = require('./lib/audit');
 const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
 
@@ -11,6 +11,7 @@ const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
 // 로그인했을 때 이 앱에서도 동일한 uid 기준으로 인증 스트리머 권한이 인식된다.
 const submitVerificationRequest = onCall(async (request) => {
   const uid = requireAuth(request);
+  await assertNotBanned(uid);
   const { nickname, soopId } = request.data || {};
   const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
   const trimmedSoopId = typeof soopId === 'string' ? soopId.trim() : '';
@@ -59,7 +60,11 @@ const approveVerification = onCall(async (request) => {
 
   if (existingSnap.exists()) {
     const existingKey = Object.keys(existingSnap.val())[0];
+    const oldUid = existingSnap.val()[existingKey].uid;
     await db.ref('streamerVerifications/' + existingKey).update({ uid });
+    // 11번 — 규칙(rules)이 "인증 스트리머인지"를 O(1)로 확인할 수 있도록 uid 기준 미러 노드를 유지한다.
+    if (oldUid && oldUid !== uid) await db.ref('bettingMarket/verifiedStreamerUids/' + oldUid).remove();
+    await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
     await reqRef.remove();
     await logAudit(adminUid, adminName, '스트리머 인증 재신청 승인 (uid 갱신)', nickname + ' (' + soopId + ')');
     return { status: 'approved', mode: 'uid-updated' };
@@ -67,6 +72,7 @@ const approveVerification = onCall(async (request) => {
 
   const newRef = db.ref('streamerVerifications').push();
   await newRef.set({ nickname, soopId, uid, verifiedAt: Date.now() });
+  await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
   await reqRef.remove();
   await logAudit(adminUid, adminName, '스트리머 인증 승인', nickname + ' (' + soopId + ')');
   return { status: 'approved', mode: 'created' };
@@ -96,9 +102,10 @@ const revokeVerification = onCall(async (request) => {
   const snap = await db.ref('streamerVerifications').orderByChild('soopId').equalTo(soopId).limitToFirst(1).get();
   if (!snap.exists()) throw new HttpsError('not-found', '인증된 스트리머를 찾을 수 없습니다.');
   const key = Object.keys(snap.val())[0];
-  const nickname = snap.val()[key].nickname;
+  const record = snap.val()[key];
   await db.ref('streamerVerifications/' + key).remove();
-  await logAudit(adminUid, adminName, '스트리머 인증 해제', nickname + ' (' + soopId + ')');
+  if (record.uid) await db.ref('bettingMarket/verifiedStreamerUids/' + record.uid).remove();
+  await logAudit(adminUid, adminName, '스트리머 인증 해제', record.nickname + ' (' + soopId + ')');
   return { status: 'revoked' };
 });
 

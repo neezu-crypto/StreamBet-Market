@@ -43,7 +43,9 @@
     });
   }
 
+  var unsubscribeProfile = null;
   document.addEventListener('sbm-auth-changed', function (e) {
+    if (unsubscribeProfile) { unsubscribeProfile(); unsubscribeProfile = null; }
     var user = e.detail.user;
     if (!e.detail.trusted || !user) {
       currentProfile = null;
@@ -52,7 +54,7 @@
       return;
     }
     var fb = window.sbmFirebase;
-    fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/profiles/' + user.uid), function (snap) {
+    unsubscribeProfile = fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/profiles/' + user.uid), function (snap) {
       currentProfile = snap.val() || { nickname: user.displayName || '유저', soopId: '', avatarUrl: '' };
       applyProfile(currentProfile.nickname, currentProfile.avatarUrl);
     });

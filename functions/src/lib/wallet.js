@@ -64,19 +64,28 @@ async function adjustBalance(uid, delta) {
   return result.snapshot.val();
 }
 
-// 07번 환전 일일 누적 사용액 — 서버가 자체 기록으로 검증, 클라이언트 값 불신
-async function addDailyExchangeAmount(uid, amount) {
+// 07번 환전 일일 누적 사용액 — 서버가 자체 기록으로 검증, 클라이언트 값 불신.
+// 한도(cap)를 넘기면 트랜잭션 자체를 중단시켜서, "확인 후 나중에 기록"이 아니라
+// "기록 자체가 원자적으로 한도 내에서만 성공"하도록 한다 — 동시 요청으로 한도를
+// 우회하는 걸 막기 위함. cap이 null/undefined면 한도 체크 없이 그냥 누적만 한다
+// (음수 amount로 예약분을 되돌릴 때 사용).
+async function addDailyExchangeAmount(uid, amount, cap) {
   const ref = walletRef(uid);
   const today = kstDateKey();
   const result = await ref.transaction((current) => {
-    if (!current) return; // 지갑이 반드시 먼저 존재해야 함
-    if (current.dailyExchangeDate !== today) {
-      current.dailyExchangeDate = today;
-      current.dailyExchangeTotal = 0;
-    }
-    current.dailyExchangeTotal = (current.dailyExchangeTotal || 0) + amount;
+    if (!current) return; // 지갑이 반드시 먼저 존재해야 함 (트랜잭션 중단)
+    const prevTotal = current.dailyExchangeDate === today ? (current.dailyExchangeTotal || 0) : 0;
+    const nextTotal = prevTotal + amount;
+    if (cap != null && nextTotal > cap) return; // 트랜잭션 중단 — 한도 초과
+    current.dailyExchangeDate = today;
+    current.dailyExchangeTotal = Math.max(0, nextTotal);
     return current;
   });
+  if (!result.committed) {
+    const err = new Error('오늘 환전 한도를 초과했습니다.');
+    err.code = 'daily-cap-exceeded';
+    throw err;
+  }
   return result.snapshot.val();
 }
 

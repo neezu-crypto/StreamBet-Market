@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
-const { ensureWallet, adjustBalance, accountDay, kstDateKey, walletRef } = require('./lib/wallet');
+const { ensureWallet, adjustBalance, accountDay, kstDateKey, addDailyExchangeAmount } = require('./lib/wallet');
 const {
   EXCHANGE_FEE_RATE,
   EXCHANGE_RATE,
@@ -50,30 +50,38 @@ const exchangeCurrency = onCall(async (request) => {
   const wallet = await ensureWallet(uid);
 
   const today = kstDateKey();
-  const dailyUsed = wallet.dailyExchangeDate === today ? wallet.dailyExchangeTotal || 0 : 0;
+  const dailyUsedBefore = wallet.dailyExchangeDate === today ? wallet.dailyExchangeTotal || 0 : 0;
   const cap = dailyCapForDay(accountDay(wallet));
-  if (dailyUsed + amt > cap) {
-    throw new HttpsError('failed-precondition', '오늘 남은 환전 한도(' + Math.max(cap - dailyUsed, 0).toLocaleString('ko-KR') + '원)를 초과했습니다.');
+
+  // 한도 예약을 먼저 원자적으로 확정한 뒤에 실제 잔액을 옮긴다 — 그래야 동시 요청이 와도
+  // 트랜잭션 자체가 한도 내에서만 성공해서 우회할 수 없다. 예약 후 잔액 이동이 실패하면
+  // (예: 반대쪽 잔액 부족) 예약분을 되돌린다.
+  try {
+    await addDailyExchangeAmount(uid, amt, cap);
+  } catch (err) {
+    if (err.code === 'daily-cap-exceeded') {
+      throw new HttpsError('failed-precondition', '오늘 남은 환전 한도(' + Math.max(cap - dailyUsedBefore, 0).toLocaleString('ko-KR') + '원)를 초과했습니다.');
+    }
+    throw err;
   }
 
   const fee = Math.round(amt * EXCHANGE_FEE_RATE);
   const net = Math.round((amt - fee) * EXCHANGE_RATE);
 
-  if (direction === 'toStock') {
-    await adjustBalance(uid, -amt);
-    await adjustCash(uid, net);
-  } else {
-    await adjustCash(uid, -amt);
-    await adjustBalance(uid, net);
+  try {
+    if (direction === 'toStock') {
+      await adjustBalance(uid, -amt);
+      await adjustCash(uid, net);
+    } else {
+      await adjustCash(uid, -amt);
+      await adjustBalance(uid, net);
+    }
+  } catch (err) {
+    await addDailyExchangeAmount(uid, -amt, null).catch(() => {}); // 예약분 롤백 (최선 노력)
+    throw err;
   }
 
   const now = Date.now();
-  await walletRef(uid).update({
-    dailyExchangeDate: today,
-    dailyExchangeTotal: dailyUsed + amt,
-    lastExchangeAt: now,
-  });
-
   const logRef = getDatabase().ref('bettingMarket/exchanges/' + uid).push();
   await logRef.set({ direction, amount: amt, fee, resultAmount: net, requestedAt: now });
 

@@ -1009,8 +1009,10 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .bet-modal-close:hover{ color:var(--text); border-color:var(--gold-line); }
 .bet-modal-title{
   font-family: var(--font-serif); font-size:16px; font-weight:600; line-height:1.5;
-  margin: 0 26px 16px 0;
+  margin: 0 26px 6px 0;
 }
+.bet-modal-proposer{ font-size:11.5px; color: var(--muted-2); margin: 0 0 14px; }
+.bet-modal-proposer b{ color: var(--muted); }
 .bet-outcomes{ display:flex; flex-direction:column; gap:8px; margin-bottom:18px; }
 .bet-outcome-option{
   display:flex; align-items:center; justify-content:space-between; gap:10px;

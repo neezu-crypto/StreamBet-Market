@@ -70,11 +70,16 @@ const claimJackpotDraw = onCall(async (request) => {
   if (wallet.dailyBetDate !== today) {
     throw new HttpsError('failed-precondition', '오늘 배팅에 1회 이상 참여해야 잭팟을 확인할 수 있습니다.');
   }
-  if (wallet.lastJackpotDrawDate === today) {
+
+  // "오늘 이미 확인함" 체크와 소모를 하나의 트랜잭션으로 묶어야 동시 요청으로 하루 여러 번
+  // 도전하는 걸 막을 수 있다 — 읽고 나중에 따로 쓰면 그 사이 다른 요청이 끼어들 수 있다.
+  const drawClaim = await walletRef(uid).child('lastJackpotDrawDate').transaction((current) => {
+    if (current === today) return; // 트랜잭션 중단 — 오늘 이미 확인함
+    return today;
+  });
+  if (!drawClaim.committed) {
     throw new HttpsError('failed-precondition', '오늘은 이미 잭팟을 확인했습니다. 내일 다시 시도해 주세요.');
   }
-
-  await walletRef(uid).update({ lastJackpotDrawDate: today });
 
   const won = Math.random() < JACKPOT_WIN_CHANCE;
   if (!won) return { won: false };

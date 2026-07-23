@@ -293,6 +293,9 @@ const judgeMarket = onCall(async (request) => {
   if (market.status !== 'closed' && market.status !== 'pendingSettlement') {
     throw new HttpsError('failed-precondition', '배팅 마감 후에만 판정할 수 있습니다.');
   }
+  if (market.pendingSettlement && market.pendingSettlement.finalizing) {
+    throw new HttpsError('failed-precondition', '이미 확정 처리가 시작되어 더 이상 변경할 수 없습니다.');
+  }
   if (!market.outcomes || !market.outcomes[winningOutcomeId]) {
     throw new HttpsError('invalid-argument', '존재하지 않는 outcome입니다.');
   }
@@ -329,6 +332,9 @@ const cancelPendingJudgment = onCall(async (request) => {
   if (market.status !== 'pendingSettlement') {
     throw new HttpsError('failed-precondition', '유예 중인 판정이 없습니다.');
   }
+  if (market.pendingSettlement && market.pendingSettlement.finalizing) {
+    throw new HttpsError('failed-precondition', '이미 확정 처리가 시작되어 취소할 수 없습니다.');
+  }
   const actorName = request.auth.token.name || request.auth.token.email || uid;
   await ref.update({ status: 'closed', pendingSettlement: null });
   await logAudit(uid, actorName, '판정 취소', market.title);
@@ -336,11 +342,23 @@ const cancelPendingJudgment = onCall(async (request) => {
 });
 
 // 유예시간이 지난 뒤 실제 지급을 확정한다 (scheduled.js가 매분 스캔해서 호출).
-async function finalizeMarketSettlement(marketId, market) {
-  const pending = market.pendingSettlement;
-  if (!pending) return;
-  const { winningOutcomeId, decidedBy: uid, decidedByName: actorName, decidedByRole: role } = pending;
+// scheduled.js가 넘겨주는 market은 스캔 시점의 스냅샷이라 오래됐을 수 있으므로 여기서 신뢰하지
+// 않는다 — 트랜잭션으로 "확정 처리 시작"을 원자적으로 선점해서, 그 사이 관리자가
+// cancelPendingJudgment로 취소했거나 judgeMarket으로 재판정(유예 연장)했으면 조용히 중단하고,
+// 어떤 이유로든 같은 마켓이 중복 실행돼도 한 번만 처리되게 한다.
+async function finalizeMarketSettlement(marketId) {
   const ref = marketRef(marketId);
+  const claimResult = await ref.transaction((market) => {
+    if (!market || !market.pendingSettlement) return; // 이미 취소되었거나 처리 대상이 아님 — 중단
+    if (market.pendingSettlement.finalizeAt > Date.now()) return; // 재판정으로 유예 연장됨 — 아직 확정 시점 아님
+    if (market.pendingSettlement.finalizing) return; // 다른 실행이 이미 처리 중 — 중단
+    market.pendingSettlement.finalizing = true;
+    return market;
+  });
+  if (!claimResult.committed) return;
+  const market = claimResult.snapshot.val();
+  const pending = market.pendingSettlement;
+  const { winningOutcomeId, decidedBy: uid, decidedByName: actorName, decidedByRole: role } = pending;
 
   const betsSnap = await betsRef(marketId).get();
   const bets = betsSnap.val() || {};

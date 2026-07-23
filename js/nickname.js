@@ -57,15 +57,19 @@ function sbmRenderNicknameReportQueue() {
     });
     list.querySelectorAll('.nick-dismiss-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
-        fb.remove(fb.ref(window.sbmDb, 'bettingMarket/nicknameReports/' + btn.getAttribute('data-report-id')));
+        btn.disabled = true;
+        fb.httpsCallable('dismissNicknameReport')({ reportId: btn.getAttribute('data-report-id') })
+          .catch(function (e) { alert(e.message); btn.disabled = false; });
       });
     });
   });
 }
 
+var sbmBlockedListSubscribed = false;
 function sbmRenderBlockedNicknames() {
   var list = document.getElementById('blocked-nick-list');
-  if (!list || !window.sbmFirebase) return;
+  if (!list || sbmBlockedListSubscribed || !window.sbmFirebase) return;
+  sbmBlockedListSubscribed = true;
   var fb = window.sbmFirebase;
   fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknames'), function (snap) {
     var val = snap.val() || {};

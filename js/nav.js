@@ -47,18 +47,22 @@
     if (!sbmCanUseAdminTab()) return; // 버튼이 숨겨져 있어도 직접 조작될 가능성 대비
     showTab(tabs[1]);
     sbmRenderAuditLog();
-    sbmRenderVerifyRequests();
     sbmRenderVerifiedStreamers();
     sbmRenderReportQueue();
-    sbmRenderChargeRequests();
-    sbmRenderStreamerRequests();
     sbmRenderNicknameReportQueue();
     sbmRenderBlockedNicknames();
     sbmRenderAdminDashboard();
     sbmRenderStatsChart();
     sbmRenderAnomalyMonitor();
     sbmRenderExchangeLog();
-    sbmSubscribeBannedAccounts();
+    // 아래는 규칙(rules)상으로도 관리자 전용으로 막혀있는 데이터 — 인증 스트리머 세션에서는
+    // 아예 구독을 시도하지 않는다(어차피 막히지만 콘솔에 권한 오류가 안 남게).
+    if (window.sbmIsAdmin) {
+      sbmRenderVerifyRequests();
+      sbmRenderChargeRequests();
+      sbmRenderStreamerRequests();
+      sbmSubscribeBannedAccounts();
+    }
   });
   navRanking.addEventListener('click', function (e) {
     e.preventDefault();

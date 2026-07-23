@@ -26,10 +26,13 @@ const closeBettingScheduled = onSchedule('every 1 minutes', async () => {
   if (pendingSnap.exists()) {
     const { finalizeMarketSettlement } = require('./markets');
     const jobs = [];
+    // 여기서의 market은 스캔 시점 스냅샷 — 실제 취소/재판정 여부·중복 실행 방지는
+    // finalizeMarketSettlement 내부의 트랜잭션이 최신 상태 기준으로 다시 확인한다.
+    // 이 필터는 그저 확실히 안 될 대상까지 잡을 필요 없이 걸러내는 용도.
     pendingSnap.forEach((child) => {
       const market = child.val();
       if (market.pendingSettlement && market.pendingSettlement.finalizeAt <= now) {
-        jobs.push(finalizeMarketSettlement(child.key, market));
+        jobs.push(finalizeMarketSettlement(child.key));
       }
     });
     await Promise.all(jobs);
