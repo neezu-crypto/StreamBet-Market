@@ -409,6 +409,54 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .ranking-more-btn:hover{ border-color: var(--gold-line); color: var(--gold); }
 
+/* ---------- Skin shop tab ---------- */
+.skin-panel{ display:flex; flex-direction:column; gap:16px; margin-top:26px; }
+.skin-panel-head{ display:flex; flex-direction:column; gap:4px; }
+.skin-panel-title{ font-family: var(--font-display); font-size:20px; font-weight:800; margin:0; }
+.skin-panel-sub{ font-size:13px; color: var(--muted); margin:0; }
+
+.skin-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr)); gap:14px; }
+.skin-card{
+  display:flex; flex-direction:column; gap:12px; padding:14px;
+  background: var(--panel-raised); border:1px solid var(--hairline); border-radius:12px;
+  transition: border-color .15s ease, transform .15s ease;
+}
+.skin-card:hover{ border-color: var(--gold-line); transform: translateY(-2px); }
+.skin-card.owned{ border-color: rgba(63,182,137,0.35); }
+.skin-card.equipped{ border-color: var(--gold-line); background: linear-gradient(165deg, rgba(217,164,65,0.08), transparent 45%), var(--panel-raised); }
+
+.skin-thumb{
+  height:100px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+  background: var(--panel); border:1px solid var(--hairline); overflow:hidden; position:relative;
+}
+.skin-thumb-profile{ background: var(--panel); }
+.skin-thumb-avatar{
+  width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  background: var(--panel-raised); color: var(--text); font-weight:700; font-size:16px;
+}
+.skin-thumb-gold .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--gold); }
+.skin-thumb-neon .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--mint), 0 0 16px rgba(63,182,137,0.6); }
+.skin-thumb-sparkle .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--coral), 0 0 20px rgba(226,85,79,0.5); }
+.skin-thumb-nickname{ background: linear-gradient(90deg, #e2554f, #d9a441, #3fb689, #4f8fe2); }
+.skin-thumb-nickname-text{ font-weight:800; font-size:15px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.35); }
+.skin-thumb-card{ padding:10px; }
+.skin-thumb-card-dark{ background: linear-gradient(165deg, #1c2027, #0b0d10); }
+.skin-thumb-card-holo{ background: linear-gradient(120deg, #e2554f, #d9a441, #3fb689, #4f8fe2, #e2554f); background-size:300% 300%; }
+
+.skin-card-body{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
+.skin-name{ font-size:13.5px; font-weight:600; color: var(--text); }
+.skin-price{ font-family: var(--font-mono); font-weight:700; font-size:13px; color: var(--gold); flex-shrink:0; }
+.skin-price small{ font-family: var(--font-body); font-weight:500; font-size:11px; color: var(--muted); margin-left:1px; }
+
+.skin-buy-btn{
+  font-family:inherit; font-size:12.5px; font-weight:700; color:#1a1200; background: var(--gold);
+  border:none; border-radius:7px; padding:9px; transition: background .15s ease;
+}
+.skin-buy-btn:hover{ background:#e6b453; }
+.skin-buy-btn.owned{ background: var(--mint-dim); color: var(--mint); cursor:default; }
+.skin-buy-btn.equipped{ background: var(--gold-dim); color: var(--gold); border:1px solid var(--gold-line); cursor:default; }
+.skin-empty{ text-align:center; color: var(--muted-2); font-size:13px; padding:32px 0; }
+
 /* ---------- Settlement history tab ---------- */
 .settlement-panel{ display:flex; flex-direction:column; gap:16px; margin-top:26px; }
 .settlement-summary{

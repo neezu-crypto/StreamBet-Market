@@ -2,18 +2,21 @@
   var navMarket = document.getElementById('nav-market');
   var navAdmin = document.getElementById('nav-admin');
   var navRanking = document.getElementById('nav-ranking');
+  var navSkin = document.getElementById('nav-skin');
   var navSettlement = document.getElementById('nav-settlement');
   var marketView = document.getElementById('market-view');
   var adminView = document.getElementById('admin-view');
   var rankingView = document.getElementById('ranking-view');
+  var skinView = document.getElementById('skin-view');
   var settlementView = document.getElementById('settlement-view');
-  if (!navMarket || !navAdmin || !navRanking || !navSettlement || !marketView || !adminView || !rankingView || !settlementView) return;
+  if (!navMarket || !navAdmin || !navRanking || !navSkin || !navSettlement || !marketView || !adminView || !rankingView || !skinView || !settlementView) return;
 
   var tabs = [
     { nav: navMarket, view: marketView },
     { nav: navAdmin, view: adminView },
     { nav: navRanking, view: rankingView },
-    { nav: navSettlement, view: settlementView }
+    { nav: navSettlement, view: settlementView },
+    { nav: navSkin, view: skinView }
   ];
 
   function showTab(active) {
@@ -73,6 +76,28 @@
     sbmApplyNicknameBlocks();
   });
   navSettlement.addEventListener('click', function (e) { e.preventDefault(); showTab(tabs[3]); });
+  navSkin.addEventListener('click', function (e) { e.preventDefault(); showTab(tabs[4]); });
+
+  // 스킨 탭 — 카테고리 칩으로 카드 목록만 필터링(서버 연동 전 레이아웃 단계, 목업 데이터)
+  var skinCategoryFilter = document.getElementById('skin-category-filter');
+  var skinGrid = document.getElementById('skin-grid');
+  var skinEmpty = document.getElementById('skin-empty');
+  if (skinCategoryFilter && skinGrid) {
+    skinCategoryFilter.querySelectorAll('.chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        skinCategoryFilter.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+        chip.classList.add('active');
+        var category = chip.getAttribute('data-category');
+        var visibleCount = 0;
+        skinGrid.querySelectorAll('.skin-card').forEach(function (card) {
+          var match = category === 'all' || card.getAttribute('data-category') === category;
+          card.style.display = match ? '' : 'none';
+          if (match) visibleCount += 1;
+        });
+        if (skinEmpty) skinEmpty.style.display = visibleCount ? 'none' : '';
+      });
+    });
+  }
 
   document.querySelectorAll('.ranking-tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -87,7 +112,7 @@
 
   sbmRenderAuditLog();
 
-  // 숫자키 1~3 = 마켓/랭킹/정산 내역 탭, 4 = 관리 탭(관리자·인증 스트리머만). 입력창에
+  // 숫자키 1~4 = 마켓/랭킹/스킨/정산 내역 탭, 5 = 관리 탭(관리자·인증 스트리머만). 입력창에
   // 타이핑 중이거나 모달이 열려있을 때는 숫자 입력을 그대로 받아야 하므로 건드리지 않는다.
   document.addEventListener('keydown', function (e) {
     if (e.ctrlKey || e.altKey || e.metaKey) return;
@@ -97,8 +122,9 @@
 
     if (e.key === '1') { e.preventDefault(); navMarket.click(); }
     else if (e.key === '2') { e.preventDefault(); navRanking.click(); }
-    else if (e.key === '3') { e.preventDefault(); navSettlement.click(); }
-    else if (e.key === '4' && sbmCanUseAdminTab()) { e.preventDefault(); navAdmin.click(); }
+    else if (e.key === '3') { e.preventDefault(); navSkin.click(); }
+    else if (e.key === '4') { e.preventDefault(); navSettlement.click(); }
+    else if (e.key === '5' && sbmCanUseAdminTab()) { e.preventDefault(); navAdmin.click(); }
   });
 })();
 
