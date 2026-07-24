@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountDay, kstDateKey, addDailyExchangeAmount } = require('./lib/wallet');
 const {
@@ -9,20 +9,20 @@ const {
   EXCHANGE_DAILY_CAPS,
 } = require('./constants');
 
-// 주식시장 users/{uid}/cash 잔액 조정 (같은 프로젝트, 다른 최상위 노드)
+// 주식시장 users/{uid}/cash 잔액 조정 (같은 프로젝트, 다른 최상위 노드) — adjustBalance와
+// 동일한 이유로 ref.transaction() 대신 ServerValue.increment 기반 원자적 증감을 쓴다.
 async function adjustCash(uid, delta) {
   const ref = getDatabase().ref('users/' + uid + '/cash');
-  const result = await ref.transaction((current) => {
-    const next = (current || 0) + delta;
-    if (next < 0) return; // 트랜잭션 중단
-    return next;
-  });
-  if (!result.committed) {
+  await ref.set(ServerValue.increment(delta));
+  const snap = await ref.get();
+  const cash = snap.val() || 0;
+  if (cash < 0) {
+    await ref.set(ServerValue.increment(-delta)); // 되돌리기
     const err = new Error('주식시장 잔액이 부족합니다.');
     err.code = 'insufficient-cash';
     throw err;
   }
-  return result.snapshot.val();
+  return cash;
 }
 
 function dailyCapForDay(day) {
@@ -60,7 +60,8 @@ const exchangeCurrency = onCall(async (request) => {
     await addDailyExchangeAmount(uid, amt, cap);
   } catch (err) {
     if (err.code === 'daily-cap-exceeded') {
-      throw new HttpsError('failed-precondition', '오늘 남은 환전 한도(' + Math.max(cap - dailyUsedBefore, 0).toLocaleString('ko-KR') + '원)를 초과했습니다.');
+      const remaining = Math.max(cap - (err.actualTotal != null ? err.actualTotal : dailyUsedBefore), 0);
+      throw new HttpsError('failed-precondition', '오늘 남은 환전 한도(' + remaining.toLocaleString('ko-KR') + '원)를 초과했습니다.');
     }
     throw err;
   }

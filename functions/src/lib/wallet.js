@@ -1,4 +1,4 @@
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 
 const INITIAL_BALANCE = 1000000; // 07번 초기 자산
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -45,48 +45,47 @@ function accountDay(wallet) {
   return Math.floor(accountAgeMs(wallet) / DAY_MS) + 1;
 }
 
+// ensureWallet()이 이미 지갑을 만들어 둔 뒤에만 호출된다는 전제 하에, ref.transaction()이
+// 같은 지갑 경로에서 실제 값이 있는데도 간헐적으로 current를 null로 잘못 인식하는 firebase-admin
+// 버그(07번 환전 한도 버그 조사로 확인됨)를 피하기 위해 balance 필드만 ServerValue.increment로
+// 원자적으로 증감하고, 음수가 되면 되돌리는 방식을 쓴다. transaction()의 "current가 없으면 기본값
+// 생성" 폴백은 이 버그 아래에서 실제 잔액을 조용히 초기값으로 덮어쓸 위험이 있어 제거했다.
 async function adjustBalance(uid, delta) {
-  const ref = walletRef(uid);
-  const result = await ref.transaction((current) => {
-    if (!current) {
-      current = { balance: INITIAL_BALANCE, accountCreatedAt: Date.now() };
-    }
-    const nextBalance = (current.balance || 0) + delta;
-    if (nextBalance < 0) return; // 트랜잭션 중단 (잔액 부족)
-    current.balance = nextBalance;
-    return current;
-  });
-  if (!result.committed) {
+  const ref = walletRef(uid).child('balance');
+  await ref.set(ServerValue.increment(delta));
+  const snap = await ref.get();
+  const balance = snap.val() || 0;
+  if (balance < 0) {
+    await ref.set(ServerValue.increment(-delta)); // 되돌리기
     const err = new Error('잔액이 부족합니다.');
     err.code = 'insufficient-balance';
     throw err;
   }
-  return result.snapshot.val();
+  return { balance };
 }
 
 // 07번 환전 일일 누적 사용액 — 서버가 자체 기록으로 검증, 클라이언트 값 불신.
-// 한도(cap)를 넘기면 트랜잭션 자체를 중단시켜서, "확인 후 나중에 기록"이 아니라
-// "기록 자체가 원자적으로 한도 내에서만 성공"하도록 한다 — 동시 요청으로 한도를
-// 우회하는 걸 막기 위함. cap이 null/undefined면 한도 체크 없이 그냥 누적만 한다
-// (음수 amount로 예약분을 되돌릴 때 사용).
+// ref.transaction()이 이 경로에서 실제 값이 있는데도 간헐적으로 current를 null로
+// 보는 firebase-admin 버그(진단 결과 .get()은 정상, .transaction()만 null로 인식하는
+// 현상 확인됨)를 피하려고, transaction 대신 ServerValue.increment로 원자적 증가 →
+// 조회 → 한도 초과 시 보정(되돌리기) 방식을 쓴다. 날짜별 키(dailyExchange/{today})라
+// 자정이 지나면 새 키로 자동 분리되어 별도 리셋 로직도 필요 없다.
 async function addDailyExchangeAmount(uid, amount, cap) {
-  const ref = walletRef(uid);
   const today = kstDateKey();
-  const result = await ref.transaction((current) => {
-    if (!current) return; // 지갑이 반드시 먼저 존재해야 함 (트랜잭션 중단)
-    const prevTotal = current.dailyExchangeDate === today ? (current.dailyExchangeTotal || 0) : 0;
-    const nextTotal = prevTotal + amount;
-    if (cap != null && nextTotal > cap) return; // 트랜잭션 중단 — 한도 초과
-    current.dailyExchangeDate = today;
-    current.dailyExchangeTotal = Math.max(0, nextTotal);
-    return current;
-  });
-  if (!result.committed) {
+  const dayRef = walletRef(uid).child('dailyExchange').child(today);
+  await dayRef.set(ServerValue.increment(amount));
+  const snap = await dayRef.get();
+  const total = snap.val() || 0;
+  if (cap != null && total > cap) {
+    await dayRef.set(ServerValue.increment(-amount)); // 한도 초과분 되돌리기
     const err = new Error('오늘 환전 한도를 초과했습니다.');
     err.code = 'daily-cap-exceeded';
+    err.actualTotal = total - amount; // 되돌리기 전, 이번 요청분 제외한 실제 사용액
     throw err;
   }
-  return result.snapshot.val();
+  // 화면 표시용 필드 — 한도 판정 자체는 위 dailyExchange/{today} 값 기준이고, 이건 참고용 미러링
+  await walletRef(uid).update({ dailyExchangeDate: today, dailyExchangeTotal: total });
+  return total;
 }
 
 async function setLastBetActionAt(uid, ts) {
