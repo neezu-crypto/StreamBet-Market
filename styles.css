@@ -647,9 +647,6 @@ button{ font-family: inherit; cursor: pointer; }
   transition: border-color .15s ease, transform .15s ease;
 }
 .skin-card:hover{ border-color: var(--gold-line); transform: translateY(-2px); }
-/* 관리자 전용 시범 스킨 — 관리자가 아니면 카테고리 필터와 무관하게 항상 숨김 */
-.skin-card[data-admin-only]{ display:none; }
-.skin-card[data-admin-only].sbm-admin-visible{ display:flex; }
 .skin-card.owned{ border-color: rgba(63,182,137,0.35); }
 .skin-card.equipped{ border-color: var(--gold-line); background: linear-gradient(165deg, rgba(217,164,65,0.08), transparent 45%), var(--panel-raised); }
 
