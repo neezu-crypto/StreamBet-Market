@@ -16,6 +16,7 @@
   var errorEl = document.getElementById('bet-error');
   var payoutEl = document.getElementById('bet-payout');
   var submitBtn = document.getElementById('bet-submit-btn');
+  var cancelBtn = document.getElementById('bet-cancel-btn');
   var statusEl = document.getElementById('bet-status');
   if (!backdrop) return;
 
@@ -95,6 +96,9 @@
     renderOutcomes(market);
     submitBtn.disabled = true;
     submitBtn.textContent = '배팅하기';
+    cancelBtn.style.display = 'none';
+    cancelBtn.disabled = false;
+    cancelBtn.textContent = '배팅 취소하기';
     statusEl.classList.remove('show');
     errorEl.classList.remove('show');
     amountInput.disabled = false;
@@ -131,6 +135,7 @@
           statusEl.style.color = 'var(--gold)';
           statusEl.textContent = '이미 ' + fmt(bet.amount) + '원을 배팅 중입니다. 다시 배팅하면 기존 배팅을 취소하고 새로 배팅합니다(30초 쿨다운 적용).';
           statusEl.classList.add('show');
+          cancelBtn.style.display = '';
           break;
         }
       }
@@ -204,6 +209,43 @@
         submitBtn.textContent = '배팅하기';
         statusEl.style.color = 'var(--coral)';
         statusEl.textContent = err.message || '배팅 처리 중 오류가 발생했습니다.';
+        statusEl.classList.add('show');
+      });
+  });
+
+  cancelBtn.addEventListener('click', function () {
+    if (!currentActiveBet || !window.sbmFirebase) return;
+    var betToCancel = currentActiveBet;
+    amountInput.disabled = true;
+    minusBtn.disabled = true;
+    plusBtn.disabled = true;
+    submitBtn.disabled = true;
+    cancelBtn.disabled = true;
+    cancelBtn.textContent = '취소 중...';
+
+    var fb = window.sbmFirebase;
+    fb.httpsCallable('cancelBet')({ marketId: currentMarketId, betId: betToCancel.betId })
+      .then(function () {
+        currentActiveBet = null;
+        cancelBtn.style.display = 'none';
+        statusEl.style.color = 'var(--mint)';
+        statusEl.textContent = '배팅이 취소되고 환불되었습니다.';
+        statusEl.classList.add('show');
+        amountInput.disabled = false;
+        minusBtn.disabled = false;
+        plusBtn.disabled = false;
+        return fb.get(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + window.sbmUser.uid + '/balance'));
+      })
+      .then(function (walletSnap) {
+        walletBalance = walletSnap.exists() ? walletSnap.val() : 1000000;
+        balanceEl.textContent = fmt(walletBalance) + '원';
+        setAmount(0);
+      })
+      .catch(function (err) {
+        cancelBtn.disabled = false;
+        cancelBtn.textContent = '배팅 취소하기';
+        statusEl.style.color = 'var(--coral)';
+        statusEl.textContent = err.message || '배팅 취소 중 오류가 발생했습니다.';
         statusEl.classList.add('show');
       });
   });
