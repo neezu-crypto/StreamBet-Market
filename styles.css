@@ -59,6 +59,30 @@ html.theme-excel-default .app{
 html.theme-excel-default .devbar{ background: #ffffff; }
 html.theme-excel-default .ticker{ background: linear-gradient(180deg, #e8ede9, transparent); }
 
+/* 16번 — 스킨: 윈도우11 폴더 스킨. Fluent 디자인 특유의 밝은 배경 + 파란 액센트 +
+   Segoe UI 폰트로 페이지 전체를 리스킨한다. --gold를 액센트 블루로 재사용한다
+   (엑셀 테마가 --gold를 초록으로 재사용한 것과 동일한 패턴). */
+html.theme-win11-folder{
+  color-scheme: light;
+  --ink: #f3f3f3;
+  --panel: #ffffff;
+  --panel-raised: #ffffff;
+  --hairline: #e1e1e1;
+  --gold: #0078d4;
+  --gold-dim: rgba(0,120,212,0.12);
+  --gold-line: rgba(0,120,212,0.35);
+  --mint: #107c10;
+  --mint-dim: rgba(16,124,16,0.12);
+  --text: #1b1b1b;
+  --muted: #616161;
+  --muted-2: #8a8a8a;
+  --font-display: "Segoe UI Variable", "Segoe UI", "Malgun Gothic", sans-serif;
+  --font-body: "Segoe UI Variable", "Segoe UI", "Malgun Gothic", sans-serif;
+  --font-serif: "Segoe UI Variable", "Segoe UI", "Malgun Gothic", sans-serif;
+}
+html.theme-win11-folder .devbar{ background: #ffffff; }
+html.theme-win11-folder .ticker{ background: linear-gradient(180deg, #e8e8e8, transparent); }
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -457,6 +481,9 @@ button{ font-family: inherit; cursor: pointer; }
   transition: border-color .15s ease, transform .15s ease;
 }
 .skin-card:hover{ border-color: var(--gold-line); transform: translateY(-2px); }
+/* 관리자 전용 시범 스킨 — 관리자가 아니면 카테고리 필터와 무관하게 항상 숨김 */
+.skin-card[data-admin-only]{ display:none; }
+.skin-card[data-admin-only].sbm-admin-visible{ display:flex; }
 .skin-card.owned{ border-color: rgba(63,182,137,0.35); }
 .skin-card.equipped{ border-color: var(--gold-line); background: linear-gradient(165deg, rgba(217,164,65,0.08), transparent 45%), var(--panel-raised); }
 
@@ -477,6 +504,28 @@ button{ font-family: inherit; cursor: pointer; }
   background-image:
     repeating-linear-gradient(0deg, rgba(33,115,70,0.18) 0 1px, transparent 1px 20px),
     repeating-linear-gradient(90deg, rgba(33,115,70,0.18) 0 1px, transparent 1px 46px);
+}
+
+/* 테마 스킨 — 윈도우11 폴더 스킨: 밝은 타이틀바 + 파란 폴더 아이콘으로 탐색기를 흉내낸다 */
+.skin-thumb-theme-win11{
+  display:flex; flex-direction:column; background:#f3f3f3;
+  color-scheme: light; forced-color-adjust: none;
+}
+.skin-thumb-theme-win11-titlebar{
+  height:20px; background:#fff; border-bottom:1px solid #e1e1e1; flex-shrink:0;
+  display:flex; align-items:center; justify-content:flex-end; gap:5px; padding:0 8px;
+}
+.skin-thumb-theme-win11-dot{ width:6px; height:6px; border-radius:50%; background:#c8c8c8; }
+.skin-thumb-theme-win11-body{ flex:1; display:flex; align-items:center; justify-content:center; }
+.skin-thumb-theme-win11-folder{ position:relative; width:44px; height:30px; }
+.skin-thumb-theme-win11-folder-tab{
+  position:absolute; left:0; top:0; width:18px; height:8px;
+  background:#50a4e8; border-radius:3px 3px 0 0;
+}
+.skin-thumb-theme-win11-folder-body{
+  position:absolute; left:0; top:6px; width:44px; height:24px;
+  background: linear-gradient(160deg, #6bc1ff, #0078d4); border-radius:3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
 .skin-card-body{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }

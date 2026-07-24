@@ -68,6 +68,7 @@ const RANKING_DISPLAY_CAP = 100; // 13번 — 자산·승률·누적수익 랭�
 // 새 스킨은 코드 배포로 추가한다. price는 서버 값이 항상 기준(클라이언트 표시는 참고용).
 const SKIN_CATALOG = {
   'excel-default': { name: '엑셀 기본 테마', category: 'theme', price: 200000 },
+  'win11-folder': { name: '윈도우11 폴더 스킨', category: 'theme', price: 200000 },
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
