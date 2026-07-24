@@ -361,6 +361,25 @@
       "rankings": {
         ".read": "auth != null",
         ".write": false
+      },
+
+      "ownedSkins": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          "$skinId": { ".write": false }
+        }
+      },
+
+      "equippedSkin": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+
+      "skinPurchases": {
+        ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
+        "$entryId": { ".write": false }
       }
     }
   }

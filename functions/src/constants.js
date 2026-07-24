@@ -64,6 +64,13 @@ const ADMIN_CHAT_CAP = 200; // 관리 탭 채팅 — 이 개수를 넘는 오래
 
 const RANKING_DISPLAY_CAP = 100; // 13번 — 자산·승률·누적수익 랭킹은 상위 100명까지만 계산·저장
 
+// 16번 — 스킨 카탈로그. 별도 관리자 CRUD 없이 서버·클라이언트 양쪽 상수로 관리하며,
+// 새 스킨은 코드 배포로 추가한다. price는 서버 값이 항상 기준(클라이언트 표시는 참고용).
+const SKIN_CATALOG = {
+  'excel-default': { name: '엑셀 기본 테마', category: 'theme', price: 200000 },
+};
+const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -102,4 +109,6 @@ module.exports = {
   AUDIT_LOG_CAP,
   ADMIN_CHAT_CAP,
   RANKING_DISPLAY_CAP,
+  SKIN_CATALOG,
+  SKIN_PURCHASE_LOG_CAP,
 };

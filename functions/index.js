@@ -33,4 +33,5 @@ module.exports = {
   ...require('./src/admin-tools'),
   ...require('./src/streamer-requests'),
   ...require('./src/chat'),
+  ...require('./src/skins'),
 };
