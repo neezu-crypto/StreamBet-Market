@@ -107,8 +107,10 @@ html.theme-win11-folder .hero-ticket{
     conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,120,212,0.12) 110deg, var(--gold) 200deg, rgba(0,120,212,0.12) 300deg, var(--gold) 360deg) border-box;
 }
 /* 모달창도 폴더 스킨으로 — 공통으로 쓰이던 금색 비네트 그라데이션·짙은 그림자를
-   지우고, 윈도우11 다이얼로그 특유의 얕은 모서리 + 옅은 그림자로 교체한다.
-   왼쪽 위에 작은 파란 폴더 탭도 붙여 마켓 카드와 통일감을 준다. */
+   지우고, 윈도우11 다이얼로그 특유의 얕은 모서리 + 옅은 그림자로 교체한다. 위쪽에는
+   탐색기 탭 바(회색 크롬 바탕 + 흰 활성 탭 + 닫기 ×)를 얹어 마켓 카드의 폴더 탭과
+   함께 "탐색기 창" 느낌을 완성한다. 탭 바는 모달 위로 튀어나오는 가상 요소라
+   레이아웃(중앙 정렬)에는 영향을 주지 않는다. */
 html.theme-win11-folder .verify-modal,
 html.theme-win11-folder .propose-modal,
 html.theme-win11-folder .exchange-modal,
@@ -132,9 +134,26 @@ html.theme-win11-folder .manage-modal::before,
 html.theme-win11-folder .profile-modal::before,
 html.theme-win11-folder .report-modal::before,
 html.theme-win11-folder .boot-card::before{
-  content:""; position:absolute; left:20px; top:-8px; width:34px; height:9px;
-  background: linear-gradient(160deg, #6bc1ff, #0078d4);
-  border-radius: 4px 4px 0 0;
+  content:""; position:absolute; left:0; right:0; top:-30px; height:30px;
+  background:#e2e2e2; border-bottom:1px solid #cfcfcf;
+  border-radius: 8px 8px 0 0;
+}
+html.theme-win11-folder .verify-modal::after,
+html.theme-win11-folder .propose-modal::after,
+html.theme-win11-folder .exchange-modal::after,
+html.theme-win11-folder .bet-modal::after,
+html.theme-win11-folder .review-modal::after,
+html.theme-win11-folder .manage-modal::after,
+html.theme-win11-folder .profile-modal::after,
+html.theme-win11-folder .report-modal::after,
+html.theme-win11-folder .boot-card::after{
+  content:"×";
+  position:absolute; left:10px; top:-30px; width:120px; height:30px;
+  background: var(--panel);
+  border-radius: 8px 8px 0 0;
+  box-shadow: 1px 0 0 rgba(0,0,0,0.06), -1px 0 0 rgba(0,0,0,0.06);
+  display:flex; align-items:center; justify-content:flex-end;
+  padding-right:10px; color:#9a9a9a; font-size:13px; line-height:1;
 }
 
 *{ box-sizing: border-box; }
