@@ -38,7 +38,8 @@ function sbmSubscribeVerifiedStreamers() {
 function sbmRenderVerifiedBanner() {
   var track = document.getElementById('verified-track');
   if (!track) return;
-  var ctaBtn = document.getElementById('open-verify-modal');
+  // 인증하기 버튼은 좌측에 고정 노출돼야 하므로(스크롤되는 홍보 이미지와 별개), 이 트랙
+  // 안으로 옮기지 않는다 — verified-row에서 viewport 앞에 별도로 위치한다.
   var items = Object.keys(sbmVerifiedCache).map(function (key) {
     var v = sbmVerifiedCache[key];
     var soopId = v.soopId || '';
@@ -52,7 +53,6 @@ function sbmRenderVerifiedBanner() {
       '<span class="verified-name">' + sbmEscapeHtml(v.nickname) + '<small>✓ 인증</small></span></a>';
   }).join('');
   track.innerHTML = items;
-  if (ctaBtn) track.appendChild(ctaBtn);
   if (window.sbmRefreshVerifiedTrack) window.sbmRefreshVerifiedTrack();
 }
 

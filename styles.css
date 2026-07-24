@@ -941,8 +941,8 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .verified-name small{ display:block; font-size:10px; color: var(--mint); font-weight:700; margin-top:1px; }
 
 .verified-cta{
-  position: relative; padding-left: 16px; border-left: 1px dashed var(--hairline);
-  background:none; border-top:none; border-right:none; border-bottom:none; font-family:inherit;
+  position: relative; padding-right: 16px; border-right: 1px dashed var(--hairline);
+  background:none; border-top:none; border-left:none; border-bottom:none; font-family:inherit;
 }
 .cta-ring{
   background: transparent; border: 2px dashed var(--gold-line);
