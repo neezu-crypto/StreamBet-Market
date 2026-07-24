@@ -195,7 +195,7 @@ html.theme-macos-finder .ticket:not(.hero-ticket):hover{
   border-color: var(--gold-line);
   box-shadow: 0 4px 10px rgba(0,0,0,0.07), 0 22px 52px rgba(0,0,0,0.12);
 }
-html.theme-macos-finder .ticket-main{ padding-top: 34px; }
+html.theme-macos-finder .ticket-main{ padding-top: 40px; }
 html.theme-macos-finder .ticket-stub{ border-top: 1px solid var(--hairline); }
 html.theme-macos-finder .ticket-stub::before,
 html.theme-macos-finder .ticket-stub::after{ display:none; }
@@ -219,7 +219,7 @@ html.theme-macos-finder .boot-card{
   background: var(--panel);
   border-radius: 13px;
   box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 30px 70px rgba(0,0,0,0.22);
-  padding-top: 34px;
+  padding-top: 50px;
 }
 html.theme-macos-finder .verify-modal::before,
 html.theme-macos-finder .propose-modal::before,
