@@ -429,19 +429,17 @@ button{ font-family: inherit; cursor: pointer; }
   height:100px; border-radius:9px; display:flex; align-items:center; justify-content:center;
   background: var(--panel); border:1px solid var(--hairline); overflow:hidden; position:relative;
 }
-.skin-thumb-profile{ background: var(--panel); }
-.skin-thumb-avatar{
-  width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-  background: var(--panel-raised); color: var(--text); font-weight:700; font-size:16px;
+
+/* 테마 스킨 — 엑셀 기본 테마: 초록 리본 헤더 + 흰 셀 그리드로 스프레드시트를 흉내낸다 */
+.skin-thumb-theme{ padding:0; align-items:stretch; }
+.skin-thumb-theme-excel{ display:flex; flex-direction:column; background:#fff; }
+.skin-thumb-theme-header{ height:22px; background:#217346; flex-shrink:0; }
+.skin-thumb-theme-grid{
+  flex:1;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(33,115,70,0.18) 0 1px, transparent 1px 20px),
+    repeating-linear-gradient(90deg, rgba(33,115,70,0.18) 0 1px, transparent 1px 46px);
 }
-.skin-thumb-gold .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--gold); }
-.skin-thumb-neon .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--mint), 0 0 16px rgba(63,182,137,0.6); }
-.skin-thumb-sparkle .skin-thumb-avatar{ box-shadow: 0 0 0 3px var(--coral), 0 0 20px rgba(226,85,79,0.5); }
-.skin-thumb-nickname{ background: linear-gradient(90deg, #e2554f, #d9a441, #3fb689, #4f8fe2); }
-.skin-thumb-nickname-text{ font-weight:800; font-size:15px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.35); }
-.skin-thumb-card{ padding:10px; }
-.skin-thumb-card-dark{ background: linear-gradient(165deg, #1c2027, #0b0d10); }
-.skin-thumb-card-holo{ background: linear-gradient(120deg, #e2554f, #d9a441, #3fb689, #4f8fe2, #e2554f); background-size:300% 300%; }
 
 .skin-card-body{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
 .skin-name{ font-size:13.5px; font-weight:600; color: var(--text); }
