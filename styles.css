@@ -43,10 +43,15 @@ html.theme-excel-default{
   --font-body: "Calibri", "Segoe UI", "Malgun Gothic", sans-serif;
   --font-serif: "Calibri", "Segoe UI", "Malgun Gothic", sans-serif;
 }
-html.theme-excel-default body{
+/* 셀 그리드를 body(뷰포트 전체) 대신 .app(실제 카드가 놓이는 중앙 정렬 콘텐츠 영역)에
+   그려서, 격자의 원점이 카드가 시작되는 지점과 맞도록 한다. content-box 기준으로
+   그려야 .app의 좌우 padding(20px) 안쪽, 즉 카드가 실제로 시작하는 지점부터 격자가 시작된다. */
+html.theme-excel-default .app{
   background-image:
     repeating-linear-gradient(0deg, rgba(33,115,70,0.08) 0 1px, transparent 1px 24px),
     repeating-linear-gradient(90deg, rgba(33,115,70,0.08) 0 1px, transparent 1px 110px);
+  background-origin: content-box;
+  background-repeat: repeat;
 }
 /* devbar·티커는 배경색을 변수가 아니라 고정값으로 쓰고 있어 별도로 오버라이드해야 한다 */
 html.theme-excel-default .devbar{ background: #ffffff; }
