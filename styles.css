@@ -3,6 +3,7 @@
   src: local('Apple SD Gothic Neo');
 }
 :root{
+  color-scheme: light;
   --ink: #0b0d10;
   --panel: #15181d;
   --panel-raised: #1c2027;
@@ -27,6 +28,7 @@
 /* 16번 — 스킨: 엑셀 기본 테마. 이 앱은 색상·폰트를 전부 커스텀 프로퍼티로 관리하므로
    변수만 오버라이드하면 기존 마크업·JS를 건드리지 않고 페이지 전체가 리스킨된다. */
 html.theme-excel-default{
+  color-scheme: light;
   --ink: #f3f2f1;
   --panel: #ffffff;
   --panel-raised: #ffffff;
@@ -465,7 +467,10 @@ button{ font-family: inherit; cursor: pointer; }
 
 /* 테마 스킨 — 엑셀 기본 테마: 초록 리본 헤더 + 흰 셀 그리드로 스프레드시트를 흉내낸다 */
 .skin-thumb-theme{ padding:0; align-items:stretch; }
-.skin-thumb-theme-excel{ display:flex; flex-direction:column; background:#fff; }
+.skin-thumb-theme-excel{
+  display:flex; flex-direction:column; background:#fff;
+  color-scheme: light; forced-color-adjust: none;
+}
 .skin-thumb-theme-header{ height:22px; background:#217346; flex-shrink:0; }
 .skin-thumb-theme-grid{
   flex:1;
