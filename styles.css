@@ -156,6 +156,99 @@ html.theme-win11-folder .boot-card::after{
   padding-right:10px; color:#9a9a9a; font-size:13px; line-height:1;
 }
 
+/* 16번 — 스킨: 맥OS 파인더 스킨. 밝은 배경 + 시스템 블루 액센트 + SF 계열 폰트로
+   페이지 전체를 리스킨한다. --gold를 액센트 블루로, --mint을 트래픽라이트 초록으로
+   재사용한다(윈도우11 폴더 스킨과 동일한 패턴). */
+html.theme-macos-finder{
+  color-scheme: light;
+  --ink: #ececec;
+  --panel: #ffffff;
+  --panel-raised: #ffffff;
+  --hairline: #d1d1d6;
+  --gold: #007aff;
+  --gold-dim: rgba(0,122,255,0.12);
+  --gold-line: rgba(0,122,255,0.35);
+  --mint: #28c840;
+  --mint-dim: rgba(40,200,64,0.12);
+  --text: #1d1d1f;
+  --muted: #6e6e73;
+  --muted-2: #98989d;
+  --font-display: -apple-system, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "Apple SD Gothic Neo", sans-serif;
+  --font-body: -apple-system, "SF Pro Text", "Helvetica Neue", "Apple SD Gothic Neo", sans-serif;
+  --font-serif: -apple-system, "SF Pro Text", "Helvetica Neue", "Apple SD Gothic Neo", sans-serif;
+}
+html.theme-macos-finder .devbar{ background: #ffffff; }
+html.theme-macos-finder .ticker{ background: linear-gradient(180deg, #e5e5e7, transparent); }
+/* 마켓 카드(.ticket) — 티켓 절취선 대신 맥 특유의 더 둥근 모서리 + 넓고 부드러운
+   그림자, 좌측 상단에는 노치 없이 하나로 이어진 둥근 실루엣의 파란 폴더 아이콘. */
+html.theme-macos-finder .ticket{
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05), 0 16px 40px rgba(0,0,0,0.08);
+}
+html.theme-macos-finder .ticket:not(.hero-ticket)::before{
+  content:""; top:14px; left:16px; right:auto; height:16px; width:22px;
+  background: linear-gradient(165deg, #6dd5fa, #0a84ff);
+  border-radius: 3px 6px 6px 6px;
+  opacity:1;
+}
+html.theme-macos-finder .ticket:not(.hero-ticket):hover{
+  border-color: var(--gold-line);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.07), 0 22px 52px rgba(0,0,0,0.12);
+}
+html.theme-macos-finder .ticket-main{ padding-top: 34px; }
+html.theme-macos-finder .ticket-stub{ border-top: 1px solid var(--hairline); }
+html.theme-macos-finder .ticket-stub::before,
+html.theme-macos-finder .ticket-stub::after{ display:none; }
+html.theme-macos-finder .hero-ticket{
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,122,255,0.12) 110deg, var(--gold) 200deg, rgba(0,122,255,0.12) 300deg, var(--gold) 360deg) border-box;
+}
+/* 모달창 — 탭 바 대신 맥OS 창 특유의 트래픽라이트 버튼(빨/노/초)을 좌측 상단에,
+   모서리는 더 크게, 그림자는 더 넓고 부드럽게. */
+html.theme-macos-finder .verify-modal,
+html.theme-macos-finder .propose-modal,
+html.theme-macos-finder .exchange-modal,
+html.theme-macos-finder .bet-modal,
+html.theme-macos-finder .review-modal,
+html.theme-macos-finder .manage-modal,
+html.theme-macos-finder .profile-modal,
+html.theme-macos-finder .report-modal,
+html.theme-macos-finder .boot-card{
+  position: relative;
+  background: var(--panel);
+  border-radius: 13px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12), 0 30px 70px rgba(0,0,0,0.22);
+  padding-top: 34px;
+}
+html.theme-macos-finder .verify-modal::before,
+html.theme-macos-finder .propose-modal::before,
+html.theme-macos-finder .exchange-modal::before,
+html.theme-macos-finder .bet-modal::before,
+html.theme-macos-finder .review-modal::before,
+html.theme-macos-finder .manage-modal::before,
+html.theme-macos-finder .profile-modal::before,
+html.theme-macos-finder .report-modal::before,
+html.theme-macos-finder .boot-card::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:34px;
+  background: #f6f6f6; border-bottom:1px solid var(--hairline);
+  border-radius: 13px 13px 0 0;
+}
+html.theme-macos-finder .verify-modal::after,
+html.theme-macos-finder .propose-modal::after,
+html.theme-macos-finder .exchange-modal::after,
+html.theme-macos-finder .bet-modal::after,
+html.theme-macos-finder .review-modal::after,
+html.theme-macos-finder .manage-modal::after,
+html.theme-macos-finder .profile-modal::after,
+html.theme-macos-finder .report-modal::after,
+html.theme-macos-finder .boot-card::after{
+  content:"";
+  position:absolute; left:16px; top:14px; width:12px; height:12px; border-radius:50%;
+  background:#ff5f57;
+  box-shadow: 20px 0 0 #febc2e, 40px 0 0 #28c840;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -554,6 +647,9 @@ button{ font-family: inherit; cursor: pointer; }
   transition: border-color .15s ease, transform .15s ease;
 }
 .skin-card:hover{ border-color: var(--gold-line); transform: translateY(-2px); }
+/* 관리자 전용 시범 스킨 — 관리자가 아니면 카테고리 필터와 무관하게 항상 숨김 */
+.skin-card[data-admin-only]{ display:none; }
+.skin-card[data-admin-only].sbm-admin-visible{ display:flex; }
 .skin-card.owned{ border-color: rgba(63,182,137,0.35); }
 .skin-card.equipped{ border-color: var(--gold-line); background: linear-gradient(165deg, rgba(217,164,65,0.08), transparent 45%), var(--panel-raised); }
 
@@ -595,6 +691,26 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-win11-folder-body{
   position:absolute; left:0; top:6px; width:44px; height:24px;
   background: linear-gradient(160deg, #6bc1ff, #0078d4); border-radius:3px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+
+/* 테마 스킨 — 맥OS 파인더 스킨: 트래픽라이트 타이틀바 + 노치 없는 둥근 파란 폴더 */
+.skin-thumb-theme-macos{
+  display:flex; flex-direction:column; background:#ececec;
+  color-scheme: light; forced-color-adjust: none;
+}
+.skin-thumb-theme-macos-titlebar{
+  height:20px; background:#f6f6f6; border-bottom:1px solid #d1d1d6; flex-shrink:0;
+  display:flex; align-items:center; gap:5px; padding:0 8px;
+}
+.skin-thumb-theme-macos-dot{ width:7px; height:7px; border-radius:50%; }
+.skin-thumb-theme-macos-dot-red{ background:#ff5f57; }
+.skin-thumb-theme-macos-dot-yellow{ background:#febc2e; }
+.skin-thumb-theme-macos-dot-green{ background:#28c840; }
+.skin-thumb-theme-macos-body{ flex:1; display:flex; align-items:center; justify-content:center; }
+.skin-thumb-theme-macos-folder{
+  width:40px; height:28px; border-radius:4px 9px 9px 9px;
+  background: linear-gradient(165deg, #6dd5fa, #0a84ff);
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 

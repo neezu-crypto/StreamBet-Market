@@ -3,6 +3,7 @@
 var SBM_SKIN_CATALOG = {
   'excel-default': { name: '엑셀 기본 테마', category: 'theme', price: 200000 },
   'win11-folder': { name: '윈도우11 폴더 스킨', category: 'theme', price: 200000 },
+  'macos-finder': { name: '맥OS 파인더 스킨', category: 'theme', price: 200000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
@@ -115,12 +116,25 @@ function sbmRenderSkinPurchaseLog() {
     }
   });
 
+  // 시범 공개 중인 관리자 전용 스킨(예: 맥OS 파인더 스킨) — 관리자가 아니면 카테고리
+  // 필터 조작과 무관하게 항상 숨겨야 하므로, style.display가 아니라 별도 클래스로
+  // 게이팅한다(CSS 쪽 .skin-card[data-admin-only] 규칙 참고).
+  function updateAdminOnlyCards() {
+    var isAdmin = !!window.sbmIsAdmin;
+    cards.forEach(function (card) {
+      if (card.hasAttribute('data-admin-only')) {
+        card.classList.toggle('sbm-admin-visible', isAdmin);
+      }
+    });
+  }
+
   var unsubscribeOwned = null;
   var unsubscribeEquipped = null;
   document.addEventListener('sbm-auth-changed', function (e) {
     if (unsubscribeOwned) { unsubscribeOwned(); unsubscribeOwned = null; }
     if (unsubscribeEquipped) { unsubscribeEquipped(); unsubscribeEquipped = null; }
     var user = e.detail.user;
+    updateAdminOnlyCards();
     ownedSkins = {};
     equippedSkinId = '';
     exitPreview();
