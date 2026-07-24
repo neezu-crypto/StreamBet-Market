@@ -106,6 +106,36 @@ html.theme-win11-folder .hero-ticket{
     linear-gradient(var(--panel), var(--panel)) padding-box,
     conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,120,212,0.12) 110deg, var(--gold) 200deg, rgba(0,120,212,0.12) 300deg, var(--gold) 360deg) border-box;
 }
+/* 모달창도 폴더 스킨으로 — 공통으로 쓰이던 금색 비네트 그라데이션·짙은 그림자를
+   지우고, 윈도우11 다이얼로그 특유의 얕은 모서리 + 옅은 그림자로 교체한다.
+   왼쪽 위에 작은 파란 폴더 탭도 붙여 마켓 카드와 통일감을 준다. */
+html.theme-win11-folder .verify-modal,
+html.theme-win11-folder .propose-modal,
+html.theme-win11-folder .exchange-modal,
+html.theme-win11-folder .bet-modal,
+html.theme-win11-folder .review-modal,
+html.theme-win11-folder .manage-modal,
+html.theme-win11-folder .profile-modal,
+html.theme-win11-folder .report-modal,
+html.theme-win11-folder .boot-card{
+  position: relative;
+  background: var(--panel);
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.12);
+}
+html.theme-win11-folder .verify-modal::before,
+html.theme-win11-folder .propose-modal::before,
+html.theme-win11-folder .exchange-modal::before,
+html.theme-win11-folder .bet-modal::before,
+html.theme-win11-folder .review-modal::before,
+html.theme-win11-folder .manage-modal::before,
+html.theme-win11-folder .profile-modal::before,
+html.theme-win11-folder .report-modal::before,
+html.theme-win11-folder .boot-card::before{
+  content:""; position:absolute; left:20px; top:-8px; width:34px; height:9px;
+  background: linear-gradient(160deg, #6bc1ff, #0078d4);
+  border-radius: 4px 4px 0 0;
+}
 
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
