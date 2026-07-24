@@ -48,6 +48,9 @@ html.theme-excel-default body{
     repeating-linear-gradient(0deg, rgba(33,115,70,0.08) 0 1px, transparent 1px 24px),
     repeating-linear-gradient(90deg, rgba(33,115,70,0.08) 0 1px, transparent 1px 110px);
 }
+/* devbar·티커는 배경색을 변수가 아니라 고정값으로 쓰고 있어 별도로 오버라이드해야 한다 */
+html.theme-excel-default .devbar{ background: #ffffff; }
+html.theme-excel-default .ticker{ background: linear-gradient(180deg, #e8ede9, transparent); }
 
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
