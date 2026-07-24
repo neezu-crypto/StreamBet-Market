@@ -4,6 +4,26 @@ var SBM_SKIN_CATALOG = {
   'excel-default': { name: '엑셀 기본 테마', category: 'theme', price: 200000 },
 };
 
+// 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
+// 다른 관리 전용 목록(감사 로그 등)과 동일하게 구독 가드를 둔다.
+var sbmSkinPurchaseLogSubscribed = false;
+function sbmRenderSkinPurchaseLog() {
+  var list = document.getElementById('skin-purchase-log-list');
+  if (!list || sbmSkinPurchaseLogSubscribed || !window.sbmFirebase) return;
+  sbmSkinPurchaseLogSubscribed = true;
+  var fb = window.sbmFirebase;
+  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/skinPurchases'), function (snap) {
+    var val = snap.val() || {};
+    var entries = Object.keys(val).map(function (k) { return val[k]; })
+      .sort(function (a, b) { return b.purchasedAt - a.purchasedAt; });
+    list.innerHTML = entries.length ? entries.map(function (e) {
+      return '<li class="verify-req-item"><div class="verify-req-info"><b>' + sbmEscapeHtml(e.nickname || e.uid) + '</b>' +
+        '<span>' + sbmEscapeHtml(e.skinName) + ' · ' + Math.round(e.price).toLocaleString('ko-KR') + '원 · ' +
+        new Date(e.purchasedAt).toLocaleString('ko-KR') + '</span></div></li>';
+    }).join('') : '<li class="audit-empty">구매 내역이 없습니다.</li>';
+  });
+}
+
 (function () {
   var previewBar = document.getElementById('skin-preview-bar');
   var previewBarName = document.getElementById('skin-preview-bar-name');

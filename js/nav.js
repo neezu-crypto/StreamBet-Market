@@ -61,6 +61,7 @@
     sbmRenderStatsChart();
     sbmRenderAnomalyMonitor();
     sbmRenderExchangeLog();
+    sbmRenderSkinPurchaseLog();
     // 아래는 규칙(rules)상으로도 관리자 전용으로 막혀있는 데이터 — 인증 스트리머 세션에서는
     // 아예 구독을 시도하지 않는다(어차피 막히지만 콘솔에 권한 오류가 안 남게).
     if (window.sbmIsAdmin) {
