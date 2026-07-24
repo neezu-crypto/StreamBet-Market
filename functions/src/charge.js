@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { adjustBalance, ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
@@ -50,17 +50,21 @@ const grantChargeRequest = onCall(async (request) => {
   const db = getDatabase();
   const reqRef = db.ref('bettingMarket/chargeRequests/' + requestId);
 
-  // 지급 전에 신청 건을 트랜잭션으로 원자적으로 선점(삭제)해야, 중복 클릭·네트워크 재시도로
-  // 같은 신청에 재화가 두 번 지급되는 걸 막을 수 있다.
-  let claimedReq = null;
-  const claim = await reqRef.transaction((current) => {
-    if (!current) return; // abort — 이미 처리됨(지급 또는 무시)
-    claimedReq = current;
-    return null;
-  });
-  if (!claim.committed || !claimedReq) {
+  // 지급 전에 신청 건을 원자적으로 한 번만 선점해야, 중복 클릭·네트워크 재시도로 같은 신청에
+  // 재화가 두 번 지급되는 걸 막을 수 있다. ref.transaction()이 이 경로에서 실제 값이 있는데도
+  // 간헐적으로 current를 null로 잘못 인식하는 현상이 확인돼(07번 환전 버그 조사),
+  // ServerValue.increment 기반 클레임 카운터로 대체한다.
+  const reqSnap = await reqRef.get();
+  if (!reqSnap.exists()) {
     throw new HttpsError('not-found', '신청 내역을 찾을 수 없습니다.');
   }
+  const claimedReq = reqSnap.val();
+  await reqRef.child('claim').set(ServerValue.increment(1));
+  const claimSnap = await reqRef.child('claim').get();
+  if (claimSnap.val() !== 1) {
+    throw new HttpsError('not-found', '신청 내역을 찾을 수 없습니다.');
+  }
+  await reqRef.remove();
 
   await ensureWallet(claimedReq.uid);
   await adjustBalance(claimedReq.uid, amt);

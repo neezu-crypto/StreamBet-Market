@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, assertNotBanned } = require('./lib/auth');
 const { adjustBalance } = require('./lib/wallet');
 const { trimToLast } = require('./lib/capped-log');
@@ -17,18 +17,22 @@ const purchaseSkin = onCall(async (request) => {
 
   const db = getDatabase();
   const ownedRef = db.ref('bettingMarket/ownedSkins/' + uid + '/' + skinId);
-  const claim = await ownedRef.transaction((current) => {
-    if (current) return; // abort — 이미 보유중
-    return true;
-  });
-  if (!claim.committed) {
+  // ref.transaction()이 이 경로에서 실제 값이 있는데도 간헐적으로 current를 null로 잘못
+  // 인식하는 현상이 확인돼(07번 환전 버그 조사), ServerValue.increment 기반 클레임
+  // 카운터로 선점 여부를 판단하는 방식으로 대체했다.
+  const claimRef = db.ref('bettingMarket/skinClaims/' + uid + '/' + skinId);
+  await claimRef.set(ServerValue.increment(1));
+  const claimSnap = await claimRef.get();
+  if (claimSnap.val() !== 1) {
     throw new HttpsError('failed-precondition', '이미 보유한 스킨입니다.');
   }
+  await ownedRef.set(true);
 
   try {
     await adjustBalance(uid, -skin.price);
   } catch (err) {
     await ownedRef.remove().catch(() => {}); // 결제 실패 시 선점 롤백
+    await claimRef.set(ServerValue.increment(-1)).catch(() => {}); // 클레임도 되돌려 재시도 가능하게
     throw err;
   }
 

@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, accountDay, setLastBetActionAt, kstDateKey, walletRef } = require('./lib/wallet');
 const {
@@ -14,19 +14,20 @@ function betCapForDay(day) {
   return day <= 1 ? NEW_ACCOUNT_BET_CAPS[0] : NEW_ACCOUNT_BET_CAPS[1];
 }
 
+// ref.transaction()이 실제 값이 있는 경로에서도 간헐적으로 current를 null로 잘못 인식하는
+// firebase-admin 버그(07번 환전 버그 조사로 확인)를 피하려고, ServerValue.increment 기반
+// 원자적 증감으로 바꿨다. 게다가 기존 코드는 market이 없을 때 `return market`으로 null을
+// 반환했는데, RTDB 트랜잭션에서 null 반환은 "그 경로를 삭제"로 커밋되는 값이라 이 버그와
+// 겹치면 마켓 데이터 자체가 삭제될 위험이 있었다 — outcome 존재 여부를 먼저 일반 조회로
+// 확인해 그 위험도 함께 없앤다.
 async function adjustPool(marketId, outcomeId, delta) {
   const ref = getDatabase().ref('bettingMarket/markets/' + marketId);
-  const result = await ref.transaction((market) => {
-    if (!market) return market;
-    market.totalPool = (market.totalPool || 0) + delta;
-    if (!market.outcomes || !market.outcomes[outcomeId]) return; // abort — invalid outcome
-    market.outcomes[outcomeId].pool = (market.outcomes[outcomeId].pool || 0) + delta;
-    return market;
-  });
-  if (!result.committed) {
+  const outcomeSnap = await ref.child('outcomes').child(outcomeId).get();
+  if (!outcomeSnap.exists()) {
     throw new HttpsError('invalid-argument', '유효하지 않은 outcome입니다.');
   }
-  return result.snapshot.val();
+  await ref.child('totalPool').set(ServerValue.increment(delta));
+  await ref.child('outcomes').child(outcomeId).child('pool').set(ServerValue.increment(delta));
 }
 
 // 09번 — 배팅 참가. 잔액 차감·쿨다운·한도는 전부 서버(Functions)가 검증한다.
@@ -96,20 +97,20 @@ const cancelBet = onCall(async (request) => {
     throw new HttpsError('failed-precondition', '취소 · 재배팅은 30초 쿨다운 중에는 할 수 없습니다.');
   }
 
-  // 취소 자체를 트랜잭션으로 원자적으로 선점해야 한다 — "active 확인 → 환불 → cancelled 기록"이
-  // 분리되어 있으면 동시에 두 번 취소 요청이 와도 둘 다 active로 읽고 통과해 환불이 이중으로 나갈 수 있다.
-  const claim = await betRef.transaction((current) => {
-    if (!current || current.status !== 'active') return; // abort — 이미 처리됨
-    current.status = 'cancelled';
-    return current;
-  });
-  if (!claim.committed) {
+  // 취소 자체를 원자적으로 한 번만 선점해야 한다 — "active 확인 → 환불 → cancelled 기록"이
+  // 분리되어 있으면 동시에 두 번 취소 요청이 와도 둘 다 active로 읽고 통과해 환불이 이중으로
+  // 나갈 수 있다. ref.transaction()이 이 경로에서 간헐적으로 오작동하는 현상이 확인돼(07번
+  // 환전 버그 조사), ServerValue.increment로 만든 클레임 카운터가 정확히 1이 되는 요청만
+  // "선점 성공"으로 인정하는 방식으로 대체한다.
+  await betRef.child('cancelClaim').set(ServerValue.increment(1));
+  const claimResult = await betRef.child('cancelClaim').get();
+  if (claimResult.val() !== 1) {
     throw new HttpsError('failed-precondition', '이미 처리된 배팅입니다.');
   }
-  const claimedBet = claim.snapshot.val();
+  await betRef.update({ status: 'cancelled' });
 
-  await adjustBalance(uid, claimedBet.amount);
-  await adjustPool(marketId, claimedBet.outcomeId, -claimedBet.amount);
+  await adjustBalance(uid, bet.amount);
+  await adjustPool(marketId, bet.outcomeId, -bet.amount);
   await setLastBetActionAt(uid, Date.now());
 
   return { status: 'cancelled' };

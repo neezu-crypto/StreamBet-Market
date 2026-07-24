@@ -1,12 +1,13 @@
 const { onValueWritten } = require('firebase-functions/v2/database');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { LIKE_THRESHOLD } = require('./constants');
 
 // 04번 — 좋아요 10개 이상 시 자동 오픈 (라이트 검증)
-// likeCount는 별도 read로 집계하지 않고 market 노드 자체의 transaction 안에서 +1/-1로 갱신한다.
-// (동시에 여러 명이 좋아요를 누르면 각 트리거 호출이 독립적으로 실행되는데, 밖에서 미리 읽은 개수를
-//  트랜잭션에 그대로 써버리면 커밋 순서에 따라 최신 값이 오래된 값으로 덮여쓰이는 경쟁 조건이 생긴다.
-//  market 노드 하나에 대한 원자적 delta 누적만이 커밋 순서와 무관하게 정확한 합을 보장한다.)
+// likeCount는 ServerValue.increment로 원자적으로 +1/-1 반영한다 — 커밋 순서와 무관하게
+// 정확한 합이 보장되고, 동시에 몰려도 재시도 루프가 필요 없다. (예전에는 ref.transaction()을
+// 썼는데, 이 경로에서 실제 값이 있는데도 간헐적으로 market을 null로 잘못 인식하는 현상이
+// 확인됐고(07번 환전 버그 조사), 그 상태에서 `if (!market) return market`이 null을 반환하면
+// RTDB 트랜잭션에서는 "그 경로 삭제"로 커밋돼 마켓 자체가 지워질 위험이 있었다.)
 const onLikeWritten = onValueWritten('/bettingMarket/likes/{marketId}/{uid}', async (event) => {
   const marketId = event.params.marketId;
   const existedBefore = event.data.before.exists();
@@ -17,23 +18,22 @@ const onLikeWritten = onValueWritten('/bettingMarket/likes/{marketId}/{uid}', as
   if (delta === 0) return;
 
   const marketRef = getDatabase().ref('bettingMarket/markets/' + marketId);
-  // 좋아요가 짧은 시간에 몰리면(예: 10명이 거의 동시에 클릭) 같은 market 노드에 트랜잭션이
-  // 대량으로 몰려 낙관적 동시성 재시도가 소진될 수 있다. 애플리케이션 레벨에서 재시도를 덧붙여
-  // 카운트 누락을 방지한다.
-  for (let attempt = 0; attempt < 10; attempt++) {
-    const result = await marketRef.transaction((market) => {
-      if (!market) return market;
-      market.validation = market.validation || {};
-      market.validation.likeCount = Math.max(0, (market.validation.likeCount || 0) + delta);
-      if (market.status === 'pendingValidation' && market.validation.likeCount >= LIKE_THRESHOLD) {
-        market.status = 'open';
-        market.validation.method = 'likes';
-        market.validation.validatedAt = Date.now();
-      }
-      return market;
-    });
-    if (result.committed) break;
-    await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 70));
+  const countRef = marketRef.child('validation/likeCount');
+  await countRef.set(ServerValue.increment(delta));
+  const countSnap = await countRef.get();
+  const likeCount = countSnap.val() || 0;
+  if (likeCount < 0) {
+    await countRef.set(0); // 방어적 보정 — 음수로 내려가면 0으로 고정
+  }
+  if (likeCount >= LIKE_THRESHOLD) {
+    const statusSnap = await marketRef.child('status').get();
+    if (statusSnap.val() === 'pendingValidation') {
+      await marketRef.update({
+        status: 'open',
+        'validation/method': 'likes',
+        'validation/validatedAt': Date.now(),
+      });
+    }
   }
 });
 

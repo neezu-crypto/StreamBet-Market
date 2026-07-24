@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const {
   requireAuth,
   isRealAccount,
@@ -348,15 +348,24 @@ const cancelPendingJudgment = onCall(async (request) => {
 // 어떤 이유로든 같은 마켓이 중복 실행돼도 한 번만 처리되게 한다.
 async function finalizeMarketSettlement(marketId) {
   const ref = marketRef(marketId);
-  const claimResult = await ref.transaction((market) => {
-    if (!market || !market.pendingSettlement) return; // 이미 취소되었거나 처리 대상이 아님 — 중단
-    if (market.pendingSettlement.finalizeAt > Date.now()) return; // 재판정으로 유예 연장됨 — 아직 확정 시점 아님
-    if (market.pendingSettlement.finalizing) return; // 다른 실행이 이미 처리 중 — 중단
-    market.pendingSettlement.finalizing = true;
-    return market;
-  });
-  if (!claimResult.committed) return;
-  const market = claimResult.snapshot.val();
+  // 어떤 이유로든 같은 마켓이 중복 실행돼도 한 번만 처리되게 선점해야 한다. ref.transaction()이
+  // 이 경로에서 실제 값이 있는데도 간헐적으로 market을 null로 잘못 인식하는 현상이 확인됐고
+  // (07번 환전 버그 조사), 그 상태에서 `if (!market) return;` 자체는 abort라 삭제 위험은 없지만
+  // 오작동으로 정산이 계속 안 되고 넘어갈 수 있어 클레임 카운터 방식으로 대체했다. 매분 스캔되니
+  // 조건 확인은 먼저 일반 조회로 하고, 실제 선점만 원자적 카운터로 한다.
+  const snap = await ref.get();
+  const marketBefore = snap.val();
+  if (!marketBefore || !marketBefore.pendingSettlement) return; // 이미 취소되었거나 처리 대상이 아님
+  if (marketBefore.pendingSettlement.finalizeAt > Date.now()) return; // 재판정으로 유예 연장됨 — 아직 확정 시점 아님
+  if (marketBefore.pendingSettlement.finalizing) return; // 이미 처리 중으로 표시됨
+
+  const claimRef = ref.child('pendingSettlement').child('finalizeClaim');
+  await claimRef.set(ServerValue.increment(1));
+  const claimSnap = await claimRef.get();
+  if (claimSnap.val() !== 1) return; // 다른 실행이 이미 선점함
+
+  await ref.child('pendingSettlement').child('finalizing').set(true);
+  const market = marketBefore;
   const pending = market.pendingSettlement;
   const { winningOutcomeId, decidedBy: uid, decidedByName: actorName, decidedByRole: role } = pending;
 
@@ -411,9 +420,9 @@ async function finalizeMarketSettlement(marketId) {
   await Promise.all(payoutJobs);
   if (Object.keys(betUpdates).length) await betsRef(marketId).update(betUpdates);
 
-  await getDatabase().ref('bettingMarket/reserveFund/balance').transaction((bal) => (bal || 0) + result.reserveDelta);
+  await getDatabase().ref('bettingMarket/reserveFund/balance').set(ServerValue.increment(result.reserveDelta));
   if (result.jackpotDelta) {
-    await getDatabase().ref('bettingMarket/jackpot/balance').transaction((bal) => (bal || 0) + result.jackpotDelta);
+    await getDatabase().ref('bettingMarket/jackpot/balance').set(ServerValue.increment(result.jackpotDelta));
   }
 
   const now = Date.now();

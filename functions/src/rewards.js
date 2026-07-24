@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, kstDateKey, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
@@ -71,26 +71,39 @@ const claimJackpotDraw = onCall(async (request) => {
     throw new HttpsError('failed-precondition', '오늘 배팅에 1회 이상 참여해야 잭팟을 확인할 수 있습니다.');
   }
 
-  // "오늘 이미 확인함" 체크와 소모를 하나의 트랜잭션으로 묶어야 동시 요청으로 하루 여러 번
-  // 도전하는 걸 막을 수 있다 — 읽고 나중에 따로 쓰면 그 사이 다른 요청이 끼어들 수 있다.
-  const drawClaim = await walletRef(uid).child('lastJackpotDrawDate').transaction((current) => {
-    if (current === today) return; // 트랜잭션 중단 — 오늘 이미 확인함
-    return today;
-  });
-  if (!drawClaim.committed) {
+  // "오늘 이미 확인함" 체크와 소모를 원자적으로 묶어야 동시 요청으로 하루 여러 번 도전하는 걸
+  // 막을 수 있다 — 읽고 나중에 따로 쓰면 그 사이 다른 요청이 끼어들 수 있다. ref.transaction()
+  // 대신 날짜별 클레임 카운터(ServerValue.increment)로 대체했다(07번 환전 버그 조사로 확인된
+  // transaction() 오작동을 피하기 위함).
+  const drawClaimRef = walletRef(uid).child('jackpotDrawClaims').child(today);
+  await drawClaimRef.set(ServerValue.increment(1));
+  const drawClaimSnap = await drawClaimRef.get();
+  if (drawClaimSnap.val() !== 1) {
     throw new HttpsError('failed-precondition', '오늘은 이미 잭팟을 확인했습니다. 내일 다시 시도해 주세요.');
   }
+  await walletRef(uid).child('lastJackpotDrawDate').set(today);
 
   const won = Math.random() < JACKPOT_WIN_CHANCE;
   if (!won) return { won: false };
 
+  // 적립금 전액을 원자적으로 가져가야 한다. transaction() 대신, 읽은 금액만큼 원자적으로
+  // 차감한 뒤 결과가 음수면(동시에 다른 당첨자가 먼저 가져간 경우) 되돌리고 이번 요청은
+  // 실패로 처리한다.
+  const jackpotRef = getDatabase().ref('bettingMarket/jackpot/balance');
+  const beforeSnap = await jackpotRef.get();
+  const beforeBal = beforeSnap.val() || 0;
   let paidAmount = 0;
-  const result = await getDatabase().ref('bettingMarket/jackpot/balance').transaction((bal) => {
-    if (!bal || bal <= 0) { paidAmount = 0; return bal; }
-    paidAmount = bal;
-    return 0;
-  });
-  if (!result.committed || paidAmount <= 0) {
+  if (beforeBal > 0) {
+    await jackpotRef.set(ServerValue.increment(-beforeBal));
+    const afterSnap = await jackpotRef.get();
+    if ((afterSnap.val() || 0) < 0) {
+      await jackpotRef.set(ServerValue.increment(beforeBal)); // 되돌리기 — 동시 당첨 처리 충돌
+      paidAmount = 0;
+    } else {
+      paidAmount = beforeBal;
+    }
+  }
+  if (paidAmount <= 0) {
     return { won: true, amount: 0 };
   }
 
