@@ -82,6 +82,30 @@ html.theme-win11-folder{
 }
 html.theme-win11-folder .devbar{ background: #ffffff; }
 html.theme-win11-folder .ticker{ background: linear-gradient(180deg, #e8e8e8, transparent); }
+/* 마켓 카드(.ticket)도 영화 티켓 모양 대신 탐색기 폴더 아이템처럼 리스킨한다 —
+   상단의 금색 장식선을 파란 폴더 탭으로 바꾸고, 티켓 절취선 특유의 반원 홈은
+   숨긴 뒤 은은한 Fluent 스타일 그림자로 교체한다. */
+html.theme-win11-folder .ticket{
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 4px 10px rgba(0,0,0,0.05);
+}
+html.theme-win11-folder .ticket:not(.hero-ticket)::before{
+  content:""; top:-8px; left:16px; right:auto; height:9px; width:34px;
+  background: linear-gradient(160deg, #6bc1ff, #0078d4);
+  border-radius: 4px 4px 0 0; opacity:1;
+}
+html.theme-win11-folder .ticket:not(.hero-ticket):hover{
+  border-color: var(--gold-line);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08), 0 8px 20px rgba(0,0,0,0.08);
+}
+html.theme-win11-folder .ticket-stub{ border-top: 1px solid var(--hairline); }
+html.theme-win11-folder .ticket-stub::before,
+html.theme-win11-folder .ticket-stub::after{ display:none; }
+html.theme-win11-folder .hero-ticket{
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,120,212,0.12) 110deg, var(--gold) 200deg, rgba(0,120,212,0.12) 300deg, var(--gold) 360deg) border-box;
+}
 
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
