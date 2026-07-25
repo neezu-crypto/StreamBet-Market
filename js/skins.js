@@ -59,7 +59,7 @@ function sbmRenderSkinPurchaseLog() {
   // html.theme-spring-bloom.spring-bg-ready body::before 규칙 참고). 로딩
   // 중에는 하단에 작은 로딩 인디케이터를 띄운다. 한 번 로드되면 브라우저
   // 캐시에 남으므로, 이후 재적용 시엔 즉시(로딩 인디케이터 없이) 노출된다.
-  var SBM_SPRING_BG_SRC = 'assets/7010naoto-cherryblossoms-9715202.jpg';
+  var SBM_SPRING_BG_SRC = 'assets/pexels-japanese-cherry-blossom-1839982.jpg';
   var sbmSpringBgLoaded = false;
   var sbmSpringBgLoadingEl = null;
   function sbmEnsureSpringBackground() {

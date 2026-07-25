@@ -455,7 +455,7 @@ html.theme-spring-bloom body::before{
   background-repeat: no-repeat;
   pointer-events: none;
   opacity: 0;
-  filter: blur(8px); /* CSS blur()는 %가 아니라 px만 허용돼, "20%" 정도의 은은한 흐림을 8px로 잡았다 */
+  filter: blur(4px);
   transition: opacity .5s ease;
 }
 html.theme-spring-bloom.spring-bg-ready body::before{
