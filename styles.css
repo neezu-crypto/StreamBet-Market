@@ -477,6 +477,13 @@ html.theme-summer-ocean body::before{
   background-repeat: no-repeat;
   pointer-events: none;
 }
+/* 실시간 WebGL 수면 왜곡 셰이더 캔버스 — 위 CSS 배경(정적 이미지) 위에 같은
+   z-index(-2)로 겹쳐서(DOM 순서상 뒤에 오므로 그 위에 그려진다) 실시간으로
+   일렁이게 만든다. WebGL 미지원 브라우저에서는 이 캔버스가 아예 생성되지
+   않아 아래 정적 배경이 그대로 보인다(js/skins.js 참고). */
+#sbm-water-layer{
+  position: fixed; inset: 0; z-index: -2; pointer-events: none;
+}
 /* 물놀이 장난감 캔버스 — 마우스가 닿으면 튕겨나가고 화면 가장자리에서도
    벽처럼 튕기는 물리 시뮬레이션(js/skins.js). z-index는 마켓 카드(.ticket 등,
    z-index:auto)보다는 뒤, 풀장 배경보다는 앞. pointer-events:none이라 마우스
