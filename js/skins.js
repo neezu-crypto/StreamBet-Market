@@ -117,22 +117,9 @@ function sbmRenderSkinPurchaseLog() {
     }
   });
 
-  // 시범 공개 중인 관리자 전용 스킨(예: 레트로 PC 테마) — 관리자가 아니면 카테고리
-  // 필터 조작과 무관하게 항상 숨겨야 하므로, style.display가 아니라 별도 클래스로
-  // 게이팅한다(CSS 쪽 .skin-card[data-admin-only] 규칙 참고).
-  function updateAdminOnlyCards() {
-    var isAdmin = !!window.sbmIsAdmin;
-    cards.forEach(function (card) {
-      if (card.hasAttribute('data-admin-only')) {
-        card.classList.toggle('sbm-admin-visible', isAdmin);
-      }
-    });
-  }
-
   var unsubscribeOwned = null;
   var unsubscribeEquipped = null;
   document.addEventListener('sbm-auth-changed', function (e) {
-    updateAdminOnlyCards();
     if (unsubscribeOwned) { unsubscribeOwned(); unsubscribeOwned = null; }
     if (unsubscribeEquipped) { unsubscribeEquipped(); unsubscribeEquipped = null; }
     var user = e.detail.user;
