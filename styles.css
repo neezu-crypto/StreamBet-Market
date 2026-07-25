@@ -274,6 +274,29 @@ html.theme-retro-pc{
 /* 라운딩 없는 각진 UI가 이 테마의 핵심이라, 버튼·뱃지·아바타 등 페이지의 모든
    모서리를 예외 없이 직각으로 강제한다. */
 html.theme-retro-pc *{ border-radius:0 !important; }
+/* 클릭 가능한 모든 버튼에 볼록한(outset) 베벨 + 눌림(inset) 효과를 적용한다.
+   버튼마다 배경색이 제각각이라 테두리 색을 고정하지 않고, 반투명 흰/검 오버레이로
+   좌상단은 밝게 우하단은 어둡게 해서 어떤 배경 위에서도 자연스러운 입체감을 준다.
+   마우스를 누르면(:active) 밝고 어두운 방향이 뒤바뀌면서 눌린 것처럼 보이고,
+   1px 살짝 밀리는 효과까지 더해 실제 버튼을 누른 느낌을 준다. 모달 닫기 버튼처럼
+   이미 전용 베벨 스타일이 있는 버튼은 더 구체적인 선택자라 그대로 유지된다. */
+html.theme-retro-pc button,
+html.theme-retro-pc .btn-exchange{
+  border-width: 2px;
+  border-style: solid;
+  border-top-color: rgba(255,255,255,0.7);
+  border-left-color: rgba(255,255,255,0.7);
+  border-right-color: rgba(0,0,0,0.45);
+  border-bottom-color: rgba(0,0,0,0.45);
+}
+html.theme-retro-pc button:active,
+html.theme-retro-pc .btn-exchange:active{
+  border-top-color: rgba(0,0,0,0.45);
+  border-left-color: rgba(0,0,0,0.45);
+  border-right-color: rgba(255,255,255,0.7);
+  border-bottom-color: rgba(255,255,255,0.7);
+  transform: translate(1px, 1px);
+}
 html.theme-retro-pc .devbar{ background: #c0c0c0; }
 html.theme-retro-pc .ticker{ background: #f0f0f0; }
 /* 마켓 카드(.ticket) — 그림자 대신 베벨(outset) 테두리로 입체감을 주고, 상단에는
