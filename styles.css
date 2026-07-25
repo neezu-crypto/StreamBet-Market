@@ -250,17 +250,18 @@ html.theme-macos-finder .boot-card::after{
 }
 
 /* 16번 — 스킨: 레트로 PC 테마. 특정 브랜드가 아니라 1990년대 데스크톱 OS 특유의
-   베벨(입체) 버튼·각진 창·회색+네이비 배색 자체를 오마주한다. --gold를 클래식
-   액티브 타이틀바 네이비로, --mint을 클래식 그린으로 재사용한다. */
+   베벨(입체) 버튼·각진 창·회색 배색 자체를 오마주한다. --gold를 파스텔 하늘색
+   타이틀바/버튼 색으로, --mint을 클래식 그린으로 재사용한다. 라운딩은 이 테마의
+   정체성이라 전부 없앤다(아래 전역 리셋 참고). */
 html.theme-retro-pc{
   color-scheme: light;
-  --ink: #008080;
+  --ink: #f0f0f0;
   --panel: #c0c0c0;
   --panel-raised: #c0c0c0;
   --hairline: #808080;
-  --gold: #000080;
-  --gold-dim: rgba(0,0,128,0.12);
-  --gold-line: rgba(0,0,128,0.4);
+  --gold: #a9d8f5;
+  --gold-dim: rgba(74,144,190,0.12);
+  --gold-line: rgba(74,144,190,0.5);
   --mint: #008000;
   --mint-dim: rgba(0,128,0,0.12);
   --text: #000000;
@@ -270,23 +271,25 @@ html.theme-retro-pc{
   --font-body: "Tahoma", "MS Sans Serif", "Dotum", sans-serif;
   --font-serif: "Tahoma", "MS Sans Serif", "Dotum", sans-serif;
 }
+/* 라운딩 없는 각진 UI가 이 테마의 핵심이라, 버튼·뱃지·아바타 등 페이지의 모든
+   모서리를 예외 없이 직각으로 강제한다. */
+html.theme-retro-pc *{ border-radius:0 !important; }
 html.theme-retro-pc .devbar{ background: #c0c0c0; }
-html.theme-retro-pc .ticker{ background: #008080; }
+html.theme-retro-pc .ticker{ background: #f0f0f0; }
 /* 마켓 카드(.ticket) — 그림자 대신 베벨(outset) 테두리로 입체감을 주고, 상단에는
-   각진 네이비 타이틀바 + 사각 버튼(_ □ ×)을 얹는다. 그림자 없는 플랫한 느낌이
+   각진 하늘색 타이틀바 + 사각 버튼(_ □)을 얹는다. 그림자 없는 플랫한 느낌이
    레트로 UI의 핵심이라 box-shadow는 제거한다. */
 html.theme-retro-pc .ticket{
-  border-radius: 0;
   border: 2px outset #c0c0c0;
   box-shadow: none;
 }
 html.theme-retro-pc .ticket:not(.hero-ticket)::before{
   content:""; position:absolute; top:0; left:0; right:0; height:22px;
-  background: var(--gold); opacity:1; border-radius:0;
+  background: var(--gold); opacity:1;
 }
 html.theme-retro-pc .ticket:not(.hero-ticket)::after{
-  content:"_ □ ×"; position:absolute; top:0; right:6px; height:22px;
-  display:flex; align-items:center; color:#ffffff; font-size:11px; letter-spacing:2px;
+  content:"_ □"; position:absolute; top:0; right:6px; height:22px;
+  display:flex; align-items:center; color:#1a3a52; font-size:11px; letter-spacing:2px;
 }
 html.theme-retro-pc .ticket:not(.hero-ticket):hover{
   border-color: #808080;
@@ -299,10 +302,12 @@ html.theme-retro-pc .ticket-stub::after{ display:none; }
 html.theme-retro-pc .hero-ticket{
   background:
     linear-gradient(var(--panel), var(--panel)) padding-box,
-    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,0,128,0.12) 110deg, var(--gold) 200deg, rgba(0,0,128,0.12) 300deg, var(--gold) 360deg) border-box;
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(74,144,190,0.15) 110deg, var(--gold) 200deg, rgba(74,144,190,0.15) 300deg, var(--gold) 360deg) border-box;
 }
 /* 모달창 — 각지고 두꺼운 베벨 테두리 + 하드섀도우(블러 없는 그림자)로 클래식 창을
-   흉내낸다. 상단에는 마켓 카드와 동일한 네이비 타이틀바 + 사각 버튼. */
+   흉내낸다. 상단에는 마켓 카드와 동일한 하늘색 타이틀바 + 사각 버튼(_ □). 실제
+   닫기(×) 버튼은 옛날 방식 그대로 우측 상단 모서리에 딱 맞춰 붙이고, 마우스
+   누름/뗌에 따라 베벨이 눌렸다 올라오는 효과를 준다(아래 -modal-close 규칙). */
 html.theme-retro-pc .verify-modal,
 html.theme-retro-pc .propose-modal,
 html.theme-retro-pc .exchange-modal,
@@ -314,7 +319,6 @@ html.theme-retro-pc .report-modal,
 html.theme-retro-pc .boot-card{
   position: relative;
   background: var(--panel);
-  border-radius: 0;
   border: 2px outset #c0c0c0;
   box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
   padding-top: 40px;
@@ -329,7 +333,7 @@ html.theme-retro-pc .profile-modal::before,
 html.theme-retro-pc .report-modal::before,
 html.theme-retro-pc .boot-card::before{
   content:""; position:absolute; left:0; right:0; top:0; height:26px;
-  background: var(--gold); border-radius:0;
+  background: var(--gold);
 }
 html.theme-retro-pc .verify-modal::after,
 html.theme-retro-pc .propose-modal::after,
@@ -338,10 +342,46 @@ html.theme-retro-pc .bet-modal::after,
 html.theme-retro-pc .review-modal::after,
 html.theme-retro-pc .manage-modal::after,
 html.theme-retro-pc .profile-modal::after,
-html.theme-retro-pc .report-modal::after,
-html.theme-retro-pc .boot-card::after{
-  content:"_ □ ×"; position:absolute; top:0; right:8px; height:26px;
-  display:flex; align-items:center; color:#ffffff; font-size:12px; letter-spacing:3px;
+html.theme-retro-pc .report-modal::after{
+  content:"_ □"; position:absolute; top:0; right:32px; height:26px;
+  display:flex; align-items:center; color:#1a3a52; font-size:12px; letter-spacing:3px;
+}
+/* 실제 닫기 버튼 — 옛날 창 닫기 버튼처럼 모서리에 딱 붙는 각진 3D 버튼.
+   :active(마우스 다운) 시 outset→inset으로 바뀌면서 눌린 것처럼 보이고,
+   손을 떼면(=:active 해제) 다시 outset으로 튀어나온다. */
+html.theme-retro-pc .verify-modal-close,
+html.theme-retro-pc .propose-modal-close,
+html.theme-retro-pc .exchange-modal-close,
+html.theme-retro-pc .bet-modal-close,
+html.theme-retro-pc .review-modal-close,
+html.theme-retro-pc .manage-modal-close,
+html.theme-retro-pc .profile-modal-close,
+html.theme-retro-pc .report-modal-close{
+  position:absolute; top:0; right:0; width:24px; height:24px;
+  background:#c0c0c0; border:2px outset #c0c0c0;
+  color:#000000; font-size:12px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  z-index:1;
+}
+html.theme-retro-pc .verify-modal-close:hover,
+html.theme-retro-pc .propose-modal-close:hover,
+html.theme-retro-pc .exchange-modal-close:hover,
+html.theme-retro-pc .bet-modal-close:hover,
+html.theme-retro-pc .review-modal-close:hover,
+html.theme-retro-pc .manage-modal-close:hover,
+html.theme-retro-pc .profile-modal-close:hover,
+html.theme-retro-pc .report-modal-close:hover{
+  color:#000000; border-color:#c0c0c0;
+}
+html.theme-retro-pc .verify-modal-close:active,
+html.theme-retro-pc .propose-modal-close:active,
+html.theme-retro-pc .exchange-modal-close:active,
+html.theme-retro-pc .bet-modal-close:active,
+html.theme-retro-pc .review-modal-close:active,
+html.theme-retro-pc .manage-modal-close:active,
+html.theme-retro-pc .profile-modal-close:active,
+html.theme-retro-pc .report-modal-close:active{
+  border-style: inset;
 }
 
 *{ box-sizing: border-box; }
@@ -809,16 +849,16 @@ button{ font-family: inherit; cursor: pointer; }
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
 
-/* 테마 스킨 — 레트로 PC 테마: 각진 네이비 타이틀바 + 사각 버튼 + 청록 데스크톱 */
+/* 테마 스킨 — 레트로 PC 테마: 각진 파스텔 하늘색 타이틀바 + 사각 버튼 + 연회색 데스크톱 */
 .skin-thumb-theme-retro{
-  display:flex; flex-direction:column; background:#008080;
+  display:flex; flex-direction:column; background:#f0f0f0;
   color-scheme: light; forced-color-adjust: none; border-radius:0;
 }
 .skin-thumb-theme-retro-titlebar{
-  height:18px; background:#000080; flex-shrink:0;
+  height:18px; background:#a9d8f5; flex-shrink:0;
   display:flex; align-items:center; gap:4px; padding:0 4px;
 }
-.skin-thumb-theme-retro-title{ color:#fff; font-size:9px; flex:1; }
+.skin-thumb-theme-retro-title{ color:#1a3a52; font-size:9px; flex:1; }
 .skin-thumb-theme-retro-btn{
   width:11px; height:11px; background:#c0c0c0; border:1px outset #c0c0c0;
   color:#000; font-size:8px; line-height:9px; text-align:center;
