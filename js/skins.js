@@ -48,6 +48,166 @@ function sbmRenderSkinPurchaseLog() {
     var classes = (html.className || '').split(/\s+/).filter(function (c) { return c && c.indexOf('theme-') !== 0; });
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
+    sbmUpdatePetals(skinId === 'spring-bloom');
+  }
+
+  // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
+  // 그 자리를 낙엽 치우는 강풍기처럼 쓸어버리는 효과. 개수가 많고(전체 화면을
+  // 덮는 밀도) 매 프레임 물리 연산(스프링 복귀 + 감쇠)이 필요해 DOM 엘리먼트
+  // 대신 <canvas> 2D 렌더링을 쓴다 — 수백 개의 style 변경보다 캔버스 draw 호출이
+  // 훨씬 가볍다. 물리는 경과 시간(dtFactor, 60fps 기준 정규화)으로 적분해
+  // 모니터 주사율과 무관하게 같은 속도로 움직인다.
+  var sbmPetalCanvas = null;
+  var sbmPetalCtx = null;
+  var sbmPetalParticles = null;
+  var sbmPetalRAF = null;
+  var sbmPetalLastT = 0;
+  var sbmPetalReducedMotion = false;
+  var sbmPetalMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
+  var SBM_PETAL_COLORS = ['#ffd9e8', '#f7b8d1', '#f4a6c6', '#e386ab'];
+  var SBM_PETAL_BLOW_RADIUS = 150;
+
+  function sbmPetalSeed() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var count = Math.min(320, Math.max(60, Math.round((w * h) / 9000)));
+    if (w < 640) count = Math.round(count * 0.55); // 모바일에선 더 가볍게
+    var particles = [];
+    for (var i = 0; i < count; i++) {
+      var hx = Math.random() * w;
+      var hy = Math.random() * h; // 배경 레이어 전체에 골고루 쌓여있는 상태
+      particles.push({
+        hx: hx, hy: hy,
+        x: hx, y: hy,
+        vx: 0, vy: 0,
+        r: 4 + Math.random() * 4,
+        rot: Math.random() * Math.PI * 2,
+        vr: 0,
+        color: SBM_PETAL_COLORS[(Math.random() * SBM_PETAL_COLORS.length) | 0]
+      });
+    }
+    sbmPetalParticles = particles;
+  }
+
+  function sbmPetalResize() {
+    if (!sbmPetalCanvas) return;
+    var dpr = window.devicePixelRatio || 1;
+    sbmPetalCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmPetalCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmPetalCanvas.style.width = window.innerWidth + 'px';
+    sbmPetalCanvas.style.height = window.innerHeight + 'px';
+    sbmPetalCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmPetalSeed();
+    sbmPetalDraw();
+  }
+
+  // 마우스 이동 속도(직전 위치 대비 변위/경과시간)를 추적 — 빠르게 움직일수록
+  // "강풍"이 세지고, 멈춰있으면(속도 0에 가까워지면) 꽃잎도 다시 잠잠해진다.
+  function sbmPetalTrackPointer(x, y) {
+    var now = performance.now();
+    var dt = Math.max(8, now - sbmPetalMouse.t);
+    sbmPetalMouse.vx = (x - sbmPetalMouse.x) / dt * 16.67;
+    sbmPetalMouse.vy = (y - sbmPetalMouse.y) / dt * 16.67;
+    sbmPetalMouse.x = x;
+    sbmPetalMouse.y = y;
+    sbmPetalMouse.t = now;
+  }
+  function sbmPetalOnMouseMove(e) { sbmPetalTrackPointer(e.clientX, e.clientY); }
+  function sbmPetalOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmPetalTrackPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmPetalStep(dtFactor) {
+    var particles = sbmPetalParticles;
+    if (!particles) return;
+    var mx = sbmPetalMouse.x, my = sbmPetalMouse.y;
+    var speed = Math.sqrt(sbmPetalMouse.vx * sbmPetalMouse.vx + sbmPetalMouse.vy * sbmPetalMouse.vy);
+    var blowing = speed > 1.2;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      if (blowing) {
+        var dx = p.x - mx, dy = p.y - my;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+        if (dist < SBM_PETAL_BLOW_RADIUS) {
+          // 마우스 위치에서 바깥쪽(마우스의 반대 방향)으로 밀어내는 힘 — 가까울수록,
+          // 마우스가 빠르게 움직일수록 세게 흩날린다(강풍기로 쓸어버리는 느낌).
+          var force = (1 - dist / SBM_PETAL_BLOW_RADIUS) * Math.min(speed, 40) * 0.35;
+          p.vx += (dx / dist) * force;
+          p.vy += (dy / dist) * force;
+          p.vr += (Math.random() - 0.5) * 0.15;
+        }
+      }
+      // 원래 쌓여있던 자리로 서서히 되돌아오는 약한 스프링 힘 + 감쇠(공기 저항)
+      p.vx += (p.hx - p.x) * 0.006;
+      p.vy += (p.hy - p.y) * 0.006;
+      p.vx *= 0.92;
+      p.vy *= 0.92;
+      p.vr *= 0.94;
+
+      p.x += p.vx * dtFactor;
+      p.y += p.vy * dtFactor;
+      p.rot += p.vr * dtFactor;
+    }
+    // 마우스가 멈추면 "체감 속도"도 같이 잦아들게 매 프레임 감쇠
+    sbmPetalMouse.vx *= 0.85;
+    sbmPetalMouse.vy *= 0.85;
+  }
+
+  function sbmPetalDraw() {
+    if (!sbmPetalCtx || !sbmPetalParticles) return;
+    var ctx = sbmPetalCtx;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = 0; i < sbmPetalParticles.length; i++) {
+      var p = sbmPetalParticles[i];
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, p.r, p.r * 0.6, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function sbmPetalLoop(t) {
+    if (!sbmPetalCanvas) return;
+    var dtMs = sbmPetalLastT ? (t - sbmPetalLastT) : 16.67;
+    sbmPetalLastT = t;
+    var dtFactor = Math.min(3, dtMs / 16.67); // 탭 전환 복귀 등으로 dt가 튀어도 한 번에 과하게 점프하지 않도록 상한
+    sbmPetalStep(dtFactor);
+    sbmPetalDraw();
+    sbmPetalRAF = requestAnimationFrame(sbmPetalLoop);
+  }
+
+  function sbmUpdatePetals(shouldShow) {
+    if (!shouldShow) {
+      if (sbmPetalRAF) { cancelAnimationFrame(sbmPetalRAF); sbmPetalRAF = null; }
+      if (sbmPetalCanvas) { sbmPetalCanvas.remove(); sbmPetalCanvas = null; sbmPetalCtx = null; }
+      window.removeEventListener('mousemove', sbmPetalOnMouseMove);
+      window.removeEventListener('touchmove', sbmPetalOnTouchMove);
+      window.removeEventListener('resize', sbmPetalResize);
+      sbmPetalParticles = null;
+      sbmPetalLastT = 0;
+      return;
+    }
+    if (sbmPetalCanvas) return; // 이미 떠 있음
+    sbmPetalReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmPetalCanvas = document.createElement('canvas');
+    sbmPetalCanvas.id = 'sbm-petal-layer';
+    sbmPetalCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmPetalCanvas);
+    sbmPetalCtx = sbmPetalCanvas.getContext('2d');
+    sbmPetalResize(); // 크기 지정 + 화면 전체에 꽃잎 카펫 시딩 + 첫 프레임 렌더
+
+    if (sbmPetalReducedMotion) return; // 정적 카펫만 보여주고 마우스 반응·애니메이션은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmPetalOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmPetalOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmPetalResize);
+    sbmPetalLastT = 0;
+    sbmPetalRAF = requestAnimationFrame(sbmPetalLoop);
   }
 
   function applyEquippedTheme() {

@@ -434,6 +434,13 @@ html.theme-spring-bloom{
 }
 html.theme-spring-bloom .devbar{ background: #ffffff; }
 html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, transparent); }
+/* 벚꽃 카펫 캔버스 — z-index를 음수로 둬서 position:relative인 마켓 카드
+   (.ticket 등, z-index:auto)보다는 뒤에, body 배경보다는 앞에 그려지도록 한다.
+   pointer-events:none이라 마우스 이벤트는 그대로 아래 UI로 통과한다(꽃잎 반응은
+   js/skins.js가 window 레벨 mousemove로 추적). */
+#sbm-petal-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 html.theme-summer-ocean{
   color-scheme: light;
