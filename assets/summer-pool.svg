@@ -1,81 +1,110 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
   <defs>
-    <linearGradient id="deckGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f0e3c8"/>
-      <stop offset="100%" stop-color="#e2d0a8"/>
-    </linearGradient>
-    <pattern id="tilePattern" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
-      <rect width="34" height="34" fill="#bfe6ee"/>
-      <rect width="16" height="16" fill="#ffffff"/>
-      <rect x="17" y="17" width="16" height="16" fill="#ffffff"/>
-    </pattern>
-    <radialGradient id="waterGrad" cx="50%" cy="42%" r="75%">
-      <stop offset="0%" stop-color="#5fd4e0"/>
-      <stop offset="45%" stop-color="#2fb8cc"/>
-      <stop offset="80%" stop-color="#1f95ac"/>
-      <stop offset="100%" stop-color="#137389"/>
+    <radialGradient id="waterGrad" cx="46%" cy="38%" r="85%">
+      <stop offset="0%" stop-color="#7fe4ec"/>
+      <stop offset="35%" stop-color="#3fc9d9"/>
+      <stop offset="65%" stop-color="#1fa3bc"/>
+      <stop offset="100%" stop-color="#0f6f89"/>
     </radialGradient>
-    <radialGradient id="deepPatch" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#0d5c70" stop-opacity="0.55"/>
-      <stop offset="100%" stop-color="#0d5c70" stop-opacity="0"/>
+    <radialGradient id="deepPatch1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#083f52" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#083f52" stop-opacity="0"/>
     </radialGradient>
-    <filter id="softBlur" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="10"/>
+    <radialGradient id="deepPatch2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#052c3a" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#052c3a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="sunPatch" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#eafcff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#eafcff" stop-opacity="0"/>
+    </radialGradient>
+
+    <filter id="softBlurLg" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="22"/>
     </filter>
-    <filter id="deckTexBlur" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="18"/>
+    <filter id="softBlurMd" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9"/>
+    </filter>
+
+    <!-- 실제 수영장 바닥에 비치는 카우스틱(빛 그물무늬) 질감 -->
+    <filter id="causticTex" x="-30%" y="-30%" width="160%" height="160%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.014 0.02" numOctaves="3" seed="11" result="n1">
+        <animate attributeName="baseFrequency" values="0.014 0.02;0.017 0.016;0.014 0.02" dur="14s" repeatCount="indefinite"/>
+      </feTurbulence>
+      <feColorMatrix in="n1" type="matrix" values="
+        0 0 0 0 0.85
+        0 0 0 0 0.97
+        0 0 0 0 1
+        0 0 0 1.1 -0.32" result="mono"/>
+      <feComponentTransfer in="mono" result="soft">
+        <feFuncA type="gamma" amplitude="1" exponent="2.6" offset="0"/>
+      </feComponentTransfer>
+      <feGaussianBlur in="soft" stdDeviation="1.1"/>
+    </filter>
+
+    <!-- 수면 잔물결(변위) — 물결선을 살짝 일렁이게 왜곡 -->
+    <filter id="rippleWarp" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.006 0.03" numOctaves="2" seed="4" result="warp"/>
+      <feDisplacementMap in="SourceGraphic" in2="warp" scale="14" xChannelSelector="R" yChannelSelector="G"/>
     </filter>
   </defs>
 
-  <rect x="0" y="0" width="1600" height="900" fill="url(#deckGrad)"/>
-  <g filter="url(#deckTexBlur)" opacity="0.35">
-    <ellipse cx="180" cy="140" rx="220" ry="90" fill="#d8c290"/>
-    <ellipse cx="1420" cy="200" rx="260" ry="100" fill="#d8c290"/>
-    <ellipse cx="120" cy="760" rx="240" ry="110" fill="#d8c290"/>
-    <ellipse cx="1480" cy="740" rx="260" ry="120" fill="#d8c290"/>
-  </g>
+  <!-- 풀장 테두리를 화면 훨씬 바깥까지 확장해, 어떤 화면 비율로 잘려도 항상
+       물로만 가득 차 보이게 한다(별도 데크/타일 테두리 없음). -->
+  <rect x="-400" y="-400" width="2400" height="1700" fill="url(#waterGrad)"/>
 
-  <!-- 수영장 테두리(타일) -->
-  <rect x="150" y="70" width="1300" height="760" rx="140" fill="url(#tilePattern)"/>
-  <!-- 물 -->
-  <rect x="196" y="112" width="1208" height="676" rx="112" fill="url(#waterGrad)"/>
-  <!-- 딥엔드(깊은 쪽) 음영 -->
-  <ellipse cx="1050" cy="480" rx="380" ry="260" fill="url(#deepPatch)"/>
+  <!-- 깊이감을 주는 짙은 음영 패치 -->
+  <ellipse cx="1150" cy="560" rx="520" ry="360" fill="url(#deepPatch1)"/>
+  <ellipse cx="260" cy="760" rx="420" ry="300" fill="url(#deepPatch2)"/>
+  <ellipse cx="420" cy="120" rx="380" ry="260" fill="url(#sunPatch)"/>
 
-  <!-- 물결 반짝임(캐스틱) — 은은하게 위치·투명도 애니메이션 -->
-  <g filter="url(#softBlur)">
-    <ellipse cx="420" cy="260" rx="90" ry="34" fill="#ffffff" opacity="0.28">
-      <animate attributeName="cx" values="420;470;420" dur="7s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.28;0.14;0.28" dur="7s" repeatCount="indefinite"/>
+  <!-- 카우스틱 빛 그물무늬(수영장 바닥에 비치는 실제 물결 빛 패턴) -->
+  <rect x="-400" y="-400" width="2400" height="1700" filter="url(#causticTex)" opacity="0.55"/>
+
+  <!-- 크고 부드러운 반짝임 패치들 -->
+  <g filter="url(#softBlurLg)">
+    <ellipse cx="380" cy="260" rx="150" ry="60" fill="#ffffff" opacity="0.22">
+      <animate attributeName="cx" values="380;460;380" dur="9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.22;0.12;0.22" dur="9s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse cx="760" cy="400" rx="130" ry="46" fill="#ffffff" opacity="0.22">
-      <animate attributeName="cx" values="760;700;760" dur="9s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.22;0.34;0.22" dur="9s" repeatCount="indefinite"/>
+    <ellipse cx="900" cy="440" rx="200" ry="80" fill="#ffffff" opacity="0.18">
+      <animate attributeName="cx" values="900;820;900" dur="11s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.18;0.28;0.18" dur="11s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse cx="520" cy="600" rx="110" ry="40" fill="#ffffff" opacity="0.2">
-      <animate attributeName="cy" values="600;640;600" dur="8s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.2;0.32;0.2" dur="8s" repeatCount="indefinite"/>
+    <ellipse cx="1300" cy="700" rx="220" ry="90" fill="#ffffff" opacity="0.16">
+      <animate attributeName="cx" values="1300;1380;1300" dur="10s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.16;0.26;0.16" dur="10s" repeatCount="indefinite"/>
     </ellipse>
-    <ellipse cx="980" cy="230" rx="100" ry="36" fill="#ffffff" opacity="0.24">
-      <animate attributeName="cx" values="980;1030;980" dur="6.5s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.24;0.12;0.24" dur="6.5s" repeatCount="indefinite"/>
-    </ellipse>
-    <ellipse cx="1160" cy="620" rx="120" ry="42" fill="#ffffff" opacity="0.2">
-      <animate attributeName="cx" values="1160;1110;1160" dur="8.5s" repeatCount="indefinite"/>
-      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="8.5s" repeatCount="indefinite"/>
+    <ellipse cx="180" cy="620" rx="160" ry="70" fill="#ffffff" opacity="0.2">
+      <animate attributeName="cy" values="620;660;620" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="8s" repeatCount="indefinite"/>
     </ellipse>
   </g>
 
-  <!-- 물 표면 잔물결 라인(가는 곡선) -->
-  <g stroke="#eafcff" stroke-width="2" fill="none" opacity="0.25">
-    <path d="M 260 220 Q 420 200 580 230 T 900 220"/>
-    <path d="M 320 500 Q 480 480 640 510 T 960 500"/>
-    <path d="M 700 700 Q 860 680 1020 710 T 1340 700"/>
+  <!-- 작고 선명한 반짝임(수면에 직접 반사되는 하이라이트) -->
+  <g filter="url(#softBlurMd)">
+    <ellipse cx="620" cy="180" rx="46" ry="16" fill="#ffffff" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;0.2;0.5" dur="3.4s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="1080" cy="300" rx="34" ry="12" fill="#ffffff" opacity="0.45">
+      <animate attributeName="opacity" values="0.45;0.15;0.45" dur="4.1s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="760" cy="620" rx="40" ry="14" fill="#ffffff" opacity="0.42">
+      <animate attributeName="opacity" values="0.42;0.15;0.42" dur="3.8s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="1360" cy="500" rx="30" ry="10" fill="#ffffff" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.15;0.4" dur="4.6s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="240" cy="420" rx="36" ry="12" fill="#ffffff" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.16;0.4" dur="3.6s" repeatCount="indefinite"/>
+    </ellipse>
   </g>
 
-  <!-- 사다리(코너 2곳) -->
-  <g stroke="#f2f2f2" stroke-width="10" fill="none" opacity="0.9" stroke-linecap="round">
-    <path d="M 236 128 L 236 168 M 268 128 L 268 168"/>
-    <path d="M 1364 772 L 1364 812 M 1332 772 L 1332 812"/>
+  <!-- 왜곡된 잔물결 라인(수면 굴곡 표현) -->
+  <g filter="url(#rippleWarp)" stroke="#f2feff" fill="none" opacity="0.32">
+    <path d="M -100 200 Q 200 170 500 210 T 1100 190 T 1700 210" stroke-width="2.4"/>
+    <path d="M -100 400 Q 250 370 550 410 T 1150 390 T 1700 410" stroke-width="2"/>
+    <path d="M -100 620 Q 300 590 600 630 T 1200 610 T 1700 630" stroke-width="2.4"/>
+    <path d="M -100 800 Q 260 770 560 810 T 1160 790 T 1700 810" stroke-width="1.8"/>
   </g>
 </svg>
