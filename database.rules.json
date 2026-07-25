@@ -204,6 +204,13 @@
       ".write": false
     },
 
+    "lotteryTripleSevenLog": {
+      ".read": false,
+      "$logId": {
+        ".write": false
+      }
+    },
+
     "streamerVerificationRequests": {
       ".read": false,
       "$requestId": {
