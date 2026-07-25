@@ -1,9 +1,9 @@
 // 16번 — 스킨 탭. 카탈로그는 서버(functions/src/constants.js SKIN_CATALOG)와 동일하게
 // 클라이언트에도 상수로 둔다(표시용 — 실제 가격 검증은 항상 서버가 한다).
 var SBM_SKIN_CATALOG = {
-  'excel-default': { name: '엑셀 기본 테마', category: 'theme', price: 200000 },
-  'win11-folder': { name: '윈도우11 폴더 스킨', category: 'theme', price: 200000 },
-  'macos-finder': { name: '맥OS 파인더 스킨', category: 'theme', price: 200000 },
+  'excel-default': { name: '스프레드시트 테마', category: 'theme', price: 200000 },
+  'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 200000 },
+  'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 200000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
