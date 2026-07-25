@@ -459,7 +459,7 @@ html.theme-spring-bloom body::before{
   transition: opacity .5s ease;
 }
 html.theme-spring-bloom.spring-bg-ready body::before{
-  background-image: url('assets/7010naoto-cherryblossoms-9715202.jpg');
+  background-image: url('assets/pexels-japanese-cherry-blossom-1839982.jpg');
   opacity: 1;
 }
 
