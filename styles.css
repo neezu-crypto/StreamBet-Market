@@ -444,8 +444,22 @@ html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, tr
   position: fixed; inset: 0; overflow: hidden; pointer-events: none;
   z-index: -1; contain: strict;
 }
-.sbm-petal{
+/* 바람 — 모든 꽃잎이 같은 지속시간 · 딜레이(둘 다 미지정 = 0, 동시 시작)로 좌우로
+   흔들려서 "같은 바람을 맞는" 느낌을 준다. 실제 좌우 이동은 이 래퍼가 담당하고,
+   낙하(.sbm-petal)는 그 안에서 독립적으로 진행 — 자식 transform이 부모 transform
+   위에 자연스럽게 합성되는 성질을 이용한 구조다. */
+.sbm-petal-wind{
   position: absolute; top: -10%;
+  animation: sbm-wind-sway 6.5s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes sbm-wind-sway{
+  0%{ transform: translateX(-24px); }
+  50%{ transform: translateX(24px); }
+  100%{ transform: translateX(-24px); }
+}
+.sbm-petal{
+  position: absolute; top: 0; left: 0;
   background: linear-gradient(145deg, #ffd9e8 0%, #f4a6c6 55%, #e386ab 100%);
   border-radius: 0% 60% 0% 60%; /* 꽃잎 한 장 실루엣(비대칭 라운딩) — 이모지 대신 순수 도형 */
   will-change: transform, opacity;
@@ -458,7 +472,7 @@ html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, tr
   100%{ transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(var(--spin, 360deg)); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce){
-  .sbm-petal{ animation: none; display: none; }
+  .sbm-petal, .sbm-petal-wind{ animation: none; display: none; }
 }
 
 html.theme-summer-ocean{

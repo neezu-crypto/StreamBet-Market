@@ -71,20 +71,31 @@ function sbmRenderSkinPurchaseLog() {
     layer.setAttribute('aria-hidden', 'true');
     var count = window.innerWidth < 640 ? 10 : 18; // 좁은 화면(모바일)에선 더 가볍게
     for (var i = 0; i < count; i++) {
+      // 바람(좌우로 일정하게 바뀌는 흔들림)과 낙하(속도 · 회전 · 수명)를 별개
+      // 요소의 별개 애니메이션으로 분리한다 — 같은 요소의 transform 두 개는 서로
+      // 합쳐지지 않고 덮어써지지만, 부모·자식 요소의 transform은 자연스럽게
+      // 합성되므로 이렇게 감싸는 방식으로만 "함께 부는 바람" + "제각각인 낙하"를
+      // 동시에 표현할 수 있다. 모든 꽃잎이 wind 애니메이션 지속시간 · 딜레이를
+      // 공유해 같은 바람을 맞는 것처럼 동시에 좌우로 흔들린다.
+      var wind = document.createElement('span');
+      wind.className = 'sbm-petal-wind';
+      wind.style.left = (Math.random() * 100).toFixed(1) + '%';
+
       var petal = document.createElement('span');
       petal.className = 'sbm-petal';
       var duration = (9 + Math.random() * 6).toFixed(2); // 9~15초, 낙하 속도는 이 값으로만 결정됨
       var delay = (Math.random() * duration).toFixed(2);
       var size = (7 + Math.random() * 6).toFixed(0) + 'px'; // 꽃잎 한 장 크기(이모지 대신 CSS 도형)
-      petal.style.left = (Math.random() * 100).toFixed(1) + '%';
       petal.style.width = size;
       petal.style.height = size;
       petal.style.animationDuration = duration + 's';
       // 음수 delay로 시작해 로드 시점부터 이미 화면 곳곳에 흩날리고 있는 것처럼 보이게 한다.
       petal.style.animationDelay = '-' + delay + 's';
-      petal.style.setProperty('--drift', (Math.random() * 70 - 35).toFixed(0) + 'px');
+      petal.style.setProperty('--drift', (Math.random() * 30 - 15).toFixed(0) + 'px'); // 개별 미세 흔들림(큰 좌우 이동은 바람이 담당)
       petal.style.setProperty('--spin', (Math.random() < 0.5 ? '-' : '') + '360deg');
-      layer.appendChild(petal);
+
+      wind.appendChild(petal);
+      layer.appendChild(wind);
     }
     document.body.appendChild(layer);
     sbmPetalLayer = layer;
