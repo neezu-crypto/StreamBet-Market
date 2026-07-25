@@ -69,15 +69,12 @@ function sbmRenderSkinPurchaseLog() {
 
   function sbmPetalSeed() {
     var w = window.innerWidth, h = window.innerHeight;
-    var count = Math.min(320, Math.max(60, Math.round((w * h) / 9000)));
+    var count = Math.min(960, Math.max(180, Math.round((w * h) / 3000))); // 기존 밀도의 3배
     if (w < 640) count = Math.round(count * 0.55); // 모바일에선 더 가볍게
     var particles = [];
     for (var i = 0; i < count; i++) {
-      var hx = Math.random() * w;
-      var hy = Math.random() * h; // 배경 레이어 전체에 골고루 쌓여있는 상태
       particles.push({
-        hx: hx, hy: hy,
-        x: hx, y: hy,
+        x: Math.random() * w, y: Math.random() * h, // 배경 레이어 전체에 골고루 쌓여있는 상태
         vx: 0, vy: 0,
         r: 4 + Math.random() * 4,
         rot: Math.random() * Math.PI * 2,
@@ -123,6 +120,7 @@ function sbmRenderSkinPurchaseLog() {
     var mx = sbmPetalMouse.x, my = sbmPetalMouse.y;
     var speed = Math.sqrt(sbmPetalMouse.vx * sbmPetalMouse.vx + sbmPetalMouse.vy * sbmPetalMouse.vy);
     var blowing = speed > 1.2;
+    var w = window.innerWidth, h = window.innerHeight;
     for (var i = 0; i < particles.length; i++) {
       var p = particles[i];
       if (blowing) {
@@ -137,9 +135,8 @@ function sbmRenderSkinPurchaseLog() {
           p.vr += (Math.random() - 0.5) * 0.15;
         }
       }
-      // 원래 쌓여있던 자리로 서서히 되돌아오는 약한 스프링 힘 + 감쇠(공기 저항)
-      p.vx += (p.hx - p.x) * 0.006;
-      p.vy += (p.hy - p.y) * 0.006;
+      // 제자리로 되돌아오는 스프링 힘 없음 — 밀려난 자리에서 감쇠(공기 저항)로만
+      // 서서히 멈춰서고, 다시 원래 쌓여있던 위치로는 돌아가지 않는다.
       p.vx *= 0.92;
       p.vy *= 0.92;
       p.vr *= 0.94;
@@ -147,6 +144,10 @@ function sbmRenderSkinPurchaseLog() {
       p.x += p.vx * dtFactor;
       p.y += p.vy * dtFactor;
       p.rot += p.vr * dtFactor;
+
+      // 화면 밖으로 완전히 날아가 사라지지 않도록 가장자리에서 멈춰 세운다
+      if (p.x < 0) { p.x = 0; p.vx = 0; } else if (p.x > w) { p.x = w; p.vx = 0; }
+      if (p.y < 0) { p.y = 0; p.vy = 0; } else if (p.y > h) { p.y = h; p.vy = 0; }
     }
     // 마우스가 멈추면 "체감 속도"도 같이 잦아들게 매 프레임 감쇠
     sbmPetalMouse.vx *= 0.85;
