@@ -157,11 +157,10 @@ function sbmRenderSkinPurchaseLog() {
     '  color += img.rgb;' +
     '  color += u_illumination * vec3(1. - u_blueish, 1., 1.) * sn;' +
     '  opacity += img.a;' +
-    '  float edge_width = .02;' +
-    '  float edge_alpha = smoothstep(0., edge_width, img_uv.x) * smoothstep(1., 1. - edge_width, img_uv.x);' +
-    '  edge_alpha *= smoothstep(0., edge_width, img_uv.y) * smoothstep(1., 1. - edge_width, img_uv.y);' +
-    '  color *= edge_alpha;' +
-    '  opacity *= edge_alpha;' +
+    // 원본 데모의 edge_alpha 비네트(액자 속 사진처럼 가장자리를 투명하게 페이드아웃하는
+    // 로직)는 제거했다 — 여기선 액자가 아니라 화면 전체가 물이어야 하므로, 가장자리도
+    // 중앙과 동일하게 불투명하게 그린다(CLAMP_TO_EDGE라 UV가 [0,1]을 살짝 벗어나도
+    // 텍스처 가장자리 색이 자연스럽게 이어진다).
     '  gl_FragColor = vec4(color, opacity);' +
     '}';
 
