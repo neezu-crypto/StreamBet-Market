@@ -45,10 +45,45 @@ function sbmRenderSkinPurchaseLog() {
   // html 태그의 theme-* 클래스만 골라서 교체한다 — 다른 용도의 클래스는 건드리지 않는다.
   function setThemeClass(skinId) {
     var html = document.documentElement;
-    var classes = (html.className || '').split(/\s+/).filter(function (c) { return c && c.indexOf('theme-') !== 0; });
+    var classes = (html.className || '').split(/\s+/).filter(function (c) {
+      return c && c.indexOf('theme-') !== 0 && c !== 'spring-bg-ready';
+    });
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
     sbmUpdatePetals(skinId === 'spring-bloom');
+    if (skinId === 'spring-bloom') sbmEnsureSpringBackground();
+  }
+
+  // 봄 테마 배경 원본 사진(9MB대)을 Image()로 미리 로드해두고, 로드가 끝난
+  // 순간에만 CSS 쪽 spring-bg-ready 클래스를 붙여 배경을 노출한다(styles.css의
+  // html.theme-spring-bloom.spring-bg-ready body::before 규칙 참고). 로딩
+  // 중에는 하단에 작은 로딩 인디케이터를 띄운다. 한 번 로드되면 브라우저
+  // 캐시에 남으므로, 이후 재적용 시엔 즉시(로딩 인디케이터 없이) 노출된다.
+  var SBM_SPRING_BG_SRC = 'assets/7010naoto-cherryblossoms-9715202.jpg';
+  var sbmSpringBgLoaded = false;
+  var sbmSpringBgLoadingEl = null;
+  function sbmEnsureSpringBackground() {
+    var html = document.documentElement;
+    if (sbmSpringBgLoaded) {
+      html.classList.add('spring-bg-ready');
+      return;
+    }
+    if (sbmSpringBgLoadingEl) return; // 이미 로딩 중
+    sbmSpringBgLoadingEl = document.createElement('div');
+    sbmSpringBgLoadingEl.id = 'sbm-spring-bg-loading';
+    sbmSpringBgLoadingEl.textContent = '배경 이미지를 불러오는 중...';
+    document.body.appendChild(sbmSpringBgLoadingEl);
+
+    var img = new Image();
+    img.onload = function () {
+      sbmSpringBgLoaded = true;
+      html.classList.add('spring-bg-ready');
+      if (sbmSpringBgLoadingEl) { sbmSpringBgLoadingEl.remove(); sbmSpringBgLoadingEl = null; }
+    };
+    img.onerror = function () {
+      if (sbmSpringBgLoadingEl) { sbmSpringBgLoadingEl.remove(); sbmSpringBgLoadingEl = null; }
+    };
+    img.src = SBM_SPRING_BG_SRC;
   }
 
   // 벚꽃 테마 전용 낙화 배경 — DOM 노드는 딱 한 번만 만들고(개수 고정) 실제 낙하는
