@@ -249,6 +249,101 @@ html.theme-macos-finder .boot-card::after{
   box-shadow: 20px 0 0 #febc2e, 40px 0 0 #28c840;
 }
 
+/* 16번 — 스킨: 레트로 PC 테마. 특정 브랜드가 아니라 1990년대 데스크톱 OS 특유의
+   베벨(입체) 버튼·각진 창·회색+네이비 배색 자체를 오마주한다. --gold를 클래식
+   액티브 타이틀바 네이비로, --mint을 클래식 그린으로 재사용한다. */
+html.theme-retro-pc{
+  color-scheme: light;
+  --ink: #008080;
+  --panel: #c0c0c0;
+  --panel-raised: #c0c0c0;
+  --hairline: #808080;
+  --gold: #000080;
+  --gold-dim: rgba(0,0,128,0.12);
+  --gold-line: rgba(0,0,128,0.4);
+  --mint: #008000;
+  --mint-dim: rgba(0,128,0,0.12);
+  --text: #000000;
+  --muted: #404040;
+  --muted-2: #707070;
+  --font-display: "Tahoma", "MS Sans Serif", "Dotum", sans-serif;
+  --font-body: "Tahoma", "MS Sans Serif", "Dotum", sans-serif;
+  --font-serif: "Tahoma", "MS Sans Serif", "Dotum", sans-serif;
+}
+html.theme-retro-pc .devbar{ background: #c0c0c0; }
+html.theme-retro-pc .ticker{ background: #008080; }
+/* 마켓 카드(.ticket) — 그림자 대신 베벨(outset) 테두리로 입체감을 주고, 상단에는
+   각진 네이비 타이틀바 + 사각 버튼(_ □ ×)을 얹는다. 그림자 없는 플랫한 느낌이
+   레트로 UI의 핵심이라 box-shadow는 제거한다. */
+html.theme-retro-pc .ticket{
+  border-radius: 0;
+  border: 2px outset #c0c0c0;
+  box-shadow: none;
+}
+html.theme-retro-pc .ticket:not(.hero-ticket)::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:22px;
+  background: var(--gold); opacity:1; border-radius:0;
+}
+html.theme-retro-pc .ticket:not(.hero-ticket)::after{
+  content:"_ □ ×"; position:absolute; top:0; right:6px; height:22px;
+  display:flex; align-items:center; color:#ffffff; font-size:11px; letter-spacing:2px;
+}
+html.theme-retro-pc .ticket:not(.hero-ticket):hover{
+  border-color: #808080;
+  box-shadow: none;
+}
+html.theme-retro-pc .ticket-main{ padding-top: 30px; }
+html.theme-retro-pc .ticket-stub{ border-top: 1px solid var(--hairline); }
+html.theme-retro-pc .ticket-stub::before,
+html.theme-retro-pc .ticket-stub::after{ display:none; }
+html.theme-retro-pc .hero-ticket{
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(0,0,128,0.12) 110deg, var(--gold) 200deg, rgba(0,0,128,0.12) 300deg, var(--gold) 360deg) border-box;
+}
+/* 모달창 — 각지고 두꺼운 베벨 테두리 + 하드섀도우(블러 없는 그림자)로 클래식 창을
+   흉내낸다. 상단에는 마켓 카드와 동일한 네이비 타이틀바 + 사각 버튼. */
+html.theme-retro-pc .verify-modal,
+html.theme-retro-pc .propose-modal,
+html.theme-retro-pc .exchange-modal,
+html.theme-retro-pc .bet-modal,
+html.theme-retro-pc .review-modal,
+html.theme-retro-pc .manage-modal,
+html.theme-retro-pc .profile-modal,
+html.theme-retro-pc .report-modal,
+html.theme-retro-pc .boot-card{
+  position: relative;
+  background: var(--panel);
+  border-radius: 0;
+  border: 2px outset #c0c0c0;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.4);
+  padding-top: 40px;
+}
+html.theme-retro-pc .verify-modal::before,
+html.theme-retro-pc .propose-modal::before,
+html.theme-retro-pc .exchange-modal::before,
+html.theme-retro-pc .bet-modal::before,
+html.theme-retro-pc .review-modal::before,
+html.theme-retro-pc .manage-modal::before,
+html.theme-retro-pc .profile-modal::before,
+html.theme-retro-pc .report-modal::before,
+html.theme-retro-pc .boot-card::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:26px;
+  background: var(--gold); border-radius:0;
+}
+html.theme-retro-pc .verify-modal::after,
+html.theme-retro-pc .propose-modal::after,
+html.theme-retro-pc .exchange-modal::after,
+html.theme-retro-pc .bet-modal::after,
+html.theme-retro-pc .review-modal::after,
+html.theme-retro-pc .manage-modal::after,
+html.theme-retro-pc .profile-modal::after,
+html.theme-retro-pc .report-modal::after,
+html.theme-retro-pc .boot-card::after{
+  content:"_ □ ×"; position:absolute; top:0; right:8px; height:26px;
+  display:flex; align-items:center; color:#ffffff; font-size:12px; letter-spacing:3px;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -647,6 +742,9 @@ button{ font-family: inherit; cursor: pointer; }
   transition: border-color .15s ease, transform .15s ease;
 }
 .skin-card:hover{ border-color: var(--gold-line); transform: translateY(-2px); }
+/* 관리자 전용 시범 스킨 — 관리자가 아니면 카테고리 필터와 무관하게 항상 숨김 */
+.skin-card[data-admin-only]{ display:none; }
+.skin-card[data-admin-only].sbm-admin-visible{ display:flex; }
 .skin-card.owned{ border-color: rgba(63,182,137,0.35); }
 .skin-card.equipped{ border-color: var(--gold-line); background: linear-gradient(165deg, rgba(217,164,65,0.08), transparent 45%), var(--panel-raised); }
 
@@ -710,6 +808,22 @@ button{ font-family: inherit; cursor: pointer; }
   background: linear-gradient(165deg, #6dd5fa, #0a84ff);
   box-shadow: 0 2px 4px rgba(0,0,0,0.15);
 }
+
+/* 테마 스킨 — 레트로 PC 테마: 각진 네이비 타이틀바 + 사각 버튼 + 청록 데스크톱 */
+.skin-thumb-theme-retro{
+  display:flex; flex-direction:column; background:#008080;
+  color-scheme: light; forced-color-adjust: none; border-radius:0;
+}
+.skin-thumb-theme-retro-titlebar{
+  height:18px; background:#000080; flex-shrink:0;
+  display:flex; align-items:center; gap:4px; padding:0 4px;
+}
+.skin-thumb-theme-retro-title{ color:#fff; font-size:9px; flex:1; }
+.skin-thumb-theme-retro-btn{
+  width:11px; height:11px; background:#c0c0c0; border:1px outset #c0c0c0;
+  color:#000; font-size:8px; line-height:9px; text-align:center;
+}
+.skin-thumb-theme-retro-body{ flex:1; background:#c0c0c0; margin:4px; border:1px inset #c0c0c0; }
 
 .skin-card-body{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
 .skin-name{ font-size:13.5px; font-weight:600; color: var(--text); }

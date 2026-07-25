@@ -72,6 +72,7 @@ const SKIN_CATALOG = {
   'excel-default': { name: '스프레드시트 테마', category: 'theme', price: 200000 },
   'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 200000 },
   'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 200000 },
+  'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 200000 },
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
