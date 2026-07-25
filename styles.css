@@ -448,13 +448,14 @@ html.theme-spring-bloom body{ background-color: var(--ink); }
 html.theme-spring-bloom body::before{
   content: "";
   position: fixed;
-  inset: 0;
+  inset: -20px; /* 블러가 가장자리를 침범해 뷰포트 테두리에 흐릿한 틈이 보이는 걸 방지 */
   z-index: -2;
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   pointer-events: none;
   opacity: 0;
+  filter: blur(8px); /* CSS blur()는 %가 아니라 px만 허용돼, "20%" 정도의 은은한 흐림을 8px로 잡았다 */
   transition: opacity .5s ease;
 }
 html.theme-spring-bloom.spring-bg-ready body::before{
