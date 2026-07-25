@@ -1,26 +1,35 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
   <defs>
     <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f6e0ea"/>
-      <stop offset="55%" stop-color="#fdeef2"/>
+      <stop offset="0%" stop-color="#f0d6e4"/>
+      <stop offset="45%" stop-color="#f8e2ec"/>
+      <stop offset="75%" stop-color="#fdeef2"/>
       <stop offset="100%" stop-color="#fff6f2"/>
     </linearGradient>
-    <radialGradient id="sunGlow" cx="50%" cy="100%" r="75%">
+    <radialGradient id="sunGlow" cx="50%" cy="100%" r="78%">
       <stop offset="0%" stop-color="#fff3e0" stop-opacity="0.95"/>
       <stop offset="35%" stop-color="#ffe3ea" stop-opacity="0.55"/>
       <stop offset="100%" stop-color="#ffe3ea" stop-opacity="0"/>
     </radialGradient>
+    <radialGradient id="haze" cx="50%" cy="52%" r="30%">
+      <stop offset="0%" stop-color="#fffaf4" stop-opacity="0.85"/>
+      <stop offset="100%" stop-color="#fffaf4" stop-opacity="0"/>
+    </radialGradient>
     <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0%" stop-color="#e7d3d0"/>
-      <stop offset="100%" stop-color="#cdb0ac"/>
+      <stop offset="100%" stop-color="#c6a8a4"/>
     </linearGradient>
     <linearGradient id="roadShine" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff6ee" stop-opacity="0.75"/>
+      <stop offset="0%" stop-color="#fff6ee" stop-opacity="0.7"/>
       <stop offset="100%" stop-color="#fff6ee" stop-opacity="0"/>
     </linearGradient>
+    <linearGradient id="walkGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#efe6cf"/>
+      <stop offset="100%" stop-color="#ddd0ae"/>
+    </linearGradient>
     <linearGradient id="grassGrad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#e9e2c6"/>
-      <stop offset="100%" stop-color="#d8ceac"/>
+      <stop offset="0%" stop-color="#e7e0c2"/>
+      <stop offset="100%" stop-color="#cfc49f"/>
     </linearGradient>
     <radialGradient id="canopyGrad" cx="35%" cy="30%" r="75%">
       <stop offset="0%" stop-color="#ffe6ef"/>
@@ -28,170 +37,295 @@
       <stop offset="80%" stop-color="#e888ab"/>
       <stop offset="100%" stop-color="#d4678d"/>
     </radialGradient>
+    <radialGradient id="canopyGradLight" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#fff5f8"/>
+      <stop offset="50%" stop-color="#fcd3e2"/>
+      <stop offset="85%" stop-color="#f0a8c4"/>
+      <stop offset="100%" stop-color="#dd85a8"/>
+    </radialGradient>
+    <radialGradient id="branchBlossom" cx="32%" cy="28%" r="80%">
+      <stop offset="0%" stop-color="#f6c9dc"/>
+      <stop offset="60%" stop-color="#dd88a8"/>
+      <stop offset="100%" stop-color="#b4587e"/>
+    </radialGradient>
     <linearGradient id="trunkGrad" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0%" stop-color="#7a4a38"/>
       <stop offset="100%" stop-color="#4a2c20"/>
     </linearGradient>
+    <linearGradient id="branchWood" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#5c3826"/>
+      <stop offset="100%" stop-color="#3a2216"/>
+    </linearGradient>
+    <linearGradient id="shaftGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fffdf6" stop-opacity="0"/>
+      <stop offset="45%" stop-color="#fffdf6" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#fffdf6" stop-opacity="0"/>
+    </linearGradient>
+    <radialGradient id="vignette" cx="50%" cy="46%" r="72%">
+      <stop offset="60%" stop-color="#3a1626" stop-opacity="0"/>
+      <stop offset="100%" stop-color="#3a1626" stop-opacity="0.28"/>
+    </radialGradient>
     <filter id="softShadow" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="6"/>
     </filter>
     <filter id="farBlur" x="-50%" y="-50%" width="200%" height="200%">
       <feGaussianBlur stdDeviation="1.6"/>
     </filter>
+    <filter id="foregroundBlur" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="5"/>
+    </filter>
   </defs>
 
   <rect x="0" y="0" width="1600" height="900" fill="url(#skyGrad)"/>
   <ellipse cx="800" cy="900" rx="900" ry="520" fill="url(#sunGlow)"/>
+  <ellipse cx="800" cy="500" rx="260" ry="90" fill="url(#haze)"/>
 
-  <!-- 도로 옆 잔디/보도 -->
-  <polygon points="0,900 640,900 790,470 810,470" fill="url(#grassGrad)"/>
-  <polygon points="1600,900 960,900 810,470 790,470" fill="url(#grassGrad)" transform="translate(0,0)"/>
+  <!-- 잔디 -->
+  <polygon points="0,900 60.0,900 762.0,480.0 745,515" fill="url(#grassGrad)"/>
+  <polygon points="1600,900 1540.0,900 838.0,480.0 855,515" fill="url(#grassGrad)"/>
 
-  <!-- 도로(원근 사다리꼴) -->
+  <!-- 인도(보도) + 보도블럭 줄눈 -->
+  <polygon points="60.0,900.0 172.3,832.8 284.6,765.6 397.0,698.4 495.2,639.6 586.5,585.0 663.7,538.8 719.9,505.2 762.0,480.0 772.0,480.0 734.7,505.2 684.9,538.8 616.5,585.0 535.6,639.6 448.6,698.4 349.0,765.6 249.5,832.8 150.0,900.0" fill="url(#walkGrad)"/>
+  <polygon points="1450.0,900.0 1350.5,832.8 1251.0,765.6 1151.4,698.4 1064.4,639.6 983.5,585.0 915.1,538.8 865.3,505.2 828.0,480.0 838.0,480.0 880.1,505.2 936.3,538.8 1013.5,585.0 1104.8,639.6 1203.0,698.4 1315.4,765.6 1427.7,832.8 1540.0,900.0" fill="url(#walkGrad)"/>
+    <line x1="102.1" y1="874.8" x2="187.3" y2="874.8" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1412.7" y1="874.8" x2="1497.9" y2="874.8" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="158.3" y1="841.2" x2="237.1" y2="841.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1362.9" y1="841.2" x2="1441.7" y2="841.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="228.5" y1="799.2" x2="299.3" y2="799.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1300.7" y1="799.2" x2="1371.5" y2="799.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="298.7" y1="757.2" x2="361.5" y2="757.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1238.5" y1="757.2" x2="1301.3" y2="757.2" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="382.9" y1="706.8" x2="436.1" y2="706.8" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1163.9" y1="706.8" x2="1217.1" y2="706.8" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="467.2" y1="656.4" x2="510.8" y2="656.4" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1089.2" y1="656.4" x2="1132.8" y2="656.4" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="551.4" y1="606.0" x2="585.4" y2="606.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="1014.6" y1="606.0" x2="1048.6" y2="606.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="621.6" y1="564.0" x2="647.6" y2="564.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="952.4" y1="564.0" x2="978.4" y2="564.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="677.8" y1="530.4" x2="697.4" y2="530.4" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="902.6" y1="530.4" x2="922.2" y2="530.4" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="726.9" y1="501.0" x2="740.9" y2="501.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <line x1="859.1" y1="501.0" x2="873.1" y2="501.0" stroke="#c9b79a" stroke-width="1.4" opacity="0.55"/>
+    <polyline points="105.0,900.0 210.9,832.8 316.8,765.6 422.8,698.4 515.4,639.6 601.5,585.0 674.3,538.8 727.3,505.2 767.0,480.0" fill="none" stroke="#c9b79a" stroke-width="1.2" opacity="0.45"/>
+    <polyline points="1495.0,900.0 1389.1,832.8 1283.2,765.6 1177.2,698.4 1084.6,639.6 998.5,585.0 925.7,538.8 872.7,505.2 833.0,480.0" fill="none" stroke="#c9b79a" stroke-width="1.2" opacity="0.45"/>
+
+  <!-- 도로 -->
   <polygon points="150,900 1450,900 830,480 770,480" fill="url(#roadGrad)"/>
   <polygon points="700,900 900,900 812,480 788,480" fill="url(#roadShine)"/>
+    <polyline points="150.0,900.0 249.5,832.8 349.0,765.6 448.6,698.4 535.6,639.6 616.5,585.0 684.9,538.8 734.7,505.2 772.0,480.0" fill="none" stroke="#8a7568" stroke-width="3" opacity="0.5"/>
+    <polyline points="1450.0,900.0 1350.5,832.8 1251.0,765.6 1151.4,698.4 1064.4,639.6 983.5,585.0 915.1,538.8 865.3,505.2 828.0,480.0" fill="none" stroke="#8a7568" stroke-width="3" opacity="0.5"/>
+    <rect x="787.2" y="886.7" width="25.5" height="9.8" fill="#fff8ef" opacity="0.8"/>
+    <rect x="787.9" y="861.7" width="24.2" height="9.3" fill="#fff8ef" opacity="0.8"/>
+    <rect x="788.7" y="832.6" width="22.6" height="8.7" fill="#fff8ef" opacity="0.8"/>
+    <rect x="789.6" y="799.4" width="20.7" height="8.0" fill="#fff8ef" opacity="0.8"/>
+    <rect x="790.7" y="762.0" width="18.6" height="7.3" fill="#fff8ef" opacity="0.8"/>
+    <rect x="791.8" y="720.4" width="16.3" height="6.4" fill="#fff8ef" opacity="0.8"/>
+    <rect x="793.1" y="674.7" width="13.8" height="5.5" fill="#fff8ef" opacity="0.8"/>
+    <rect x="794.4" y="628.9" width="11.3" height="4.6" fill="#fff8ef" opacity="0.8"/>
+    <rect x="795.5" y="587.3" width="9.0" height="3.7" fill="#fff8ef" opacity="0.8"/>
+    <rect x="796.5" y="549.9" width="6.9" height="2.9" fill="#fff8ef" opacity="0.8"/>
+    <rect x="797.4" y="520.8" width="5.3" height="2.3" fill="#fff8ef" opacity="0.8"/>
+    <rect x="797.9" y="500.0" width="4.2" height="1.9" fill="#fff8ef" opacity="0.8"/>
 
     <g opacity="1">
-      <ellipse cx="60.0" cy="991.2" rx="71.2" ry="16.5" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="54.8" y="890.0" width="10.5" height="101.2" rx="5.3" fill="url(#trunkGrad)"/>
-      <circle cx="60.0" cy="848.8" r="46.5" fill="url(#canopyGrad)"/>
-      <circle cx="18.8" cy="878.8" r="41.2" fill="url(#canopyGrad)"/>
-      <circle cx="101.2" cy="878.8" r="41.2" fill="url(#canopyGrad)"/>
-      <circle cx="37.5" cy="908.8" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="82.5" cy="908.8" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="60.0" cy="893.8" r="45.0" fill="url(#canopyGrad)"/>
+      <ellipse cx="40.0" cy="992.2" rx="68.4" ry="15.8" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="35.0" y="895.0" width="10.1" height="97.2" rx="5.0" fill="url(#trunkGrad)"/>
+      <circle cx="43.0" cy="854.5" r="42.1" fill="url(#canopyGrad)"/>
+      <circle cx="0.5" cy="883.1" r="42.3" fill="url(#canopyGrad)"/>
+      <circle cx="77.3" cy="883.9" r="40.4" fill="url(#canopyGrad)"/>
+      <circle cx="23.1" cy="913.1" r="34.1" fill="url(#canopyGrad)"/>
+      <circle cx="64.5" cy="914.4" r="33.8" fill="url(#canopyGrad)"/>
+      <circle cx="44.7" cy="904.2" r="46.4" fill="url(#canopyGrad)"/>
     </g>
     <g opacity="1">
-      <ellipse cx="1540.0" cy="991.2" rx="71.2" ry="16.5" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="1534.8" y="890.0" width="10.5" height="101.2" rx="5.3" fill="url(#trunkGrad)"/>
-      <circle cx="1540.0" cy="848.8" r="46.5" fill="url(#canopyGrad)"/>
-      <circle cx="1498.8" cy="878.8" r="41.2" fill="url(#canopyGrad)"/>
-      <circle cx="1581.2" cy="878.8" r="41.2" fill="url(#canopyGrad)"/>
-      <circle cx="1517.5" cy="908.8" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="1562.5" cy="908.8" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="1540.0" cy="893.8" r="45.0" fill="url(#canopyGrad)"/>
+      <ellipse cx="1560.0" cy="992.2" rx="68.4" ry="15.8" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1555.0" y="895.0" width="10.1" height="97.2" rx="5.0" fill="url(#trunkGrad)"/>
+      <circle cx="1564.0" cy="858.4" r="42.0" fill="url(#canopyGradLight)"/>
+      <circle cx="1520.3" cy="883.6" r="41.0" fill="url(#canopyGradLight)"/>
+      <circle cx="1602.9" cy="879.5" r="35.1" fill="url(#canopyGradLight)"/>
+      <circle cx="1542.3" cy="912.2" r="38.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1575.9" cy="912.4" r="37.9" fill="url(#canopyGradLight)"/>
+      <circle cx="1556.9" cy="903.7" r="47.4" fill="url(#canopyGradLight)"/>
     </g>
     <g opacity="1">
-      <ellipse cx="210.7" cy="890.2" rx="57.5" ry="13.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="206.5" y="808.6" width="8.5" height="81.6" rx="4.2" fill="url(#trunkGrad)"/>
-      <circle cx="210.7" cy="775.3" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="177.4" cy="799.5" r="33.3" fill="url(#canopyGrad)"/>
-      <circle cx="244.0" cy="799.5" r="33.3" fill="url(#canopyGrad)"/>
-      <circle cx="192.6" cy="823.7" r="30.2" fill="url(#canopyGrad)"/>
-      <circle cx="228.8" cy="823.7" r="30.2" fill="url(#canopyGrad)"/>
-      <circle cx="210.7" cy="811.6" r="36.3" fill="url(#canopyGrad)"/>
+      <ellipse cx="153.3" cy="917.6" rx="58.7" ry="13.6" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="149.0" y="834.2" width="8.6" height="83.4" rx="4.3" fill="url(#trunkGrad)"/>
+      <circle cx="157.7" cy="795.9" r="34.5" fill="url(#canopyGrad)"/>
+      <circle cx="122.6" cy="827.3" r="35.4" fill="url(#canopyGrad)"/>
+      <circle cx="185.4" cy="826.0" r="34.8" fill="url(#canopyGrad)"/>
+      <circle cx="135.6" cy="846.3" r="30.4" fill="url(#canopyGrad)"/>
+      <circle cx="170.8" cy="851.8" r="34.5" fill="url(#canopyGrad)"/>
+      <circle cx="157.7" cy="837.7" r="36.6" fill="url(#canopyGrad)"/>
     </g>
     <g opacity="1">
-      <ellipse cx="1389.3" cy="890.2" rx="57.5" ry="13.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="1385.1" y="808.6" width="8.5" height="81.6" rx="4.2" fill="url(#trunkGrad)"/>
-      <circle cx="1389.3" cy="775.3" r="37.5" fill="url(#canopyGrad)"/>
-      <circle cx="1356.0" cy="799.5" r="33.3" fill="url(#canopyGrad)"/>
-      <circle cx="1422.6" cy="799.5" r="33.3" fill="url(#canopyGrad)"/>
-      <circle cx="1371.2" cy="823.7" r="30.2" fill="url(#canopyGrad)"/>
-      <circle cx="1407.4" cy="823.7" r="30.2" fill="url(#canopyGrad)"/>
-      <circle cx="1389.3" cy="811.6" r="36.3" fill="url(#canopyGrad)"/>
+      <ellipse cx="1446.7" cy="917.6" rx="58.7" ry="13.6" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1442.4" y="834.2" width="8.6" height="83.4" rx="4.3" fill="url(#trunkGrad)"/>
+      <circle cx="1447.2" cy="798.9" r="39.2" fill="url(#canopyGradLight)"/>
+      <circle cx="1414.0" cy="820.6" r="30.0" fill="url(#canopyGradLight)"/>
+      <circle cx="1484.0" cy="822.6" r="31.8" fill="url(#canopyGradLight)"/>
+      <circle cx="1433.1" cy="849.3" r="33.4" fill="url(#canopyGradLight)"/>
+      <circle cx="1465.0" cy="851.0" r="28.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1448.1" cy="840.9" r="37.3" fill="url(#canopyGradLight)"/>
     </g>
     <g opacity="1">
-      <ellipse cx="347.7" cy="798.4" rx="44.9" ry="10.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="344.4" y="734.6" width="6.6" height="63.8" rx="3.3" fill="url(#trunkGrad)"/>
-      <circle cx="347.7" cy="708.6" r="29.3" fill="url(#canopyGrad)"/>
-      <circle cx="321.7" cy="727.5" r="26.0" fill="url(#canopyGrad)"/>
-      <circle cx="373.7" cy="727.5" r="26.0" fill="url(#canopyGrad)"/>
-      <circle cx="333.5" cy="746.4" r="23.6" fill="url(#canopyGrad)"/>
-      <circle cx="361.9" cy="746.4" r="23.6" fill="url(#canopyGrad)"/>
-      <circle cx="347.7" cy="737.0" r="28.4" fill="url(#canopyGrad)"/>
+      <ellipse cx="266.6" cy="843.0" rx="48.9" ry="11.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="263.0" y="773.4" width="7.2" height="69.6" rx="3.6" fill="url(#trunkGrad)"/>
+      <circle cx="263.3" cy="744.2" r="29.3" fill="url(#canopyGradLight)"/>
+      <circle cx="234.7" cy="764.9" r="31.2" fill="url(#canopyGradLight)"/>
+      <circle cx="297.4" cy="767.9" r="26.4" fill="url(#canopyGradLight)"/>
+      <circle cx="251.4" cy="784.4" r="23.7" fill="url(#canopyGradLight)"/>
+      <circle cx="278.8" cy="783.9" r="28.4" fill="url(#canopyGradLight)"/>
+      <circle cx="269.3" cy="778.5" r="33.1" fill="url(#canopyGradLight)"/>
     </g>
     <g opacity="1">
-      <ellipse cx="1252.3" cy="798.4" rx="44.9" ry="10.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="1249.0" y="734.6" width="6.6" height="63.8" rx="3.3" fill="url(#trunkGrad)"/>
-      <circle cx="1252.3" cy="708.6" r="29.3" fill="url(#canopyGrad)"/>
-      <circle cx="1226.3" cy="727.5" r="26.0" fill="url(#canopyGrad)"/>
-      <circle cx="1278.3" cy="727.5" r="26.0" fill="url(#canopyGrad)"/>
-      <circle cx="1238.1" cy="746.4" r="23.6" fill="url(#canopyGrad)"/>
-      <circle cx="1266.5" cy="746.4" r="23.6" fill="url(#canopyGrad)"/>
-      <circle cx="1252.3" cy="737.0" r="28.4" fill="url(#canopyGrad)"/>
+      <ellipse cx="1333.4" cy="843.0" rx="48.9" ry="11.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1329.8" y="773.4" width="7.2" height="69.6" rx="3.6" fill="url(#trunkGrad)"/>
+      <circle cx="1335.4" cy="747.5" r="35.3" fill="url(#canopyGrad)"/>
+      <circle cx="1307.1" cy="769.2" r="25.1" fill="url(#canopyGrad)"/>
+      <circle cx="1361.5" cy="769.3" r="29.3" fill="url(#canopyGrad)"/>
+      <circle cx="1321.3" cy="783.1" r="25.6" fill="url(#canopyGrad)"/>
+      <circle cx="1346.8" cy="786.6" r="26.2" fill="url(#canopyGrad)"/>
+      <circle cx="1329.4" cy="773.6" r="29.3" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="471.0" cy="715.8" rx="33.6" ry="7.8" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="468.5" y="668.0" width="5.0" height="47.8" rx="2.5" fill="url(#trunkGrad)"/>
-      <circle cx="471.0" cy="648.5" r="21.9" fill="url(#canopyGrad)"/>
-      <circle cx="451.5" cy="662.7" r="19.5" fill="url(#canopyGrad)"/>
-      <circle cx="490.5" cy="662.7" r="19.5" fill="url(#canopyGrad)"/>
-      <circle cx="460.4" cy="676.9" r="17.7" fill="url(#canopyGrad)"/>
-      <circle cx="481.6" cy="676.9" r="17.7" fill="url(#canopyGrad)"/>
-      <circle cx="471.0" cy="669.8" r="21.2" fill="url(#canopyGrad)"/>
+    <g opacity="1">
+      <ellipse cx="379.8" cy="768.3" rx="39.2" ry="9.1" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="377.0" y="712.6" width="5.8" height="55.7" rx="2.9" fill="url(#trunkGrad)"/>
+      <circle cx="382.0" cy="689.8" r="24.1" fill="url(#canopyGrad)"/>
+      <circle cx="353.8" cy="707.5" r="22.5" fill="url(#canopyGrad)"/>
+      <circle cx="404.3" cy="705.6" r="24.2" fill="url(#canopyGrad)"/>
+      <circle cx="366.0" cy="724.9" r="21.8" fill="url(#canopyGrad)"/>
+      <circle cx="391.7" cy="723.2" r="21.5" fill="url(#canopyGrad)"/>
+      <circle cx="377.8" cy="715.0" r="26.6" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="1129.0" cy="715.8" rx="33.6" ry="7.8" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="1126.5" y="668.0" width="5.0" height="47.8" rx="2.5" fill="url(#trunkGrad)"/>
-      <circle cx="1129.0" cy="648.5" r="21.9" fill="url(#canopyGrad)"/>
-      <circle cx="1109.5" cy="662.7" r="19.5" fill="url(#canopyGrad)"/>
-      <circle cx="1148.5" cy="662.7" r="19.5" fill="url(#canopyGrad)"/>
-      <circle cx="1118.4" cy="676.9" r="17.7" fill="url(#canopyGrad)"/>
-      <circle cx="1139.6" cy="676.9" r="17.7" fill="url(#canopyGrad)"/>
-      <circle cx="1129.0" cy="669.8" r="21.2" fill="url(#canopyGrad)"/>
+    <g opacity="1">
+      <ellipse cx="1220.2" cy="768.3" rx="39.2" ry="9.1" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1217.3" y="712.6" width="5.8" height="55.7" rx="2.9" fill="url(#trunkGrad)"/>
+      <circle cx="1217.9" cy="690.9" r="23.0" fill="url(#canopyGradLight)"/>
+      <circle cx="1197.7" cy="705.5" r="20.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1242.9" cy="703.4" r="22.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1204.9" cy="720.2" r="20.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1234.7" cy="720.4" r="19.3" fill="url(#canopyGradLight)"/>
+      <circle cx="1221.0" cy="717.6" r="25.2" fill="url(#canopyGradLight)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="580.6" cy="642.3" rx="23.6" ry="5.5" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="578.9" y="608.8" width="3.5" height="33.5" rx="1.7" fill="url(#trunkGrad)"/>
-      <circle cx="580.6" cy="595.1" r="15.4" fill="url(#canopyGrad)"/>
-      <circle cx="566.9" cy="605.1" r="13.7" fill="url(#canopyGrad)"/>
-      <circle cx="594.3" cy="605.1" r="13.7" fill="url(#canopyGrad)"/>
-      <circle cx="573.1" cy="615.0" r="12.4" fill="url(#canopyGrad)"/>
-      <circle cx="588.1" cy="615.0" r="12.4" fill="url(#canopyGrad)"/>
-      <circle cx="580.6" cy="610.0" r="14.9" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="479.0" cy="703.0" rx="30.7" ry="7.1" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="476.7" y="659.4" width="4.5" height="43.6" rx="2.3" fill="url(#trunkGrad)"/>
+      <circle cx="481.4" cy="639.7" r="21.0" fill="url(#canopyGradLight)"/>
+      <circle cx="459.0" cy="653.2" r="19.9" fill="url(#canopyGradLight)"/>
+      <circle cx="495.2" cy="655.3" r="17.6" fill="url(#canopyGradLight)"/>
+      <circle cx="469.0" cy="667.5" r="15.0" fill="url(#canopyGradLight)"/>
+      <circle cx="490.4" cy="665.4" r="15.1" fill="url(#canopyGradLight)"/>
+      <circle cx="476.5" cy="659.8" r="19.0" fill="url(#canopyGradLight)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="1019.4" cy="642.3" rx="23.6" ry="5.5" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="1017.7" y="608.8" width="3.5" height="33.5" rx="1.7" fill="url(#trunkGrad)"/>
-      <circle cx="1019.4" cy="595.1" r="15.4" fill="url(#canopyGrad)"/>
-      <circle cx="1005.7" cy="605.1" r="13.7" fill="url(#canopyGrad)"/>
-      <circle cx="1033.1" cy="605.1" r="13.7" fill="url(#canopyGrad)"/>
-      <circle cx="1011.9" cy="615.0" r="12.4" fill="url(#canopyGrad)"/>
-      <circle cx="1026.9" cy="615.0" r="12.4" fill="url(#canopyGrad)"/>
-      <circle cx="1019.4" cy="610.0" r="14.9" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="1121.0" cy="703.0" rx="30.7" ry="7.1" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1118.8" y="659.4" width="4.5" height="43.6" rx="2.3" fill="url(#trunkGrad)"/>
+      <circle cx="1120.4" cy="639.8" r="21.8" fill="url(#canopyGrad)"/>
+      <circle cx="1100.7" cy="654.6" r="19.5" fill="url(#canopyGrad)"/>
+      <circle cx="1136.6" cy="654.8" r="18.3" fill="url(#canopyGrad)"/>
+      <circle cx="1109.0" cy="666.9" r="16.9" fill="url(#canopyGrad)"/>
+      <circle cx="1130.5" cy="668.6" r="14.8" fill="url(#canopyGrad)"/>
+      <circle cx="1119.7" cy="659.0" r="19.4" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="676.5" cy="578.1" rx="14.8" ry="3.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="675.4" y="557.0" width="2.2" height="21.1" rx="1.1" fill="url(#trunkGrad)"/>
-      <circle cx="676.5" cy="548.4" r="9.7" fill="url(#canopyGrad)"/>
-      <circle cx="667.9" cy="554.7" r="8.6" fill="url(#canopyGrad)"/>
-      <circle cx="685.1" cy="554.7" r="8.6" fill="url(#canopyGrad)"/>
-      <circle cx="671.8" cy="560.9" r="7.8" fill="url(#canopyGrad)"/>
-      <circle cx="681.2" cy="560.9" r="7.8" fill="url(#canopyGrad)"/>
-      <circle cx="676.5" cy="557.8" r="9.4" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="571.0" cy="642.4" rx="22.8" ry="5.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="569.3" y="610.0" width="3.4" height="32.4" rx="1.7" fill="url(#trunkGrad)"/>
+      <circle cx="570.7" cy="597.1" r="13.8" fill="url(#canopyGrad)"/>
+      <circle cx="559.0" cy="607.6" r="13.7" fill="url(#canopyGrad)"/>
+      <circle cx="582.9" cy="606.5" r="12.7" fill="url(#canopyGrad)"/>
+      <circle cx="562.8" cy="617.7" r="13.4" fill="url(#canopyGrad)"/>
+      <circle cx="576.5" cy="617.4" r="12.3" fill="url(#canopyGrad)"/>
+      <circle cx="570.5" cy="610.4" r="15.0" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="923.5" cy="578.1" rx="14.8" ry="3.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="922.4" y="557.0" width="2.2" height="21.1" rx="1.1" fill="url(#trunkGrad)"/>
-      <circle cx="923.5" cy="548.4" r="9.7" fill="url(#canopyGrad)"/>
-      <circle cx="914.9" cy="554.7" r="8.6" fill="url(#canopyGrad)"/>
-      <circle cx="932.1" cy="554.7" r="8.6" fill="url(#canopyGrad)"/>
-      <circle cx="918.8" cy="560.9" r="7.8" fill="url(#canopyGrad)"/>
-      <circle cx="928.2" cy="560.9" r="7.8" fill="url(#canopyGrad)"/>
-      <circle cx="923.5" cy="557.8" r="9.4" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="1029.0" cy="642.4" rx="22.8" ry="5.3" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="1027.3" y="610.0" width="3.4" height="32.4" rx="1.7" fill="url(#trunkGrad)"/>
+      <circle cx="1029.2" cy="598.4" r="14.8" fill="url(#canopyGrad)"/>
+      <circle cx="1015.8" cy="606.7" r="12.2" fill="url(#canopyGrad)"/>
+      <circle cx="1042.2" cy="606.9" r="14.1" fill="url(#canopyGrad)"/>
+      <circle cx="1020.2" cy="615.2" r="10.8" fill="url(#canopyGrad)"/>
+      <circle cx="1037.4" cy="616.7" r="10.7" fill="url(#canopyGrad)"/>
+      <circle cx="1030.9" cy="613.0" r="14.9" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="724.4" cy="545.9" rx="10.4" ry="2.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="723.7" y="531.1" width="1.5" height="14.8" rx="0.8" fill="url(#trunkGrad)"/>
-      <circle cx="724.4" cy="525.1" r="6.8" fill="url(#canopyGrad)"/>
-      <circle cx="718.4" cy="529.5" r="6.0" fill="url(#canopyGrad)"/>
-      <circle cx="730.5" cy="529.5" r="6.0" fill="url(#canopyGrad)"/>
-      <circle cx="721.2" cy="533.8" r="5.5" fill="url(#canopyGrad)"/>
-      <circle cx="727.7" cy="533.8" r="5.5" fill="url(#canopyGrad)"/>
-      <circle cx="724.4" cy="531.6" r="6.6" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="648.9" cy="591.1" rx="16.1" ry="3.7" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="647.7" y="568.2" width="2.4" height="22.9" rx="1.2" fill="url(#trunkGrad)"/>
+      <circle cx="649.3" cy="559.3" r="9.6" fill="url(#canopyGrad)"/>
+      <circle cx="638.2" cy="565.3" r="8.8" fill="url(#canopyGrad)"/>
+      <circle cx="659.1" cy="566.2" r="9.6" fill="url(#canopyGrad)"/>
+      <circle cx="643.9" cy="572.9" r="7.8" fill="url(#canopyGrad)"/>
+      <circle cx="653.8" cy="571.5" r="9.3" fill="url(#canopyGrad)"/>
+      <circle cx="647.7" cy="569.9" r="9.1" fill="url(#canopyGrad)"/>
     </g>
-    <g opacity="0.82" filter="url(#farBlur)">
-      <ellipse cx="875.6" cy="545.9" rx="10.4" ry="2.4" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
-      <rect x="874.8" y="531.1" width="1.5" height="14.8" rx="0.8" fill="url(#trunkGrad)"/>
-      <circle cx="875.6" cy="525.1" r="6.8" fill="url(#canopyGrad)"/>
-      <circle cx="869.5" cy="529.5" r="6.0" fill="url(#canopyGrad)"/>
-      <circle cx="881.6" cy="529.5" r="6.0" fill="url(#canopyGrad)"/>
-      <circle cx="872.3" cy="533.8" r="5.5" fill="url(#canopyGrad)"/>
-      <circle cx="878.8" cy="533.8" r="5.5" fill="url(#canopyGrad)"/>
-      <circle cx="875.6" cy="531.6" r="6.6" fill="url(#canopyGrad)"/>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="951.1" cy="591.1" rx="16.1" ry="3.7" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="949.9" y="568.2" width="2.4" height="22.9" rx="1.2" fill="url(#trunkGrad)"/>
+      <circle cx="951.6" cy="559.4" r="11.4" fill="url(#canopyGradLight)"/>
+      <circle cx="940.9" cy="564.9" r="8.5" fill="url(#canopyGradLight)"/>
+      <circle cx="959.7" cy="566.3" r="8.5" fill="url(#canopyGradLight)"/>
+      <circle cx="946.1" cy="571.7" r="8.1" fill="url(#canopyGradLight)"/>
+      <circle cx="956.0" cy="573.4" r="8.7" fill="url(#canopyGradLight)"/>
+      <circle cx="949.8" cy="568.4" r="9.3" fill="url(#canopyGradLight)"/>
+    </g>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="705.5" cy="553.8" rx="11.2" ry="2.6" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="704.7" y="537.8" width="1.7" height="16.0" rx="0.8" fill="url(#trunkGrad)"/>
+      <circle cx="705.9" cy="531.6" r="8.1" fill="url(#canopyGradLight)"/>
+      <circle cx="698.6" cy="535.6" r="6.9" fill="url(#canopyGradLight)"/>
+      <circle cx="712.3" cy="535.7" r="6.8" fill="url(#canopyGradLight)"/>
+      <circle cx="701.8" cy="541.3" r="5.4" fill="url(#canopyGradLight)"/>
+      <circle cx="708.5" cy="541.5" r="5.7" fill="url(#canopyGradLight)"/>
+      <circle cx="705.1" cy="539.0" r="7.3" fill="url(#canopyGradLight)"/>
+    </g>
+    <g opacity="0.8" filter="url(#farBlur)">
+      <ellipse cx="894.5" cy="553.8" rx="11.2" ry="2.6" fill="#5a2f22" opacity="0.16" filter="url(#softShadow)"/>
+      <rect x="893.7" y="537.8" width="1.7" height="16.0" rx="0.8" fill="url(#trunkGrad)"/>
+      <circle cx="893.6" cy="531.7" r="6.7" fill="url(#canopyGrad)"/>
+      <circle cx="888.9" cy="535.1" r="7.1" fill="url(#canopyGrad)"/>
+      <circle cx="901.3" cy="536.7" r="7.3" fill="url(#canopyGrad)"/>
+      <circle cx="890.4" cy="540.5" r="6.2" fill="url(#canopyGrad)"/>
+      <circle cx="897.6" cy="540.3" r="5.5" fill="url(#canopyGrad)"/>
+      <circle cx="895.2" cy="539.1" r="7.6" fill="url(#canopyGrad)"/>
     </g>
 
   <!-- 소실점 은은한 빛 -->
-  <ellipse cx="800" cy="480" rx="70" ry="26" fill="#fff8ef" opacity="0.5" filter="url(#softShadow)"/>
+  <ellipse cx="800" cy="480" rx="80" ry="30" fill="#fff8ef" opacity="0.55" filter="url(#softShadow)"/>
+
+  <!-- 빛줄기 -->
+    <g transform="translate(760,420) rotate(-70)" opacity="0.85">
+      <rect x="-20.0" y="-40" width="40.0" height="640" fill="url(#shaftGrad)"/>
+    </g>
+    <g transform="translate(800,420) rotate(20)" opacity="0.6">
+      <rect x="-15.0" y="-40" width="30.0" height="640" fill="url(#shaftGrad)"/>
+    </g>
+    <g transform="translate(840,420) rotate(90)" opacity="0.7">
+      <rect x="-17.0" y="-40" width="34.0" height="640" fill="url(#shaftGrad)"/>
+    </g>
+    <g transform="translate(700,420) rotate(-150)" opacity="0.5">
+      <rect x="-13.0" y="-40" width="26.0" height="640" fill="url(#shaftGrad)"/>
+    </g>
+
+  <!-- 근경 프레이밍 나뭇가지 -->
+    <g filter="url(#foregroundBlur)" opacity="0.92">
+      <path d="M 0 0 C 260 40, 160 160, 300 230 C 380 270, 300 340, 420 360" fill="none" stroke="url(#branchWood)" stroke-width="14" stroke-linecap="round"/>
+      <circle cx="90.0" cy="60.0" r="32.1" fill="url(#branchBlossom)"/>
+      <circle cx="210.0" cy="130.0" r="43.6" fill="url(#branchBlossom)"/>
+      <circle cx="150.0" cy="210.0" r="42.2" fill="url(#branchBlossom)"/>
+      <circle cx="330.0" cy="255.0" r="34.1" fill="url(#branchBlossom)"/>
+      <circle cx="260.0" cy="320.0" r="37.9" fill="url(#branchBlossom)"/>
+      <circle cx="400.0" cy="340.0" r="37.2" fill="url(#branchBlossom)"/>
+    </g>
+    <g filter="url(#foregroundBlur)" opacity="0.92">
+      <path d="M 1600 0 C 1340 40, 1440 160, 1300 230 C 1220 270, 1300 340, 1180 360" fill="none" stroke="url(#branchWood)" stroke-width="14" stroke-linecap="round"/>
+      <circle cx="1510.0" cy="60.0" r="45.3" fill="url(#branchBlossom)"/>
+      <circle cx="1390.0" cy="130.0" r="45.2" fill="url(#branchBlossom)"/>
+      <circle cx="1450.0" cy="210.0" r="30.9" fill="url(#branchBlossom)"/>
+      <circle cx="1270.0" cy="255.0" r="31.4" fill="url(#branchBlossom)"/>
+      <circle cx="1340.0" cy="320.0" r="43.4" fill="url(#branchBlossom)"/>
+      <circle cx="1200.0" cy="340.0" r="41.8" fill="url(#branchBlossom)"/>
+    </g>
+
+  <!-- 비네트 -->
+  <rect x="0" y="0" width="1600" height="900" fill="url(#vignette)"/>
 </svg>
