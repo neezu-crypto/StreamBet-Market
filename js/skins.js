@@ -49,6 +49,7 @@ function sbmRenderSkinPurchaseLog() {
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
     sbmUpdatePetals(skinId === 'spring-bloom');
+    sbmUpdatePoolToys(skinId === 'summer-ocean');
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
@@ -209,6 +210,234 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('resize', sbmPetalResize);
     sbmPetalLastT = 0;
     sbmPetalRAF = requestAnimationFrame(sbmPetalLoop);
+  }
+
+  // 여름 테마 — 풀장 탑뷰 배경(assets/summer-pool.svg) 위에 비치볼 · 튜브 · 오리
+  // 튜브 등 물놀이 장난감을 캔버스로 띄운다. 마우스가 닿으면(원형 충돌) 그
+  // 반대 방향으로 튕겨나가고, 화면 가장자리에 닿으면 벽처럼 반사돼 튕긴다.
+  // 물 위에 떠 있는 느낌을 위해 각 장난감 아래에 흐린 그림자(물그림자)를 깔고,
+  // 평소엔 잔물결에 살짝씩 흔들리듯 미세한 표류(현재)를 계속 준다.
+  var sbmPoolCanvas = null;
+  var sbmPoolCtx = null;
+  var sbmPoolToys = null;
+  var sbmPoolRAF = null;
+  var sbmPoolLastT = 0;
+  var sbmPoolReducedMotion = false;
+  var sbmPoolMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
+  var SBM_POOL_MOUSE_R = 22;
+  var SBM_POOL_TYPES = ['ball', 'ring', 'duck', 'star'];
+  var SBM_POOL_RING_COLORS = ['#ff6b6b', '#ffd93d', '#4dd6c0', '#5b8def', '#ff9f5b'];
+
+  function sbmPoolSeed() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var count = Math.min(22, Math.max(8, Math.round((w * h) / 90000)));
+    if (w < 640) count = Math.round(count * 0.6);
+    var toys = [];
+    for (var i = 0; i < count; i++) {
+      var type = SBM_POOL_TYPES[(Math.random() * SBM_POOL_TYPES.length) | 0];
+      toys.push({
+        type: type,
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 6, vy: (Math.random() - 0.5) * 6,
+        r: type === 'ring' ? (22 + Math.random() * 10) : (16 + Math.random() * 8),
+        rot: Math.random() * Math.PI * 2,
+        vr: (Math.random() - 0.5) * 0.01,
+        color: SBM_POOL_RING_COLORS[(Math.random() * SBM_POOL_RING_COLORS.length) | 0],
+        bobPhase: Math.random() * Math.PI * 2
+      });
+    }
+    sbmPoolToys = toys;
+  }
+
+  function sbmPoolResize() {
+    if (!sbmPoolCanvas) return;
+    var dpr = window.devicePixelRatio || 1;
+    sbmPoolCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmPoolCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmPoolCanvas.style.width = window.innerWidth + 'px';
+    sbmPoolCanvas.style.height = window.innerHeight + 'px';
+    sbmPoolCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmPoolSeed();
+    sbmPoolDraw(0);
+  }
+
+  function sbmPoolTrackPointer(x, y) {
+    var now = performance.now();
+    var dt = Math.max(8, now - sbmPoolMouse.t);
+    sbmPoolMouse.vx = (x - sbmPoolMouse.x) / dt * 16.67;
+    sbmPoolMouse.vy = (y - sbmPoolMouse.y) / dt * 16.67;
+    sbmPoolMouse.x = x;
+    sbmPoolMouse.y = y;
+    sbmPoolMouse.t = now;
+  }
+  function sbmPoolOnMouseMove(e) { sbmPoolTrackPointer(e.clientX, e.clientY); }
+  function sbmPoolOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmPoolTrackPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmPoolStep(dtFactor) {
+    var toys = sbmPoolToys;
+    if (!toys) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    var mx = sbmPoolMouse.x, my = sbmPoolMouse.y;
+    var mouseSpeed = Math.sqrt(sbmPoolMouse.vx * sbmPoolMouse.vx + sbmPoolMouse.vy * sbmPoolMouse.vy);
+    for (var i = 0; i < toys.length; i++) {
+      var p = toys[i];
+
+      // 마우스와의 원형 충돌 — 닿는 순간 반대 방향으로 튕겨나간다(마우스 속도가
+      // 빠를수록 더 세게). 겹친 만큼 위치도 즉시 밀어내 계속 붙어있지 않게 한다.
+      var dx = p.x - mx, dy = p.y - my;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+      var minDist = p.r + SBM_POOL_MOUSE_R;
+      if (dist < minDist) {
+        var nx = dx / dist, ny = dy / dist;
+        p.x += nx * (minDist - dist);
+        p.y += ny * (minDist - dist);
+        var impulse = Math.max(mouseSpeed * 0.7, 5);
+        p.vx += nx * impulse;
+        p.vy += ny * impulse;
+        p.vr += (Math.random() - 0.5) * 0.25;
+      }
+
+      // 물 위를 떠도는 잔잔한 현(전류) — 완전히 멈추지 않고 계속 미세하게 표류
+      p.vx += (Math.random() - 0.5) * 0.06;
+      p.vy += (Math.random() - 0.5) * 0.06;
+      p.vx *= 0.985;
+      p.vy *= 0.985;
+      p.vr *= 0.96;
+
+      p.x += p.vx * dtFactor;
+      p.y += p.vy * dtFactor;
+      p.rot += p.vr * dtFactor;
+
+      // 화면 가장자리 = 벽 — 반사(반발계수 0.8)돼 튕기고 밖으로 나가지 않는다
+      if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx) * 0.8; }
+      else if (p.x > w - p.r) { p.x = w - p.r; p.vx = -Math.abs(p.vx) * 0.8; }
+      if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy) * 0.8; }
+      else if (p.y > h - p.r) { p.y = h - p.r; p.vy = -Math.abs(p.vy) * 0.8; }
+    }
+    sbmPoolMouse.vx *= 0.85;
+    sbmPoolMouse.vy *= 0.85;
+  }
+
+  function sbmPoolDrawToy(ctx, p, bob) {
+    ctx.save();
+    ctx.translate(p.x, p.y + bob);
+    ctx.rotate(p.rot);
+    if (p.type === 'ball') {
+      var slices = 6;
+      for (var s = 0; s < slices; s++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.arc(0, 0, p.r, (s / slices) * Math.PI * 2, ((s + 1) / slices) * Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = s % 2 === 0 ? p.color : '#ffffff';
+        ctx.fill();
+      }
+      ctx.beginPath();
+      ctx.arc(0, 0, p.r * 0.32, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    } else if (p.type === 'ring') {
+      ctx.beginPath();
+      ctx.arc(0, 0, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(0, 0, p.r * 0.55, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(159,230,240,0.85)';
+      ctx.fill();
+    } else if (p.type === 'duck') {
+      ctx.beginPath();
+      ctx.ellipse(0, 2, p.r, p.r * 0.72, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd93d';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.r * 0.7, -p.r * 0.35, p.r * 0.42, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd93d';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(p.r * 1.05, -p.r * 0.35);
+      ctx.lineTo(p.r * 1.4, -p.r * 0.22);
+      ctx.lineTo(p.r * 1.05, -p.r * 0.12);
+      ctx.closePath();
+      ctx.fillStyle = '#ff9f2f';
+      ctx.fill();
+    } else { // star
+      var spikes = 5, outerR = p.r, innerR = p.r * 0.48;
+      ctx.beginPath();
+      for (var k = 0; k < spikes * 2; k++) {
+        var rad = k % 2 === 0 ? outerR : innerR;
+        var ang = (k / (spikes * 2)) * Math.PI * 2;
+        var px = Math.cos(ang) * rad, py = Math.sin(ang) * rad;
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fillStyle = p.color;
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+
+  function sbmPoolDraw(tSec) {
+    if (!sbmPoolCtx || !sbmPoolToys) return;
+    var ctx = sbmPoolCtx;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = 0; i < sbmPoolToys.length; i++) {
+      var p = sbmPoolToys[i];
+      var bob = Math.sin(tSec * 1.6 + p.bobPhase) * 2.5;
+      // 물 위에 뜬 느낌을 주는 흐린 그림자(수면 아래 그림자)
+      ctx.save();
+      ctx.filter = 'blur(4px)';
+      ctx.beginPath();
+      ctx.ellipse(p.x, p.y + bob + p.r * 0.35, p.r * 0.9, p.r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(10,60,70,0.28)';
+      ctx.fill();
+      ctx.restore();
+
+      sbmPoolDrawToy(ctx, p, bob);
+    }
+  }
+
+  function sbmPoolLoop(t) {
+    if (!sbmPoolCanvas) return;
+    var dtMs = sbmPoolLastT ? (t - sbmPoolLastT) : 16.67;
+    sbmPoolLastT = t;
+    var dtFactor = Math.min(3, dtMs / 16.67);
+    sbmPoolStep(dtFactor);
+    sbmPoolDraw(t / 1000);
+    sbmPoolRAF = requestAnimationFrame(sbmPoolLoop);
+  }
+
+  function sbmUpdatePoolToys(shouldShow) {
+    if (!shouldShow) {
+      if (sbmPoolRAF) { cancelAnimationFrame(sbmPoolRAF); sbmPoolRAF = null; }
+      if (sbmPoolCanvas) { sbmPoolCanvas.remove(); sbmPoolCanvas = null; sbmPoolCtx = null; }
+      window.removeEventListener('mousemove', sbmPoolOnMouseMove);
+      window.removeEventListener('touchmove', sbmPoolOnTouchMove);
+      window.removeEventListener('resize', sbmPoolResize);
+      sbmPoolToys = null;
+      sbmPoolLastT = 0;
+      return;
+    }
+    if (sbmPoolCanvas) return; // 이미 떠 있음
+    sbmPoolReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmPoolCanvas = document.createElement('canvas');
+    sbmPoolCanvas.id = 'sbm-pool-toys-layer';
+    sbmPoolCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmPoolCanvas);
+    sbmPoolCtx = sbmPoolCanvas.getContext('2d');
+    sbmPoolResize(); // 크기 지정 + 장난감 시딩 + 첫 프레임 렌더
+
+    if (sbmPoolReducedMotion) return; // 정적 배치만 보여주고 마우스 반응·애니메이션은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmPoolOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmPoolOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmPoolResize);
+    sbmPoolLastT = 0;
+    sbmPoolRAF = requestAnimationFrame(sbmPoolLoop);
   }
 
   function applyEquippedTheme() {

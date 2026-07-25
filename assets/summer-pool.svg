@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="deckGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f0e3c8"/>
+      <stop offset="100%" stop-color="#e2d0a8"/>
+    </linearGradient>
+    <pattern id="tilePattern" width="34" height="34" patternUnits="userSpaceOnUse" patternTransform="rotate(0)">
+      <rect width="34" height="34" fill="#bfe6ee"/>
+      <rect width="16" height="16" fill="#ffffff"/>
+      <rect x="17" y="17" width="16" height="16" fill="#ffffff"/>
+    </pattern>
+    <radialGradient id="waterGrad" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#5fd4e0"/>
+      <stop offset="45%" stop-color="#2fb8cc"/>
+      <stop offset="80%" stop-color="#1f95ac"/>
+      <stop offset="100%" stop-color="#137389"/>
+    </radialGradient>
+    <radialGradient id="deepPatch" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0d5c70" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#0d5c70" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softBlur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <filter id="deckTexBlur" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1600" height="900" fill="url(#deckGrad)"/>
+  <g filter="url(#deckTexBlur)" opacity="0.35">
+    <ellipse cx="180" cy="140" rx="220" ry="90" fill="#d8c290"/>
+    <ellipse cx="1420" cy="200" rx="260" ry="100" fill="#d8c290"/>
+    <ellipse cx="120" cy="760" rx="240" ry="110" fill="#d8c290"/>
+    <ellipse cx="1480" cy="740" rx="260" ry="120" fill="#d8c290"/>
+  </g>
+
+  <!-- 수영장 테두리(타일) -->
+  <rect x="150" y="70" width="1300" height="760" rx="140" fill="url(#tilePattern)"/>
+  <!-- 물 -->
+  <rect x="196" y="112" width="1208" height="676" rx="112" fill="url(#waterGrad)"/>
+  <!-- 딥엔드(깊은 쪽) 음영 -->
+  <ellipse cx="1050" cy="480" rx="380" ry="260" fill="url(#deepPatch)"/>
+
+  <!-- 물결 반짝임(캐스틱) — 은은하게 위치·투명도 애니메이션 -->
+  <g filter="url(#softBlur)">
+    <ellipse cx="420" cy="260" rx="90" ry="34" fill="#ffffff" opacity="0.28">
+      <animate attributeName="cx" values="420;470;420" dur="7s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.28;0.14;0.28" dur="7s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="760" cy="400" rx="130" ry="46" fill="#ffffff" opacity="0.22">
+      <animate attributeName="cx" values="760;700;760" dur="9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.22;0.34;0.22" dur="9s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="520" cy="600" rx="110" ry="40" fill="#ffffff" opacity="0.2">
+      <animate attributeName="cy" values="600;640;600" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.2;0.32;0.2" dur="8s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="980" cy="230" rx="100" ry="36" fill="#ffffff" opacity="0.24">
+      <animate attributeName="cx" values="980;1030;980" dur="6.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.24;0.12;0.24" dur="6.5s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="1160" cy="620" rx="120" ry="42" fill="#ffffff" opacity="0.2">
+      <animate attributeName="cx" values="1160;1110;1160" dur="8.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.2;0.3;0.2" dur="8.5s" repeatCount="indefinite"/>
+    </ellipse>
+  </g>
+
+  <!-- 물 표면 잔물결 라인(가는 곡선) -->
+  <g stroke="#eafcff" stroke-width="2" fill="none" opacity="0.25">
+    <path d="M 260 220 Q 420 200 580 230 T 900 220"/>
+    <path d="M 320 500 Q 480 480 640 510 T 960 500"/>
+    <path d="M 700 700 Q 860 680 1020 710 T 1340 700"/>
+  </g>
+
+  <!-- 사다리(코너 2곳) -->
+  <g stroke="#f2f2f2" stroke-width="10" fill="none" opacity="0.9" stroke-linecap="round">
+    <path d="M 236 128 L 236 168 M 268 128 L 268 168"/>
+    <path d="M 1364 772 L 1364 812 M 1332 772 L 1332 812"/>
+  </g>
+</svg>

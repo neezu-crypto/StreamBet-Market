@@ -460,6 +460,30 @@ html.theme-summer-ocean{
 }
 html.theme-summer-ocean .devbar{ background: #ffffff; }
 html.theme-summer-ocean .ticker{ background: linear-gradient(180deg, #d3f1f5, transparent); }
+/* 풀장 탑뷰 배경(assets/summer-pool.svg, 벡터라 용량이 작아 봄 테마처럼 프리로드
+   대기가 필요 없다) — 뷰포트 고정 레이어(body::before)로 깔아서 body 스크롤
+   높이와 무관하게 항상 화면 기준으로만 cover 계산되게 한다(봄 테마 배경에서
+   겪은 "탭마다 잘리는 비율이 달라지는" 문제 예방). 물놀이 장난감 캔버스보다
+   한 단계 더 뒤(z-index -2)에 그린다. */
+html.theme-summer-ocean body{ background-color: var(--ink); }
+html.theme-summer-ocean body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: url('assets/summer-pool.svg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+/* 물놀이 장난감 캔버스 — 마우스가 닿으면 튕겨나가고 화면 가장자리에서도
+   벽처럼 튕기는 물리 시뮬레이션(js/skins.js). z-index는 마켓 카드(.ticket 등,
+   z-index:auto)보다는 뒤, 풀장 배경보다는 앞. pointer-events:none이라 마우스
+   이벤트는 그대로 아래 UI로 통과한다. */
+#sbm-pool-toys-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 html.theme-autumn-maple{
   color-scheme: light;
