@@ -434,6 +434,19 @@ html.theme-spring-bloom{
 }
 html.theme-spring-bloom .devbar{ background: #ffffff; }
 html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, transparent); }
+/* 벚꽃길 배경 — 원근감 있는 도로 + 양옆 벚꽃나무 + 소실점 쪽 빛 번짐을 정적 SVG
+   한 장(assets/spring-scene.svg)으로 미리 그려서 background-image로 깐다. 실시간
+   렌더링 비용 없이 정적 이미지 한 장만 그리면 되므로 가볍다. body 배경이라 낙화
+   레이어(z-index:-1)·마켓 카드보다 가장 뒤에 깔린다. background-attachment는
+   기본값(scroll)을 유지해 일부 모바일 브라우저에서 fixed 배경이 스크롤 시
+   버벅이는 문제를 피한다. */
+html.theme-spring-bloom body{
+  background-color: var(--ink);
+  background-image: url('assets/spring-scene.svg');
+  background-size: cover;
+  background-position: bottom center;
+  background-repeat: no-repeat;
+}
 
 /* 벚꽃 테마 — 낙화 배경. transform·opacity만 애니메이션해 레이아웃/페인트 재계산 없이
    GPU 합성만으로 처리되고, animation-timing-function이 시간 기준이라 모니터 주사율과
