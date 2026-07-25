@@ -45,95 +45,9 @@ function sbmRenderSkinPurchaseLog() {
   // html 태그의 theme-* 클래스만 골라서 교체한다 — 다른 용도의 클래스는 건드리지 않는다.
   function setThemeClass(skinId) {
     var html = document.documentElement;
-    var classes = (html.className || '').split(/\s+/).filter(function (c) {
-      return c && c.indexOf('theme-') !== 0 && c !== 'spring-bg-ready';
-    });
+    var classes = (html.className || '').split(/\s+/).filter(function (c) { return c && c.indexOf('theme-') !== 0; });
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
-    sbmUpdatePetals(skinId === 'spring-bloom');
-    if (skinId === 'spring-bloom') sbmEnsureSpringBackground();
-  }
-
-  // 봄 테마 배경 원본 사진(9MB대)을 Image()로 미리 로드해두고, 로드가 끝난
-  // 순간에만 CSS 쪽 spring-bg-ready 클래스를 붙여 배경을 노출한다(styles.css의
-  // html.theme-spring-bloom.spring-bg-ready body::before 규칙 참고). 로딩
-  // 중에는 하단에 작은 로딩 인디케이터를 띄운다. 한 번 로드되면 브라우저
-  // 캐시에 남으므로, 이후 재적용 시엔 즉시(로딩 인디케이터 없이) 노출된다.
-  var SBM_SPRING_BG_SRC = 'assets/pexels-japanese-cherry-blossom-1839982.jpg';
-  var sbmSpringBgLoaded = false;
-  var sbmSpringBgLoadingEl = null;
-  function sbmEnsureSpringBackground() {
-    var html = document.documentElement;
-    if (sbmSpringBgLoaded) {
-      html.classList.add('spring-bg-ready');
-      return;
-    }
-    if (sbmSpringBgLoadingEl) return; // 이미 로딩 중
-    sbmSpringBgLoadingEl = document.createElement('div');
-    sbmSpringBgLoadingEl.id = 'sbm-spring-bg-loading';
-    sbmSpringBgLoadingEl.textContent = '배경 이미지를 불러오는 중...';
-    document.body.appendChild(sbmSpringBgLoadingEl);
-
-    var img = new Image();
-    img.onload = function () {
-      sbmSpringBgLoaded = true;
-      html.classList.add('spring-bg-ready');
-      if (sbmSpringBgLoadingEl) { sbmSpringBgLoadingEl.remove(); sbmSpringBgLoadingEl = null; }
-    };
-    img.onerror = function () {
-      if (sbmSpringBgLoadingEl) { sbmSpringBgLoadingEl.remove(); sbmSpringBgLoadingEl = null; }
-    };
-    img.src = SBM_SPRING_BG_SRC;
-  }
-
-  // 벚꽃 테마 전용 낙화 배경 — DOM 노드는 딱 한 번만 만들고(개수 고정) 실제 낙하는
-  // CSS @keyframes(transform/opacity만 사용)에 맡긴다. CSS 애니메이션은 프레임 수가
-  // 아니라 경과 시간 기준으로 보간되므로 모니터 주사율과 무관하게 속도가 일정하고,
-  // transform·opacity는 GPU 합성만으로 처리돼(레이아웃 재계산 없음) 저사양에서도
-  // 프레임드랍이 적다. 바닥에 "쌓이는" 대신 화면 밖(115vh)까지 내려가며 서서히
-  // 사라지도록 opacity를 함께 애니메이션한다.
-  var sbmPetalLayer = null;
-  function sbmUpdatePetals(shouldShow) {
-    if (!shouldShow) {
-      if (sbmPetalLayer) { sbmPetalLayer.remove(); sbmPetalLayer = null; }
-      return;
-    }
-    if (sbmPetalLayer) return; // 이미 떠 있음
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    var layer = document.createElement('div');
-    layer.id = 'sbm-petal-layer';
-    layer.setAttribute('aria-hidden', 'true');
-    var count = window.innerWidth < 640 ? 10 : 18; // 좁은 화면(모바일)에선 더 가볍게
-    for (var i = 0; i < count; i++) {
-      // 바람(좌우로 일정하게 바뀌는 흔들림)과 낙하(속도 · 회전 · 수명)를 별개
-      // 요소의 별개 애니메이션으로 분리한다 — 같은 요소의 transform 두 개는 서로
-      // 합쳐지지 않고 덮어써지지만, 부모·자식 요소의 transform은 자연스럽게
-      // 합성되므로 이렇게 감싸는 방식으로만 "함께 부는 바람" + "제각각인 낙하"를
-      // 동시에 표현할 수 있다. 모든 꽃잎이 wind 애니메이션 지속시간 · 딜레이를
-      // 공유해 같은 바람을 맞는 것처럼 동시에 좌우로 흔들린다.
-      var wind = document.createElement('span');
-      wind.className = 'sbm-petal-wind';
-      wind.style.left = (Math.random() * 100).toFixed(1) + '%';
-
-      var petal = document.createElement('span');
-      petal.className = 'sbm-petal';
-      var duration = (9 + Math.random() * 6).toFixed(2); // 9~15초, 낙하 속도는 이 값으로만 결정됨
-      var delay = (Math.random() * duration).toFixed(2);
-      var size = (7 + Math.random() * 6).toFixed(0) + 'px'; // 꽃잎 한 장 크기(이모지 대신 CSS 도형)
-      petal.style.width = size;
-      petal.style.height = size;
-      petal.style.animationDuration = duration + 's';
-      // 음수 delay로 시작해 로드 시점부터 이미 화면 곳곳에 흩날리고 있는 것처럼 보이게 한다.
-      petal.style.animationDelay = '-' + delay + 's';
-      petal.style.setProperty('--drift', (Math.random() * 30 - 15).toFixed(0) + 'px'); // 개별 미세 흔들림(큰 좌우 이동은 바람이 담당)
-      petal.style.setProperty('--spin', (Math.random() < 0.5 ? '-' : '') + '360deg');
-
-      wind.appendChild(petal);
-      layer.appendChild(wind);
-    }
-    document.body.appendChild(layer);
-    sbmPetalLayer = layer;
   }
 
   function applyEquippedTheme() {
