@@ -437,20 +437,25 @@ html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, tr
 
 /* 벚꽃 테마 — 낙화 배경. transform·opacity만 애니메이션해 레이아웃/페인트 재계산 없이
    GPU 합성만으로 처리되고, animation-timing-function이 시간 기준이라 모니터 주사율과
-   무관하게 낙하 속도가 일정하다. 화면 밖(115vh)까지 내려가며 사라져 바닥에 쌓이지 않는다. */
+   무관하게 낙하 속도가 일정하다. 화면 밖(115vh)까지 내려가며 사라져 바닥에 쌓이지 않는다.
+   z-index를 음수로 둬서, position:relative인 마켓 카드(.ticket 등, z-index:auto)보다는
+   뒤에 그려지고 body 배경보다는 앞에 그려지도록 한다 — "배경과 카드 사이" 레이어. */
 #sbm-petal-layer{
   position: fixed; inset: 0; overflow: hidden; pointer-events: none;
-  z-index: 5; contain: strict;
+  z-index: -1; contain: strict;
 }
 .sbm-petal{
-  position: absolute; top: -10%; will-change: transform, opacity;
+  position: absolute; top: -10%;
+  background: linear-gradient(145deg, #ffd9e8 0%, #f4a6c6 55%, #e386ab 100%);
+  border-radius: 0% 60% 0% 60%; /* 꽃잎 한 장 실루엣(비대칭 라운딩) — 이모지 대신 순수 도형 */
+  will-change: transform, opacity;
   animation-name: sbm-petal-fall; animation-timing-function: linear; animation-iteration-count: infinite;
 }
 @keyframes sbm-petal-fall{
   0%{ transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
   8%{ opacity: .9; }
   85%{ opacity: .9; }
-  100%{ transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(360deg); opacity: 0; }
+  100%{ transform: translate3d(var(--drift, 0px), 115vh, 0) rotate(var(--spin, 360deg)); opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce){
   .sbm-petal{ animation: none; display: none; }

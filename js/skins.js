@@ -75,13 +75,15 @@ function sbmRenderSkinPurchaseLog() {
       petal.className = 'sbm-petal';
       var duration = (9 + Math.random() * 6).toFixed(2); // 9~15초, 낙하 속도는 이 값으로만 결정됨
       var delay = (Math.random() * duration).toFixed(2);
+      var size = (7 + Math.random() * 6).toFixed(0) + 'px'; // 꽃잎 한 장 크기(이모지 대신 CSS 도형)
       petal.style.left = (Math.random() * 100).toFixed(1) + '%';
-      petal.style.fontSize = (10 + Math.random() * 8).toFixed(0) + 'px';
+      petal.style.width = size;
+      petal.style.height = size;
       petal.style.animationDuration = duration + 's';
       // 음수 delay로 시작해 로드 시점부터 이미 화면 곳곳에 흩날리고 있는 것처럼 보이게 한다.
       petal.style.animationDelay = '-' + delay + 's';
       petal.style.setProperty('--drift', (Math.random() * 70 - 35).toFixed(0) + 'px');
-      petal.textContent = '🌸';
+      petal.style.setProperty('--spin', (Math.random() < 0.5 ? '-' : '') + '360deg');
       layer.appendChild(petal);
     }
     document.body.appendChild(layer);
