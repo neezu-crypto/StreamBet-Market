@@ -48,6 +48,44 @@ function sbmRenderSkinPurchaseLog() {
     var classes = (html.className || '').split(/\s+/).filter(function (c) { return c && c.indexOf('theme-') !== 0; });
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
+    sbmUpdatePetals(skinId === 'spring-bloom');
+  }
+
+  // 벚꽃 테마 전용 낙화 배경 — DOM 노드는 딱 한 번만 만들고(개수 고정) 실제 낙하는
+  // CSS @keyframes(transform/opacity만 사용)에 맡긴다. CSS 애니메이션은 프레임 수가
+  // 아니라 경과 시간 기준으로 보간되므로 모니터 주사율과 무관하게 속도가 일정하고,
+  // transform·opacity는 GPU 합성만으로 처리돼(레이아웃 재계산 없음) 저사양에서도
+  // 프레임드랍이 적다. 바닥에 "쌓이는" 대신 화면 밖(115vh)까지 내려가며 서서히
+  // 사라지도록 opacity를 함께 애니메이션한다.
+  var sbmPetalLayer = null;
+  function sbmUpdatePetals(shouldShow) {
+    if (!shouldShow) {
+      if (sbmPetalLayer) { sbmPetalLayer.remove(); sbmPetalLayer = null; }
+      return;
+    }
+    if (sbmPetalLayer) return; // 이미 떠 있음
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    var layer = document.createElement('div');
+    layer.id = 'sbm-petal-layer';
+    layer.setAttribute('aria-hidden', 'true');
+    var count = window.innerWidth < 640 ? 10 : 18; // 좁은 화면(모바일)에선 더 가볍게
+    for (var i = 0; i < count; i++) {
+      var petal = document.createElement('span');
+      petal.className = 'sbm-petal';
+      var duration = (9 + Math.random() * 6).toFixed(2); // 9~15초, 낙하 속도는 이 값으로만 결정됨
+      var delay = (Math.random() * duration).toFixed(2);
+      petal.style.left = (Math.random() * 100).toFixed(1) + '%';
+      petal.style.fontSize = (10 + Math.random() * 8).toFixed(0) + 'px';
+      petal.style.animationDuration = duration + 's';
+      // 음수 delay로 시작해 로드 시점부터 이미 화면 곳곳에 흩날리고 있는 것처럼 보이게 한다.
+      petal.style.animationDelay = '-' + delay + 's';
+      petal.style.setProperty('--drift', (Math.random() * 70 - 35).toFixed(0) + 'px');
+      petal.textContent = '🌸';
+      layer.appendChild(petal);
+    }
+    document.body.appendChild(layer);
+    sbmPetalLayer = layer;
   }
 
   function applyEquippedTheme() {
