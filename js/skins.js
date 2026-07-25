@@ -122,7 +122,11 @@ function sbmRenderSkinPurchaseLog() {
     '  vec2 n = vec2(.1);' +
     '  vec2 N = vec2(.1);' +
     '  mat2 m = rotate2D(.5);' +
-    '  for (int j = 0; j < 10; j++) {' +
+    // 프래그먼트 셰이더는 화면의 모든 픽셀마다 이 루프를 도는데, 반복마다 sin/cos를
+    // (vec2라 실질 4회) 호출해 프레임 드랍의 주범이었다. 반복 횟수를 10 → 5로 줄여
+    // 이 루프의 삼각함수 연산량을 절반으로 낮췄다(scale이 반복마다 1.2배씩 커지는
+    // 누적 방식이라, 절반만 돌아도 저주파~중간 주파수 디테일은 거의 그대로 유지된다).
+    '  for (int j = 0; j < 5; j++) {' +
     '    uv *= m; n *= m;' +
     '    vec2 q = uv * scale + float(j) + n + (.5 + .5 * float(j)) * (mod(float(j), 2.) - 1.) * t;' +
     '    n += sin(q);' +
