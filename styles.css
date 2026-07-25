@@ -434,16 +434,24 @@ html.theme-spring-bloom{
 }
 html.theme-spring-bloom .devbar{ background: #ffffff; }
 html.theme-spring-bloom .ticker{ background: linear-gradient(180deg, #fbe4ec, transparent); }
-/* 벚꽃길 배경 — 실제 벚꽃길 사진(CC0 상업 이용 가능 스톡, assets/spring-scene.jpg)을
-   background-image로 깐다. body 배경이라 낙화 레이어(z-index:-1)·마켓 카드보다
-   가장 뒤에 깔린다. background-attachment는 기본값(scroll)을 유지해 일부 모바일
-   브라우저에서 fixed 배경이 스크롤 시 버벅이는 문제를 피한다. */
-html.theme-spring-bloom body{
-  background-color: var(--ink);
+/* 벚꽃길 배경 — 실제 벚꽃길 사진(CC0 상업 이용 가능 스톡, assets/spring-scene.jpg).
+   body에 직접 background로 걸면 background-size:cover의 기준 박스가 body의
+   스크롤 높이(탭마다 콘텐츠 양이 달라 제각각)가 돼서 탭을 옮길 때마다 사진이
+   다른 비율로 잘려 보인다. 그래서 뷰포트 크기에 고정된 별도 레이어(::before,
+   position:fixed + inset:0)로 분리해 항상 뷰포트 기준으로만 cover 계산되게
+   한다. background-attachment:fixed가 아니라 position:fixed라서 일부 모바일
+   브라우저의 fixed-attachment 스크롤 버벅임 문제도 발생하지 않는다. */
+html.theme-spring-bloom body{ background-color: var(--ink); }
+html.theme-spring-bloom body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
   background-image: url('assets/spring-scene.jpg');
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 /* 벚꽃 테마 — 낙화 배경. transform·opacity만 애니메이션해 레이아웃/페인트 재계산 없이
