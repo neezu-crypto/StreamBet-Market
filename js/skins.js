@@ -7,7 +7,7 @@ var SBM_SKIN_CATALOG = {
   'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 150000 },
   'spring-bloom': { name: '벚꽃 테마', category: 'theme', price: 200000 },
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
-  'autumn-maple': { name: '단풍 테마', category: 'theme', price: 150000 },
+  'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
   'winter-snow': { name: '스노우 테마', category: 'theme', price: 150000 },
 };
 
