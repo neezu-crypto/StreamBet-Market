@@ -473,7 +473,14 @@ html.theme-summer-ocean .brand-name,
 html.theme-summer-ocean .brand-name em,
 html.theme-summer-ocean .ticker-track span,
 html.theme-summer-ocean .verified-name,
-html.theme-summer-ocean .verified-cta .verified-name{
+html.theme-summer-ocean .verified-cta .verified-name,
+html.theme-summer-ocean .verified-banner-head,
+html.theme-summer-ocean .cta-plus,
+html.theme-summer-ocean .section-label,
+html.theme-summer-ocean .skin-panel-sub,
+html.theme-summer-ocean .empty-state-desc,
+html.theme-summer-ocean .app-footer a,
+html.theme-summer-ocean .app-footer-sep{
   color: #ffffff;
 }
 /* 풀장 탑뷰 배경(assets/summer-pool.svg, 벡터라 용량이 작아 봄 테마처럼 프리로드
