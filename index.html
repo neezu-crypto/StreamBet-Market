@@ -1044,6 +1044,13 @@
 <script defer src="js/nickname.js"></script>
 <script defer src="js/ranking.js"></script>
 <script defer src="js/skins.js"></script>
+<!-- 겨울 테마 3D 배경(js/winter-scene.js)이 쓰는 three.js — 이 프로젝트에서
+     유일하게 3D 라이브러리를 쓰는 곳이라 importmap으로 그 스크립트에만 한정해
+     불러온다. -->
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js" } }
+</script>
+<script type="module" src="js/winter-scene.js"></script>
 <script defer src="js/streamer-verification.js"></script>
 <script defer src="js/market-report.js"></script>
 <script defer src="js/boot.js"></script>

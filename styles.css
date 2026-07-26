@@ -566,11 +566,15 @@ html.theme-winter-snow{
 }
 html.theme-winter-snow .devbar{ background: #ffffff; }
 html.theme-winter-snow .ticker{ background: linear-gradient(180deg, #dcedf7, transparent); }
-/* 실시간 WebGL 눈밭 셰이더 캔버스 — 마우스가 지나간 자리가 높이맵에 영구히
-   찍혀서, 프래그먼트 셰이더가 그 경사로 음영을 계산해 실제로 눌려서 움푹
-   들어간 것처럼 보이게 한다(js/skins.js). WebGL 미지원 환경에서는 이 캔버스가
-   아예 생성되지 않고 아래 --ink 단색 배경(body 기본 규칙)이 그대로 보인다. */
+/* 눈밭 발자국 셰이더(#sbm-snow-layer) — 3D 회전 숲 배경으로 교체되면서 지금은
+   js/skins.js에서 항상 꺼둔다(코드는 남겨둠, 규칙만 유지). */
 #sbm-snow-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+/* Three.js 회전 겨울 숲 배경(js/winter-scene.js) — 마우스 인터랙션 없이 카메라가
+   씬 주위를 천천히 자동 회전한다. WebGL 미지원 환경에서는 캔버스가 생성되지
+   않고 --ink 단색 배경(body 기본 규칙)이 그대로 보인다. */
+#sbm-winter-scene-layer{
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
 }
 

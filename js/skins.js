@@ -53,7 +53,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdateWater(skinId === 'summer-ocean');
     sbmUpdateBigTube(skinId === 'summer-ocean');
     sbmUpdateLeaves(skinId === 'autumn-maple');
-    sbmUpdateSnow(skinId === 'winter-snow');
+    sbmUpdateSnow(false); // 3D 회전 숲 배경(js/winter-scene.js)으로 교체 — 발자국 셰이더는 비활성화(코드는 남겨둠)
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
