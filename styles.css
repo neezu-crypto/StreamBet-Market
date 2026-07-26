@@ -539,6 +539,28 @@ html.theme-autumn-maple{
 }
 html.theme-autumn-maple .devbar{ background: #fffaf3; }
 html.theme-autumn-maple .ticker{ background: linear-gradient(180deg, #f3ddc0, transparent); }
+/* 단풍나무 가로수길 일러스트 배경(assets/autumn-scene.svg) — 뷰포트 고정 레이어
+   (body::before)로 깔아서 body 스크롤 높이와 무관하게 항상 화면 기준으로만
+   cover 계산되게 한다(봄 테마에서 겪었던 "탭마다 잘리는 비율이 달라지는"
+   문제 예방). 낙엽 캔버스보다 한 단계 더 뒤(z-index -2)에 그린다. */
+html.theme-autumn-maple body{ background-color: var(--ink); }
+html.theme-autumn-maple body::before{
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: url('assets/autumn-scene.svg');
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+/* 낙엽 캔버스 — 위에서 계속 떨어지며 바닥에 쌓이고, 마우스가 지나가면
+   강풍기처럼 반대 방향으로 흩날린다(세게 밀리면 화면 밖으로 나가 사라짐).
+   z-index는 마켓 카드(.ticket 등, z-index:auto)보다는 뒤, 배경보다는 앞. */
+#sbm-leaf-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 html.theme-winter-snow{
   color-scheme: light;

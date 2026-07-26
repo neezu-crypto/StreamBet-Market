@@ -52,6 +52,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdatePoolToys(false); // 프레임 드랍 방지 — 다중 장난감 물리는 계속 비활성화
     sbmUpdateWater(skinId === 'summer-ocean');
     sbmUpdateBigTube(skinId === 'summer-ocean');
+    sbmUpdateLeaves(skinId === 'autumn-maple');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -534,6 +535,213 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('resize', sbmTubeResize);
     sbmTubeLastT = 0;
     sbmTubeRAF = requestAnimationFrame(sbmTubeLoop);
+  }
+
+  // 가을 테마 — 위에서 계속 낙엽이 떨어져 바닥에 쌓이고(화면을 여러 구간으로
+  // 나눠 구간별 더미 높이를 추적), 마우스가 지나가면 강풍기처럼 반대 방향으로
+  // 흩날린다. 세게 밀려 화면 밖으로 나가면 그 낙엽은 사라지고, 개수 상한 이하로
+  // 유지되는 동안 위에서 계속 보충 생성된다. 물리는 경과 시간(dtFactor, 60fps
+  // 기준 정규화)으로 적분해 모니터 주사율과 무관하게 같은 속도로 움직인다.
+  var sbmLeafCanvas = null;
+  var sbmLeafCtx = null;
+  var sbmLeaves = null;
+  var sbmLeafPileHeights = null;
+  var sbmLeafRAF = null;
+  var sbmLeafLastT = 0;
+  var sbmLeafWindPhase = 0;
+  var sbmLeafReducedMotion = false;
+  var sbmLeafMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
+  var SBM_LEAF_CAP = 160;
+  var SBM_LEAF_BUCKETS = 48;
+  var SBM_LEAF_PILE_MAX = 70;
+  var SBM_LEAF_BLOW_RADIUS = 140;
+  var SBM_LEAF_COLORS = ['#c0522a', '#d97742', '#e0a339', '#a8471b', '#8f6b18'];
+
+  function sbmLeafBucketWidth() { return window.innerWidth / SBM_LEAF_BUCKETS; }
+
+  function sbmLeafSpawn() {
+    var size = 6 + Math.random() * 5;
+    return {
+      x: Math.random() * window.innerWidth,
+      y: -20,
+      vx: (Math.random() - 0.5) * 0.6,
+      vy: 1.2 + Math.random() * 0.8,
+      rot: Math.random() * Math.PI * 2,
+      vr: (Math.random() - 0.5) * 0.05,
+      size: size,
+      color: SBM_LEAF_COLORS[(Math.random() * SBM_LEAF_COLORS.length) | 0],
+      state: 'falling',
+      bucket: -1
+    };
+  }
+
+  function sbmLeafReset() {
+    sbmLeafPileHeights = new Array(SBM_LEAF_BUCKETS).fill(0);
+    sbmLeaves = [];
+    // 처음부터 화면이 텅 비어있지 않도록, 이미 어느 정도 떨어지고 있는 상태로 시작한다
+    var initialCount = window.innerWidth < 640 ? 40 : 80;
+    for (var i = 0; i < initialCount; i++) {
+      var leaf = sbmLeafSpawn();
+      leaf.y = Math.random() * window.innerHeight;
+      sbmLeaves.push(leaf);
+    }
+  }
+
+  function sbmLeafResize() {
+    if (!sbmLeafCanvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sbmLeafCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmLeafCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmLeafCanvas.style.width = window.innerWidth + 'px';
+    sbmLeafCanvas.style.height = window.innerHeight + 'px';
+    sbmLeafCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmLeafReset();
+    sbmLeafDraw();
+  }
+
+  function sbmLeafTrackPointer(x, y) {
+    var now = performance.now();
+    var dt = Math.max(8, now - sbmLeafMouse.t);
+    sbmLeafMouse.vx = (x - sbmLeafMouse.x) / dt * 16.67;
+    sbmLeafMouse.vy = (y - sbmLeafMouse.y) / dt * 16.67;
+    sbmLeafMouse.x = x;
+    sbmLeafMouse.y = y;
+    sbmLeafMouse.t = now;
+  }
+  function sbmLeafOnMouseMove(e) { sbmLeafTrackPointer(e.clientX, e.clientY); }
+  function sbmLeafOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmLeafTrackPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmLeafStep(dtFactor) {
+    if (!sbmLeaves) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    var bw = sbmLeafBucketWidth();
+    sbmLeafWindPhase += 0.006 * dtFactor;
+    var wind = Math.sin(sbmLeafWindPhase) * 0.35; // 좌우로 서서히 바뀌는 바람
+
+    var mx = sbmLeafMouse.x, my = sbmLeafMouse.y;
+    var mouseSpeed = Math.sqrt(sbmLeafMouse.vx * sbmLeafMouse.vx + sbmLeafMouse.vy * sbmLeafMouse.vy);
+    var blowing = mouseSpeed > 1.2;
+
+    var next = [];
+    for (var i = 0; i < sbmLeaves.length; i++) {
+      var leaf = sbmLeaves[i];
+
+      if (blowing) {
+        var dx = leaf.x - mx, dy = leaf.y - my;
+        var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+        if (dist < SBM_LEAF_BLOW_RADIUS) {
+          if (leaf.state === 'settled' && leaf.bucket >= 0) {
+            sbmLeafPileHeights[leaf.bucket] = Math.max(0, sbmLeafPileHeights[leaf.bucket] - leaf.size * 0.5);
+          }
+          leaf.state = 'falling';
+          var nx = dx / dist, ny = dy / dist;
+          var force = (1 - dist / SBM_LEAF_BLOW_RADIUS) * Math.min(mouseSpeed, 40) * 0.4;
+          leaf.vx += nx * force;
+          leaf.vy += ny * force;
+          leaf.vr += (Math.random() - 0.5) * 0.3;
+        }
+      }
+
+      if (leaf.state === 'falling') {
+        leaf.vx += (wind - leaf.vx) * 0.02 * dtFactor;
+        leaf.vx += (Math.random() - 0.5) * 0.04;
+        leaf.vy += (1.6 - leaf.vy) * 0.01 * dtFactor; // 목표 낙하 속도로 서서히 수렴
+        leaf.vx *= 0.995;
+        leaf.vy *= 0.995;
+        leaf.x += leaf.vx * dtFactor;
+        leaf.y += leaf.vy * dtFactor;
+        leaf.rot += leaf.vr * dtFactor;
+
+        var bucket = Math.min(SBM_LEAF_BUCKETS - 1, Math.max(0, Math.floor(leaf.x / bw)));
+        var groundY = h - sbmLeafPileHeights[bucket];
+        if (leaf.y >= groundY && leaf.vy >= 0) {
+          leaf.state = 'settled';
+          leaf.y = groundY;
+          leaf.vx = 0; leaf.vy = 0; leaf.vr *= 0.3;
+          leaf.bucket = bucket;
+          sbmLeafPileHeights[bucket] = Math.min(SBM_LEAF_PILE_MAX, sbmLeafPileHeights[bucket] + leaf.size * 0.5);
+        }
+      }
+
+      // 화면 밖(좌우 또는 위)으로 완전히 밀려나면 사라진다
+      if (leaf.x < -40 || leaf.x > w + 40 || leaf.y < -60) {
+        if (leaf.state === 'settled' && leaf.bucket >= 0) {
+          sbmLeafPileHeights[leaf.bucket] = Math.max(0, sbmLeafPileHeights[leaf.bucket] - leaf.size * 0.5);
+        }
+        continue; // 배열에서 제외(= 삭제)
+      }
+      next.push(leaf);
+    }
+
+    // 위에서 계속 보충 생성(상한 이하일 때만, 확률적으로 조금씩)
+    if (next.length < SBM_LEAF_CAP && Math.random() < 0.35 * dtFactor) {
+      next.push(sbmLeafSpawn());
+    }
+
+    sbmLeaves = next;
+    sbmLeafMouse.vx *= 0.85;
+    sbmLeafMouse.vy *= 0.85;
+  }
+
+  function sbmLeafDraw() {
+    if (!sbmLeafCtx || !sbmLeaves) return;
+    var ctx = sbmLeafCtx;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = 0; i < sbmLeaves.length; i++) {
+      var leaf = sbmLeaves[i];
+      ctx.save();
+      ctx.translate(leaf.x, leaf.y);
+      ctx.rotate(leaf.rot);
+      ctx.fillStyle = leaf.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, leaf.size, leaf.size * 0.62, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  function sbmLeafLoop(t) {
+    if (!sbmLeafCanvas) return;
+    var dtMs = sbmLeafLastT ? (t - sbmLeafLastT) : 16.67;
+    sbmLeafLastT = t;
+    var dtFactor = Math.min(3, dtMs / 16.67);
+    sbmLeafStep(dtFactor);
+    sbmLeafDraw();
+    sbmLeafRAF = requestAnimationFrame(sbmLeafLoop);
+  }
+
+  function sbmUpdateLeaves(shouldShow) {
+    if (!shouldShow) {
+      if (sbmLeafRAF) { cancelAnimationFrame(sbmLeafRAF); sbmLeafRAF = null; }
+      if (sbmLeafCanvas) { sbmLeafCanvas.remove(); sbmLeafCanvas = null; sbmLeafCtx = null; }
+      window.removeEventListener('mousemove', sbmLeafOnMouseMove);
+      window.removeEventListener('touchmove', sbmLeafOnTouchMove);
+      window.removeEventListener('resize', sbmLeafResize);
+      sbmLeaves = null;
+      sbmLeafPileHeights = null;
+      sbmLeafLastT = 0;
+      return;
+    }
+    if (sbmLeafCanvas) return; // 이미 떠 있음
+    sbmLeafReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmLeafCanvas = document.createElement('canvas');
+    sbmLeafCanvas.id = 'sbm-leaf-layer';
+    sbmLeafCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmLeafCanvas);
+    sbmLeafCtx = sbmLeafCanvas.getContext('2d');
+    sbmLeafResize(); // 크기 지정 + 초기 낙엽 시딩 + 첫 프레임 렌더
+
+    if (sbmLeafReducedMotion) return; // 정적 배치만 보여주고 마우스 반응·애니메이션은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmLeafOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmLeafOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmLeafResize);
+    sbmLeafLastT = 0;
+    sbmLeafRAF = requestAnimationFrame(sbmLeafLoop);
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
