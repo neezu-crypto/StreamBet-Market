@@ -460,6 +460,22 @@ html.theme-summer-ocean{
 }
 html.theme-summer-ocean .devbar{ background: #ffffff; }
 html.theme-summer-ocean .ticker{ background: linear-gradient(180deg, #d3f1f5, transparent); }
+/* 상단 로고·내비게이션·지갑·인증 스트리머 배너 줄은 자체 불투명 패널이 없어서
+   물 배경이 그대로 비친다 — 원래 쓰던 하늘색 계열(--muted/--muted-2/--text/
+   --gold-text) 글자가 그 위에서 잘 안 보여서 흰색으로 바꾼다(카드 위 같은
+   변수를 쓰는 다른 텍스트는 건드리지 않도록 이 영역 클래스에만 한정한다). */
+html.theme-summer-ocean .topnav a,
+html.theme-summer-ocean .topnav a.active,
+html.theme-summer-ocean .wallet-label,
+html.theme-summer-ocean .wallet-amount,
+html.theme-summer-ocean .wallet-amount small,
+html.theme-summer-ocean .brand-name,
+html.theme-summer-ocean .brand-name em,
+html.theme-summer-ocean .ticker-track span,
+html.theme-summer-ocean .verified-name,
+html.theme-summer-ocean .verified-cta .verified-name{
+  color: #ffffff;
+}
 /* 풀장 탑뷰 배경(assets/summer-pool.svg, 벡터라 용량이 작아 봄 테마처럼 프리로드
    대기가 필요 없다) — 뷰포트 고정 레이어(body::before)로 깔아서 body 스크롤
    높이와 무관하게 항상 화면 기준으로만 cover 계산되게 한다(봄 테마 배경에서
