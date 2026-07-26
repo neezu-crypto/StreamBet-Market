@@ -66,11 +66,20 @@ function sbmRenderSkinPurchaseLog() {
   var sbmWaterGL = null;
   var sbmWaterUniforms = null;
   var sbmWaterRAF = null;
-  var sbmWaterImage = null;
   var sbmWaterImgRatio = 16 / 9;
   var sbmWaterReducedMotion = false;
-  var SBM_WATER_SRC = 'assets/summer-pool.svg';
   var SBM_WATER_PARAMS = { blueish: 0.5, scale: 8, illumination: 0.2, surfaceDistortion: 0.05, waterDistortion: 0.025 };
+
+  // 셰이더가 굴절시키는 "원본 이미지"를 정적 파일이 아니라, 매 프레임 다시 그리는
+  // 작은 2D 캔버스로 바꿨다 — 단색 배경 위에 큰 튜브의 그림자를 그 프레임의 튜브
+  // 위치에 맞춰 얹은 뒤 이걸 텍스처로 올리면, 셰이더의 굴절·왜곡이 그림자에도
+  // 그대로 적용된다("그림자가 물살에 따라 왜곡"되는 효과). 화면 해상도와 무관하게
+  // 작은 고정 폭(SBM_WATER_TEX_W)만 쓰므로 매 프레임 다시 그려도 비용이 적다.
+  var sbmWaterTexCanvas = null;
+  var sbmWaterTexCtx = null;
+  var sbmWaterTex = null;
+  var SBM_WATER_TEX_W = 512;
+  var SBM_WATER_BASE_COLOR = '#1fa3bc';
 
   var SBM_WATER_VERT_SRC =
     'precision mediump float;' +
@@ -234,32 +243,70 @@ function sbmRenderSkinPurchaseLog() {
     sbmWaterCanvas.style.height = window.innerHeight + 'px';
     gl.viewport(0, 0, sbmWaterCanvas.width, sbmWaterCanvas.height);
     gl.uniform1f(sbmWaterUniforms.u_ratio, sbmWaterCanvas.width / sbmWaterCanvas.height);
-    gl.uniform1f(sbmWaterUniforms.u_img_ratio, sbmWaterImgRatio);
-  }
 
-  function sbmWaterLoadTexture() {
-    var img = new Image();
-    img.onload = function () {
-      sbmWaterImgRatio = img.naturalWidth / img.naturalHeight || sbmWaterImgRatio;
-      var gl = sbmWaterGL;
-      if (!gl) return;
-      var tex = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, tex);
+    // 텍스처 캔버스를 항상 화면 비율과 똑같이 맞춘다 — u_ratio === u_img_ratio가
+    // 항상 성립해야 아래 sbmWaterUpdateTexture()의 화면→텍스처 좌표 변환 공식이
+    // (셰이더의 img_uv 계산과 어긋나지 않고) 정확하게 들어맞는다.
+    if (!sbmWaterTexCanvas) {
+      sbmWaterTexCanvas = document.createElement('canvas');
+      sbmWaterTexCtx = sbmWaterTexCanvas.getContext('2d');
+    }
+    var texW = SBM_WATER_TEX_W;
+    var texH = Math.max(1, Math.round(texW * (window.innerHeight / window.innerWidth)));
+    sbmWaterTexCanvas.width = texW;
+    sbmWaterTexCanvas.height = texH;
+    sbmWaterImgRatio = texW / texH;
+    gl.uniform1f(sbmWaterUniforms.u_img_ratio, sbmWaterImgRatio);
+
+    if (!sbmWaterTex) {
+      sbmWaterTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, sbmWaterTex);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
       gl.uniform1i(sbmWaterUniforms.u_image_texture, 0);
-      sbmWaterResize();
-      if (!sbmWaterReducedMotion && !sbmWaterRAF) sbmWaterRAF = requestAnimationFrame(sbmWaterLoop);
-    };
-    img.src = SBM_WATER_SRC;
-    sbmWaterImage = img;
+    }
+  }
+
+  // 매 프레임 텍스처를 다시 그린다 — 단색 배경 위에, 큰 튜브가 떠 있으면 그
+  // 화면 위치를 셰이더의 img_uv 공식(사방 1.4배 확대 + Y축 반전)대로 그대로
+  // 역산해 텍스처 좌표로 옮긴 뒤 그림자를 얹는다. 이 텍스처를 셰이더가 매
+  // 프레임 굴절시키므로, 그림자도 물결을 따라 함께 일렁인다.
+  function sbmWaterUpdateTexture(tSec) {
+    if (!sbmWaterTexCtx || !sbmWaterGL) return;
+    var ctx = sbmWaterTexCtx;
+    var tw = sbmWaterTexCanvas.width, th = sbmWaterTexCanvas.height;
+    ctx.fillStyle = SBM_WATER_BASE_COLOR;
+    ctx.fillRect(0, 0, tw, th);
+
+    if (sbmTube) {
+      var p = sbmTube;
+      var w = window.innerWidth, h = window.innerHeight;
+      var bob = Math.sin(tSec * 1.2 + p.bobPhase) * 3;
+      var imgUvX = 0.5 + 1.4 * (p.x / w - 0.5);
+      var imgUvY = -0.2 + 1.4 * ((p.y + bob) / h);
+      var texX = imgUvX * tw;
+      var texY = imgUvY * th;
+      var texR = (p.r / w) * tw / 1.4;
+
+      var shGrad = ctx.createRadialGradient(texX, texY, texR * 0.15, texX, texY, texR * 1.05);
+      shGrad.addColorStop(0, 'rgba(4,30,38,0.5)');
+      shGrad.addColorStop(1, 'rgba(4,30,38,0)');
+      ctx.fillStyle = shGrad;
+      ctx.beginPath();
+      ctx.ellipse(texX, texY, texR * 1.05, texR * 0.65, 0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    var gl = sbmWaterGL;
+    gl.bindTexture(gl.TEXTURE_2D, sbmWaterTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, sbmWaterTexCanvas);
   }
 
   function sbmWaterLoop(t) {
     if (!sbmWaterCanvas || !sbmWaterGL) return;
+    sbmWaterUpdateTexture(t / 1000);
     sbmWaterGL.uniform1f(sbmWaterUniforms.u_time, t);
     sbmWaterGL.drawArrays(sbmWaterGL.TRIANGLE_STRIP, 0, 4);
     sbmWaterRAF = requestAnimationFrame(sbmWaterLoop);
@@ -271,7 +318,7 @@ function sbmRenderSkinPurchaseLog() {
       if (sbmWaterCanvas) { sbmWaterCanvas.remove(); sbmWaterCanvas = null; }
       sbmWaterGL = null;
       sbmWaterUniforms = null;
-      sbmWaterImage = null;
+      sbmWaterTex = null;
       window.removeEventListener('resize', sbmWaterResize);
       return;
     }
@@ -287,8 +334,9 @@ function sbmRenderSkinPurchaseLog() {
     if (!gl) { canvas.remove(); return; } // WebGL 미지원 — CSS 정적 배경으로 폴백
     sbmWaterCanvas = canvas;
     sbmWaterGL = gl;
-    sbmWaterLoadTexture();
+    sbmWaterResize(); // 텍스처 캔버스까지 함께 초기화
     window.addEventListener('resize', sbmWaterResize);
+    sbmWaterRAF = requestAnimationFrame(sbmWaterLoop);
   }
 
   // 여름 테마 — 큰 튜브 하나. 예전엔 장난감을 여러 개(최대 22개) 물리 연산 +
@@ -393,15 +441,8 @@ function sbmRenderSkinPurchaseLog() {
     var bob = Math.sin(tSec * 1.2 + p.bobPhase) * 3;
     var cx = p.x, cy = p.y + bob;
     var outerR = p.r, innerR = p.r * 0.52;
-
-    // 그림자 — ctx.filter 블러 대신 저비용 라디얼 그라데이션으로 부드럽게 표현
-    var shGrad = ctx.createRadialGradient(cx + 8, cy + outerR * 0.55, outerR * 0.15, cx + 8, cy + outerR * 0.55, outerR * 1.05);
-    shGrad.addColorStop(0, 'rgba(6,40,50,0.38)');
-    shGrad.addColorStop(1, 'rgba(6,40,50,0)');
-    ctx.fillStyle = shGrad;
-    ctx.beginPath();
-    ctx.ellipse(cx + 8, cy + outerR * 0.55, outerR * 1.05, outerR * 0.42, 0, 0, Math.PI * 2);
-    ctx.fill();
+    // 그림자는 이 캔버스가 아니라 sbmWaterUpdateTexture()에서, 셰이더가 굴절시키는
+    // 텍스처 위에 직접 그린다 — 그래야 물결 왜곡이 그림자에도 그대로 적용된다.
 
     ctx.save();
     ctx.translate(cx, cy);
