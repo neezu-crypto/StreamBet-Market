@@ -7,10 +7,16 @@
 // 새로 불러와 텍스처 없이 순수 절차적 지오메트리로 재구성했다. 마우스 조작
 // (OrbitControls) 대신 카메라가 씬 중심을 천천히 자동으로 도는 것으로 바꿨다.
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 var scene = null;
 var camera = null;
 var renderer = null;
+var composer = null;
 var canvas = null;
 var rafId = null;
 var clock = null;
@@ -18,6 +24,48 @@ var angle = 0;
 var reducedMotion = false;
 var sparkleMat = null; // 반짝이는 눈 파티클 셰이더(u_time 매 프레임 갱신용)
 var elapsed = 0;
+
+// 원본 CodePen의 "미니어처 디오라마" 느낌(수평·수직 틸트시프트 블러 + 블룸)을
+// 내는 두 셰이더 — 지금의 three.js 애드온 모음엔 더 이상 번들되어 있지 않아서
+// 원본이 쓰던 것과 동일한 9-tap 가우시안 틸트시프트 셰이더를 직접 옮겨왔다.
+var TiltShiftShader = {
+  uniforms: { tDiffuse: { value: null }, h: { value: 1 / 512 }, v: { value: 1 / 512 }, r: { value: 0.5 } },
+  vertexShader:
+    'varying vec2 vUv;' +
+    'void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShaderH:
+    'uniform sampler2D tDiffuse; uniform float h; uniform float r; varying vec2 vUv;' +
+    'void main() {' +
+    '  vec4 sum = vec4(0.0);' +
+    '  float hh = h * abs(r - vUv.y);' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x - 4.0*hh, vUv.y)) * 0.051;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x - 3.0*hh, vUv.y)) * 0.0918;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x - 2.0*hh, vUv.y)) * 0.12245;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x - 1.0*hh, vUv.y)) * 0.1531;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y)) * 0.1633;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x + 1.0*hh, vUv.y)) * 0.1531;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x + 2.0*hh, vUv.y)) * 0.12245;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x + 3.0*hh, vUv.y)) * 0.0918;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x + 4.0*hh, vUv.y)) * 0.051;' +
+    '  gl_FragColor = sum;' +
+    '}',
+  fragmentShaderV:
+    'uniform sampler2D tDiffuse; uniform float v; uniform float r; varying vec2 vUv;' +
+    'void main() {' +
+    '  vec4 sum = vec4(0.0);' +
+    '  float vv = v * abs(r - vUv.y);' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y - 4.0*vv)) * 0.051;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y - 3.0*vv)) * 0.0918;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y - 2.0*vv)) * 0.12245;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y - 1.0*vv)) * 0.1531;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y)) * 0.1633;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y + 1.0*vv)) * 0.1531;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y + 2.0*vv)) * 0.12245;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y + 3.0*vv)) * 0.0918;' +
+    '  sum += texture2D(tDiffuse, vec2(vUv.x, vUv.y + 4.0*vv)) * 0.051;' +
+    '  gl_FragColor = sum;' +
+    '}'
+};
 
 var ORBIT_RADIUS = 950;
 var ORBIT_HEIGHT = 260;
@@ -121,6 +169,8 @@ function makeTree() {
   var trunkMat = new THREE.MeshPhongMaterial({ color: 0x5b4a3f, flatShading: true });
   var trunk = new THREE.Mesh(trunkGeo, trunkMat);
   trunk.position.y = -20;
+  trunk.castShadow = true;
+  trunk.receiveShadow = true;
   group.add(trunk);
 
   // 아래(그늘진 연한 하늘색) → 위(눈 덮인 흰색)로 층마다 색을 보간한다
@@ -139,6 +189,8 @@ function makeTree() {
     mesh.position.y = 55 - i * 20;
     var rot = i > 0 ? (Math.random() - 0.5) * 0.08 : 0;
     mesh.rotation.set(rot, 0, rot);
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     group.add(mesh);
   }
 
@@ -156,11 +208,24 @@ function buildScene() {
   renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap; // 나무가 눈밭에 부드러운 그림자를 드리우게
+  renderer.toneMapping = THREE.ACESFilmicToneMapping; // 블룸과 잘 어울리는 필름톤 색감
+  renderer.toneMappingExposure = 1.15;
 
   // 전체적으로 더 밝게 + 따뜻한 햇볕 색의 직사광을 강하게(태양 스프라이트와 같은 위치)
   scene.add(new THREE.AmbientLight(0xeaf3fb, 1.25));
   var dirLight = new THREE.DirectionalLight(0xfff2d6, 1.35);
   dirLight.position.set(SUN_POS.x, SUN_POS.y, SUN_POS.z);
+  dirLight.castShadow = true;
+  dirLight.shadow.mapSize.set(1536, 1536);
+  dirLight.shadow.camera.near = 200;
+  dirLight.shadow.camera.far = 2600;
+  dirLight.shadow.camera.left = -1400;
+  dirLight.shadow.camera.right = 1400;
+  dirLight.shadow.camera.top = 1400;
+  dirLight.shadow.camera.bottom = -1400;
+  dirLight.shadow.bias = -0.0015;
   scene.add(dirLight);
   var fillLight = new THREE.DirectionalLight(0xd9ecff, 0.35); // 그림자 쪽도 완전히 어둡지 않게 보조광
   fillLight.position.set(-600, 400, -400);
@@ -176,6 +241,7 @@ function buildScene() {
   var ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -30;
+  ground.receiveShadow = true;
   scene.add(ground);
 
   addSnowSparkle();
@@ -190,20 +256,63 @@ function buildScene() {
     tree.scale.set(s, s, s);
     scene.add(tree);
   }
+
+  buildComposer();
+}
+
+// 원본 CodePen 특유의 "미니어처 디오라마" 느낌을 내는 후처리 파이프라인 —
+// 블룸(밝은 곳이 은은하게 번짐) + 수평·수직 틸트시프트 블러(화면 중앙 띠만
+// 선명하고 위아래로 갈수록 흐려져 장난감 모형처럼 보이는 효과).
+function buildComposer() {
+  var w = window.innerWidth, h = window.innerHeight;
+  composer = new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene, camera));
+
+  var bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.55, 0.4, 0.78);
+  composer.addPass(bloom);
+
+  var hBlur = new ShaderPass({
+    uniforms: THREE.UniformsUtils.clone(TiltShiftShader.uniforms),
+    vertexShader: TiltShiftShader.vertexShader,
+    fragmentShader: TiltShiftShader.fragmentShaderH
+  });
+  var vBlur = new ShaderPass({
+    uniforms: THREE.UniformsUtils.clone(TiltShiftShader.uniforms),
+    vertexShader: TiltShiftShader.vertexShader,
+    fragmentShader: TiltShiftShader.fragmentShaderV
+  });
+  var bluriness = 6;
+  hBlur.uniforms.h.value = bluriness / w;
+  vBlur.uniforms.v.value = bluriness / h;
+  hBlur.uniforms.r.value = vBlur.uniforms.r.value = 0.58; // 초점 띠를 화면 중앙보다 살짝 아래(지평선 쪽)에 둔다
+  composer.addPass(hBlur);
+  composer.addPass(vBlur);
+
+  composer.addPass(new OutputPass());
 }
 
 function onResize() {
   if (!renderer || !camera) return;
-  camera.aspect = window.innerWidth / window.innerHeight;
+  var w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setSize(w, h);
+  if (composer) {
+    composer.setSize(w, h);
+    var bluriness = 6;
+    var passes = composer.passes;
+    for (var i = 0; i < passes.length; i++) {
+      if (passes[i].uniforms && passes[i].uniforms.h) passes[i].uniforms.h.value = bluriness / w;
+      if (passes[i].uniforms && passes[i].uniforms.v) passes[i].uniforms.v.value = bluriness / h;
+    }
+  }
 }
 
 function renderFrame() {
   camera.position.set(Math.cos(angle) * ORBIT_RADIUS, ORBIT_HEIGHT, Math.sin(angle) * ORBIT_RADIUS);
   camera.lookAt(0, 80, 0);
-  renderer.render(scene, camera);
+  if (composer) composer.render(); else renderer.render(scene, camera);
 }
 
 function animate() {
@@ -221,7 +330,7 @@ function show() {
     reducedMotion = isReducedMotion();
     buildScene();
   } catch (e) {
-    scene = camera = renderer = null;
+    scene = camera = renderer = composer = null;
     return; // WebGL 미지원 등 — CSS 단색 배경(--ink)으로 폴백
   }
   canvas = renderer.domElement;
@@ -243,7 +352,7 @@ function hide() {
   window.removeEventListener('resize', onResize);
   if (renderer) { renderer.dispose(); }
   if (canvas) { canvas.remove(); }
-  scene = camera = renderer = canvas = clock = sparkleMat = null;
+  scene = camera = renderer = composer = canvas = clock = sparkleMat = null;
   angle = 0;
   elapsed = 0;
 }

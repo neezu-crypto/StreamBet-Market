@@ -1048,7 +1048,10 @@
      유일하게 3D 라이브러리를 쓰는 곳이라 importmap으로 그 스크립트에만 한정해
      불러온다. -->
 <script type="importmap">
-{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js" } }
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"
+} }
 </script>
 <script type="module" src="js/winter-scene.js"></script>
 <script defer src="js/streamer-verification.js"></script>
