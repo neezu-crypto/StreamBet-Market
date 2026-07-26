@@ -281,7 +281,7 @@ function buildComposer() {
     vertexShader: TiltShiftShader.vertexShader,
     fragmentShader: TiltShiftShader.fragmentShaderV
   });
-  var bluriness = 6;
+  var bluriness = 4; // 원본 값(6)에서 강도 33% 감소
   hBlur.uniforms.h.value = bluriness / w;
   vBlur.uniforms.v.value = bluriness / h;
   hBlur.uniforms.r.value = vBlur.uniforms.r.value = 0.58; // 초점 띠를 화면 중앙보다 살짝 아래(지평선 쪽)에 둔다
@@ -300,7 +300,7 @@ function onResize() {
   renderer.setSize(w, h);
   if (composer) {
     composer.setSize(w, h);
-    var bluriness = 6;
+    var bluriness = 4;
     var passes = composer.passes;
     for (var i = 0; i < passes.length; i++) {
       if (passes[i].uniforms && passes[i].uniforms.h) passes[i].uniforms.h.value = bluriness / w;
