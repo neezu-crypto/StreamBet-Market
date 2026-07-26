@@ -211,6 +211,13 @@
       }
     },
 
+    "playTimePurchases": {
+      ".read": false,
+      "$purchaseId": {
+        ".write": false
+      }
+    },
+
     "streamerVerificationRequests": {
       ".read": false,
       "$requestId": {
