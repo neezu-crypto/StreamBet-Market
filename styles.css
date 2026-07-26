@@ -491,6 +491,12 @@ html.theme-summer-ocean body::before{
 #sbm-pool-toys-layer{
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
 }
+/* 큰 튜브 하나 — 마우스가 닿으면 튕겨나가고 화면 가장자리에서도 벽처럼
+   튕기는 물리 시뮬레이션(js/skins.js). 위 물놀이 장난감 레이어와 같은
+   z-index 단계(마켓 카드보다 뒤, 수면 셰이더보다 앞). */
+#sbm-big-tube-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 html.theme-autumn-maple{
   color-scheme: light;

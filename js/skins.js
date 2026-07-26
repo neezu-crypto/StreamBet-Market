@@ -49,8 +49,9 @@ function sbmRenderSkinPurchaseLog() {
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
     sbmUpdatePetals(skinId === 'spring-bloom');
-    sbmUpdatePoolToys(false); // 프레임 드랍 방지 — 여름 테마엔 수면 셰이더 + 단색 배경만 남기고 비활성화
+    sbmUpdatePoolToys(false); // 프레임 드랍 방지 — 다중 장난감 물리는 계속 비활성화
     sbmUpdateWater(skinId === 'summer-ocean');
+    sbmUpdateBigTube(skinId === 'summer-ocean');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -288,6 +289,210 @@ function sbmRenderSkinPurchaseLog() {
     sbmWaterGL = gl;
     sbmWaterLoadTexture();
     window.addEventListener('resize', sbmWaterResize);
+  }
+
+  // 여름 테마 — 큰 튜브 하나. 예전엔 장난감을 여러 개(최대 22개) 물리 연산 +
+  // ctx.filter 블러 그림자로 그려서 프레임 드랍이 있었는데, 이번엔 딱 1개만
+  // 그리는 대신 라디얼 그라데이션으로 원환(torus) 단면의 입체감·광택·안쪽
+  // 그림자를 살려 디테일을 높였다(ctx.filter 블러 대신 그림자도 저비용
+  // 라디얼 그라데이션으로 그려서 개수가 늘어도 안전한 방식을 유지). 마우스에
+  // 닿으면 그 반대 방향으로 튕기고, 화면 가장자리에서는 벽처럼 반사된다.
+  var sbmTubeCanvas = null;
+  var sbmTubeCtx = null;
+  var sbmTube = null;
+  var sbmTubeRAF = null;
+  var sbmTubeLastT = 0;
+  var sbmTubeReducedMotion = false;
+  var sbmTubeMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
+  var SBM_TUBE_MOUSE_R = 22;
+
+  function sbmTubeSeed() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var r = Math.max(70, Math.min(150, Math.min(w, h) * 0.11));
+    sbmTube = {
+      x: w * 0.6, y: h * 0.48,
+      vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
+      r: r, rot: Math.random() * Math.PI * 2, vr: 0,
+      bobPhase: Math.random() * Math.PI * 2
+    };
+  }
+
+  function sbmTubeResize() {
+    if (!sbmTubeCanvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2); // 저사양 대응 — DPR 상한
+    sbmTubeCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmTubeCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmTubeCanvas.style.width = window.innerWidth + 'px';
+    sbmTubeCanvas.style.height = window.innerHeight + 'px';
+    sbmTubeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (!sbmTube) sbmTubeSeed();
+    // 리사이즈로 화면이 좁아져 튜브가 밖으로 밀려나지 않도록 위치를 안쪽으로 당긴다
+    sbmTube.x = Math.min(Math.max(sbmTube.x, sbmTube.r), window.innerWidth - sbmTube.r);
+    sbmTube.y = Math.min(Math.max(sbmTube.y, sbmTube.r), window.innerHeight - sbmTube.r);
+    sbmTubeDraw(0);
+  }
+
+  function sbmTubeTrackPointer(x, y) {
+    var now = performance.now();
+    var dt = Math.max(8, now - sbmTubeMouse.t);
+    sbmTubeMouse.vx = (x - sbmTubeMouse.x) / dt * 16.67;
+    sbmTubeMouse.vy = (y - sbmTubeMouse.y) / dt * 16.67;
+    sbmTubeMouse.x = x;
+    sbmTubeMouse.y = y;
+    sbmTubeMouse.t = now;
+  }
+  function sbmTubeOnMouseMove(e) { sbmTubeTrackPointer(e.clientX, e.clientY); }
+  function sbmTubeOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmTubeTrackPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmTubeStep(dtFactor) {
+    var p = sbmTube;
+    if (!p) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    var mx = sbmTubeMouse.x, my = sbmTubeMouse.y;
+    var mouseSpeed = Math.sqrt(sbmTubeMouse.vx * sbmTubeMouse.vx + sbmTubeMouse.vy * sbmTubeMouse.vy);
+
+    var dx = p.x - mx, dy = p.y - my;
+    var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+    var minDist = p.r + SBM_TUBE_MOUSE_R;
+    if (dist < minDist) {
+      var nx = dx / dist, ny = dy / dist;
+      p.x += nx * (minDist - dist);
+      p.y += ny * (minDist - dist);
+      var impulse = Math.max(mouseSpeed * 0.7, 6);
+      p.vx += nx * impulse;
+      p.vy += ny * impulse;
+      p.vr += (Math.random() - 0.5) * 0.2;
+    }
+
+    // 물 위를 떠도는 잔잔한 표류 + 아주 느린 자체 회전(하이라이트·밸브가 보이도록)
+    p.vx += (Math.random() - 0.5) * 0.05;
+    p.vy += (Math.random() - 0.5) * 0.05;
+    p.vx *= 0.985;
+    p.vy *= 0.985;
+    p.vr *= 0.97;
+    p.x += p.vx * dtFactor;
+    p.y += p.vy * dtFactor;
+    p.rot += p.vr * dtFactor + 0.0009 * dtFactor;
+
+    if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx) * 0.82; }
+    else if (p.x > w - p.r) { p.x = w - p.r; p.vx = -Math.abs(p.vx) * 0.82; }
+    if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy) * 0.82; }
+    else if (p.y > h - p.r) { p.y = h - p.r; p.vy = -Math.abs(p.vy) * 0.82; }
+
+    sbmTubeMouse.vx *= 0.85;
+    sbmTubeMouse.vy *= 0.85;
+  }
+
+  function sbmTubeDraw(tSec) {
+    if (!sbmTubeCtx || !sbmTube) return;
+    var ctx = sbmTubeCtx, p = sbmTube;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    var bob = Math.sin(tSec * 1.2 + p.bobPhase) * 3;
+    var cx = p.x, cy = p.y + bob;
+    var outerR = p.r, innerR = p.r * 0.52;
+
+    // 그림자 — ctx.filter 블러 대신 저비용 라디얼 그라데이션으로 부드럽게 표현
+    var shGrad = ctx.createRadialGradient(cx + 8, cy + outerR * 0.55, outerR * 0.15, cx + 8, cy + outerR * 0.55, outerR * 1.05);
+    shGrad.addColorStop(0, 'rgba(6,40,50,0.38)');
+    shGrad.addColorStop(1, 'rgba(6,40,50,0)');
+    ctx.fillStyle = shGrad;
+    ctx.beginPath();
+    ctx.ellipse(cx + 8, cy + outerR * 0.55, outerR * 1.05, outerR * 0.42, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(p.rot);
+
+    // 튜브 몸체 — 라디얼 그라데이션으로 원환(torus) 단면 입체감(안쪽 그늘 →
+    // 하이라이트 능선 → 바깥 그늘) 표현, 가운데는 구멍으로 뚫어 물이 비치게 한다.
+    var bodyGrad = ctx.createRadialGradient(0, 0, innerR * 0.75, 0, 0, outerR);
+    bodyGrad.addColorStop(0, '#c23b3b');
+    bodyGrad.addColorStop(0.38, '#ff8a8a');
+    bodyGrad.addColorStop(0.7, '#ff5c5c');
+    bodyGrad.addColorStop(1, '#b83030');
+    ctx.beginPath();
+    ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+    ctx.moveTo(innerR, 0);
+    ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+    ctx.fillStyle = bodyGrad;
+    ctx.fill('evenodd');
+
+    // 구멍 안쪽 — 물이 비치는 느낌 + 안쪽 테두리 음영(AO)으로 깊이감
+    ctx.beginPath();
+    ctx.arc(0, 0, innerR, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(20,110,130,0.55)';
+    ctx.fill();
+    ctx.lineWidth = innerR * 0.14;
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.stroke();
+
+    // 광택 하이라이트(비스듬한 반투명 흰색 — 매끈한 플라스틱 느낌)
+    ctx.save();
+    ctx.rotate(-0.6);
+    ctx.beginPath();
+    ctx.ellipse(-outerR * 0.42, -outerR * 0.55, outerR * 0.32, outerR * 0.11, 0, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.fill();
+    ctx.restore();
+
+    // 공기 주입구(밸브) 디테일
+    ctx.beginPath();
+    ctx.ellipse(0, outerR * 0.85, outerR * 0.08, outerR * 0.05, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#7a2020';
+    ctx.fill();
+
+    // 바깥 테두리를 살짝 어둡게 눌러 윤곽을 또렷하게
+    ctx.beginPath();
+    ctx.arc(0, 0, outerR, 0, Math.PI * 2);
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function sbmTubeLoop(t) {
+    if (!sbmTubeCanvas) return;
+    var dtMs = sbmTubeLastT ? (t - sbmTubeLastT) : 16.67;
+    sbmTubeLastT = t;
+    var dtFactor = Math.min(3, dtMs / 16.67);
+    sbmTubeStep(dtFactor);
+    sbmTubeDraw(t / 1000);
+    sbmTubeRAF = requestAnimationFrame(sbmTubeLoop);
+  }
+
+  function sbmUpdateBigTube(shouldShow) {
+    if (!shouldShow) {
+      if (sbmTubeRAF) { cancelAnimationFrame(sbmTubeRAF); sbmTubeRAF = null; }
+      if (sbmTubeCanvas) { sbmTubeCanvas.remove(); sbmTubeCanvas = null; sbmTubeCtx = null; }
+      window.removeEventListener('mousemove', sbmTubeOnMouseMove);
+      window.removeEventListener('touchmove', sbmTubeOnTouchMove);
+      window.removeEventListener('resize', sbmTubeResize);
+      sbmTube = null;
+      sbmTubeLastT = 0;
+      return;
+    }
+    if (sbmTubeCanvas) return; // 이미 떠 있음
+    sbmTubeReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmTubeCanvas = document.createElement('canvas');
+    sbmTubeCanvas.id = 'sbm-big-tube-layer';
+    sbmTubeCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmTubeCanvas);
+    sbmTubeCtx = sbmTubeCanvas.getContext('2d');
+    sbmTubeResize(); // 크기 지정 + 시딩 + 첫 프레임 렌더
+
+    if (sbmTubeReducedMotion) return; // 정적 배치만 보여주고 마우스 반응·애니메이션은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmTubeOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmTubeOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmTubeResize);
+    sbmTubeLastT = 0;
+    sbmTubeRAF = requestAnimationFrame(sbmTubeLoop);
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
