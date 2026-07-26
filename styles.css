@@ -826,6 +826,60 @@ html.theme-trading-terminal .verify-submit-btn{
   font-family: var(--font-mono); letter-spacing:.02em; border-radius:5px;
 }
 
+/* 16번 — 스킨: 당구대 테마. 카드·모달 형태는 기본 디자인을 그대로 두고(배경의
+   당구공 물리 효과가 주인공), 초록 펠트 팔레트 + 좌상단 당구공 배지로만
+   무드를 입힌다(계절 테마들과 동일한 가벼운 패턴). */
+html.theme-billiard-table{
+  color-scheme: dark;
+  --ink: #0b3d24;
+  --panel: #123f28;
+  --panel-raised: #164a30;
+  --hairline: #2a6b45;
+  --gold: #d4af37;
+  --gold-dim: rgba(212,175,55,0.14);
+  --gold-line: rgba(212,175,55,0.4);
+  --mint: #3fd17a;
+  --mint-dim: rgba(63,209,122,0.14);
+  --text: #f0f4ef;
+  --muted: #9db8a8;
+  --muted-2: #628b70;
+}
+html.theme-billiard-table .devbar{ background: #0e3320; }
+html.theme-billiard-table .ticker{ background: linear-gradient(180deg, rgba(212,175,55,0.1), transparent); }
+html.theme-billiard-table .boot-card{ position: relative; }
+html.theme-billiard-table .ticket:not(.hero-ticket)::before,
+html.theme-billiard-table .verify-modal::before,
+html.theme-billiard-table .propose-modal::before,
+html.theme-billiard-table .exchange-modal::before,
+html.theme-billiard-table .bet-modal::before,
+html.theme-billiard-table .review-modal::before,
+html.theme-billiard-table .manage-modal::before,
+html.theme-billiard-table .profile-modal::before,
+html.theme-billiard-table .report-modal::before,
+html.theme-billiard-table .boot-card::before{ content:"🎱"; }
+html.theme-billiard-table .ticket:not(.hero-ticket)::before,
+html.theme-billiard-table .verify-modal::before,
+html.theme-billiard-table .propose-modal::before,
+html.theme-billiard-table .exchange-modal::before,
+html.theme-billiard-table .bet-modal::before,
+html.theme-billiard-table .review-modal::before,
+html.theme-billiard-table .manage-modal::before,
+html.theme-billiard-table .profile-modal::before,
+html.theme-billiard-table .report-modal::before,
+html.theme-billiard-table .boot-card::before{
+  position:absolute; top:-12px; left:16px; width:28px; height:28px;
+  background: var(--panel); border:1px solid var(--gold-line); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+/* 당구공 물리 캔버스(js/skins.js) — 마우스가 큐처럼 공을 밀어내고, 화면
+   가장자리(레일)·공끼리도 서로 튕기며, 6개 포켓 중 하나에 들어가면 사라진다.
+   z-index는 마켓 카드보다 뒤, pointer-events:none이라 마우스 이벤트는
+   그대로 아래 UI로 통과한다. */
+#sbm-billiard-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1314,6 +1368,7 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-summer{ background: linear-gradient(160deg, #cdf1f6, #eefcfd); }
 .skin-thumb-theme-autumn{ background: linear-gradient(160deg, #f6dcb8, #fdf3e6); }
 .skin-thumb-theme-winter{ background: linear-gradient(160deg, #dcedf8, #f4f9fd); }
+.skin-thumb-theme-billiard{ background: linear-gradient(160deg, #164a30, #0b3d24); }
 
 /* 테마 스킨 — 트레이딩 터미널 테마: 다크 헤더(LIVE 점) + 네온 캔들스틱 바 미리보기 */
 .skin-thumb-theme-trading{

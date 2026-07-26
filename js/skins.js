@@ -10,6 +10,7 @@ var SBM_SKIN_CATALOG = {
   'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
   'winter-snow': { name: '스노우 테마', category: 'theme', price: 200000 },
   'trading-terminal': { name: '트레이딩 터미널 테마', category: 'theme', price: 200000 },
+  'billiard-table': { name: '당구대 테마', category: 'theme', price: 200000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
@@ -56,6 +57,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdateLeaves(skinId === 'autumn-maple');
     sbmUpdateSnow(false); // 3D 회전 숲 배경(js/winter-scene.js)으로 교체 — 발자국 셰이더는 비활성화(코드는 남겨둠)
     sbmUpdateCandleChart(skinId === 'trading-terminal');
+    sbmUpdateBilliards(skinId === 'billiard-table');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -1080,6 +1082,276 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('resize', sbmCandleResize);
     sbmCandleLastT = 0;
     sbmCandleRAF = requestAnimationFrame(sbmCandleLoop);
+  }
+
+  // 당구대 테마 — 마우스가 큐처럼 공을 밀어내고(반대 방향으로 튕김), 화면
+  // 가장자리(레일)에서도 튕기고, 공끼리도 서로 충돌한다. 6개 포켓(모서리 4 +
+  // 상하 중앙 2) 중 하나에 들어가면 살짝 줄어들며 사라지고, 테이블이 비면
+  // 잠시 후 새 공 세트로 다시 랙(rack)된다.
+  var sbmBilliardCanvas = null;
+  var sbmBilliardCtx = null;
+  var sbmBalls = null;
+  var sbmPockets = null;
+  var sbmBilliardRAF = null;
+  var sbmBilliardLastT = 0;
+  var sbmBilliardReducedMotion = false;
+  var sbmBilliardMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
+  var sbmBilliardRackTimer = 0;
+  var SBM_BALL_R = 15;
+  var SBM_POCKET_R = 26;
+  var SBM_MOUSE_CUE_R = 20;
+  var SBM_BALL_COLORS = [
+    '#fff7e6', // 큐볼(흰공)
+    '#f2c230', '#2f6fe0', '#e0342f', '#7b3fbf',
+    '#f07f1a', '#2f9e4f', '#8a2f2f', '#1a1a1a'
+  ];
+
+  function sbmBilliardPockets() {
+    var w = window.innerWidth, h = window.innerHeight, m = 18;
+    return [
+      { x: m, y: m }, { x: w / 2, y: m }, { x: w - m, y: m },
+      { x: m, y: h - m }, { x: w / 2, y: h - m }, { x: w - m, y: h - m }
+    ];
+  }
+
+  function sbmBilliardRack() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var balls = [];
+    for (var i = 0; i < SBM_BALL_COLORS.length; i++) {
+      var placed = false;
+      var x, y, tries = 0;
+      while (!placed && tries < 40) {
+        tries++;
+        x = SBM_BALL_R * 3 + Math.random() * (w - SBM_BALL_R * 6);
+        y = SBM_BALL_R * 3 + Math.random() * (h - SBM_BALL_R * 6);
+        placed = true;
+        for (var j = 0; j < balls.length; j++) {
+          var dx = balls[j].x - x, dy = balls[j].y - y;
+          if (Math.sqrt(dx * dx + dy * dy) < SBM_BALL_R * 2.4) { placed = false; break; }
+        }
+      }
+      balls.push({
+        x: x, y: y, vx: 0, vy: 0, r: SBM_BALL_R,
+        color: SBM_BALL_COLORS[i], num: i,
+        sinking: false, sinkT: 0
+      });
+    }
+    sbmBalls = balls;
+  }
+
+  function sbmBilliardResize() {
+    if (!sbmBilliardCanvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sbmBilliardCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmBilliardCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmBilliardCanvas.style.width = window.innerWidth + 'px';
+    sbmBilliardCanvas.style.height = window.innerHeight + 'px';
+    sbmBilliardCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmPockets = sbmBilliardPockets();
+    if (!sbmBalls) sbmBilliardRack();
+    sbmBilliardDraw();
+  }
+
+  function sbmBilliardTrackPointer(x, y) {
+    var now = performance.now();
+    var dt = Math.max(8, now - sbmBilliardMouse.t);
+    sbmBilliardMouse.vx = (x - sbmBilliardMouse.x) / dt * 16.67;
+    sbmBilliardMouse.vy = (y - sbmBilliardMouse.y) / dt * 16.67;
+    sbmBilliardMouse.x = x;
+    sbmBilliardMouse.y = y;
+    sbmBilliardMouse.t = now;
+  }
+  function sbmBilliardOnMouseMove(e) { sbmBilliardTrackPointer(e.clientX, e.clientY); }
+  function sbmBilliardOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmBilliardTrackPointer(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmBilliardStep(dtFactor) {
+    var balls = sbmBalls;
+    if (!balls) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    var mx = sbmBilliardMouse.x, my = sbmBilliardMouse.y;
+    var mouseSpeed = Math.sqrt(sbmBilliardMouse.vx * sbmBilliardMouse.vx + sbmBilliardMouse.vy * sbmBilliardMouse.vy);
+    var i, ball;
+
+    for (i = 0; i < balls.length; i++) {
+      ball = balls[i];
+      if (ball.sinking) { ball.sinkT += dtFactor; continue; }
+
+      // 마우스(큐) 충돌 — 닿는 순간 반대 방향으로 튕겨나간다
+      var dx = ball.x - mx, dy = ball.y - my;
+      var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
+      var minDist = ball.r + SBM_MOUSE_CUE_R;
+      if (dist < minDist) {
+        var nx = dx / dist, ny = dy / dist;
+        ball.x += nx * (minDist - dist);
+        ball.y += ny * (minDist - dist);
+        var impulse = Math.max(mouseSpeed * 0.8, 6);
+        ball.vx += nx * impulse;
+        ball.vy += ny * impulse;
+      }
+    }
+
+    // 공-공 충돌(단순 탄성 충돌) — 개수가 적어 전수비교(O(n^2))로도 가볍다
+    for (i = 0; i < balls.length; i++) {
+      if (balls[i].sinking) continue;
+      for (var k = i + 1; k < balls.length; k++) {
+        if (balls[k].sinking) continue;
+        var a = balls[i], b = balls[k];
+        var ddx = b.x - a.x, ddy = b.y - a.y;
+        var d = Math.sqrt(ddx * ddx + ddy * ddy) || 0.0001;
+        var minD = a.r + b.r;
+        if (d < minD) {
+          var ux = ddx / d, uy = ddy / d;
+          var overlap = (minD - d) / 2;
+          a.x -= ux * overlap; a.y -= uy * overlap;
+          b.x += ux * overlap; b.y += uy * overlap;
+          var relVx = b.vx - a.vx, relVy = b.vy - a.vy;
+          var rel = relVx * ux + relVy * uy;
+          if (rel < 0) {
+            a.vx += ux * rel; a.vy += uy * rel;
+            b.vx -= ux * rel; b.vy -= uy * rel;
+          }
+        }
+      }
+    }
+
+    for (i = 0; i < balls.length; i++) {
+      ball = balls[i];
+      if (ball.sinking) continue;
+
+      ball.vx *= 0.988; // 테이블 마찰 — 시간이 지나면 서서히 멈춘다
+      ball.vy *= 0.988;
+      ball.x += ball.vx * dtFactor;
+      ball.y += ball.vy * dtFactor;
+
+      // 레일(화면 가장자리) 반사
+      if (ball.x < ball.r) { ball.x = ball.r; ball.vx = Math.abs(ball.vx) * 0.82; }
+      else if (ball.x > w - ball.r) { ball.x = w - ball.r; ball.vx = -Math.abs(ball.vx) * 0.82; }
+      if (ball.y < ball.r) { ball.y = ball.r; ball.vy = Math.abs(ball.vy) * 0.82; }
+      else if (ball.y > h - ball.r) { ball.y = h - ball.r; ball.vy = -Math.abs(ball.vy) * 0.82; }
+
+      // 포켓 판정 — 중심이 포켓 반경 안에 들어오면 가라앉기 시작
+      for (var p = 0; p < sbmPockets.length; p++) {
+        var pdx = ball.x - sbmPockets[p].x, pdy = ball.y - sbmPockets[p].y;
+        if (Math.sqrt(pdx * pdx + pdy * pdy) < SBM_POCKET_R * 0.55) {
+          ball.sinking = true;
+          ball.sinkX = sbmPockets[p].x;
+          ball.sinkY = sbmPockets[p].y;
+          break;
+        }
+      }
+    }
+
+    // 다 가라앉은 공은 배열에서 제거하고, 테이블이 비면 잠시 후 다시 랙
+    sbmBalls = balls.filter(function (bl) { return !(bl.sinking && bl.sinkT > 0.35); });
+    if (sbmBalls.length === 0) {
+      sbmBilliardRackTimer += dtFactor / 60;
+      if (sbmBilliardRackTimer > 2.2) {
+        sbmBilliardRackTimer = 0;
+        sbmBilliardRack();
+      }
+    }
+
+    sbmBilliardMouse.vx *= 0.85;
+    sbmBilliardMouse.vy *= 0.85;
+  }
+
+  function sbmBilliardDraw() {
+    if (!sbmBilliardCtx || !sbmBalls || !sbmPockets) return;
+    var ctx = sbmBilliardCtx;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+
+    // 포켓
+    for (var p = 0; p < sbmPockets.length; p++) {
+      ctx.beginPath();
+      ctx.arc(sbmPockets[p].x, sbmPockets[p].y, SBM_POCKET_R, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fill();
+    }
+
+    ctx.font = '11px sans-serif'; // 공 개수가 적어 폰트 크기 고정 — 매 프레임 재설정해도 저렴하다
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+
+    for (var i = 0; i < sbmBalls.length; i++) {
+      var ball = sbmBalls[i];
+      var t = ball.sinking ? Math.max(0, 1 - ball.sinkT / 0.35) : 1;
+      var x = ball.sinking ? ball.sinkX + (ball.x - ball.sinkX) * t : ball.x;
+      var y = ball.sinking ? ball.sinkY + (ball.y - ball.sinkY) * t : ball.y;
+      var r = ball.r * t;
+      if (r <= 0.5) continue;
+
+      ctx.save();
+      ctx.globalAlpha = t;
+      // 그림자
+      ctx.beginPath();
+      ctx.ellipse(x + 3, y + 4, r * 0.9, r * 0.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.fill();
+      // 몸통
+      var grad = ctx.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.1, x, y, r);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.15, ball.color);
+      grad.addColorStop(1, ball.color);
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // 번호 서클(큐볼 제외)
+      if (ball.num > 0) {
+        ctx.beginPath();
+        ctx.arc(x, y, r * 0.42, 0, Math.PI * 2);
+        ctx.fillStyle = '#f4f0e6';
+        ctx.fill();
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillText(String(ball.num), x, y + 0.5);
+      }
+      ctx.restore();
+    }
+  }
+
+  function sbmBilliardLoop(t) {
+    if (!sbmBilliardCanvas) return;
+    var dtMs = sbmBilliardLastT ? (t - sbmBilliardLastT) : 16.67;
+    sbmBilliardLastT = t;
+    var dtFactor = Math.min(3, dtMs / 16.67);
+    sbmBilliardStep(dtFactor);
+    sbmBilliardDraw();
+    sbmBilliardRAF = requestAnimationFrame(sbmBilliardLoop);
+  }
+
+  function sbmUpdateBilliards(shouldShow) {
+    if (!shouldShow) {
+      if (sbmBilliardRAF) { cancelAnimationFrame(sbmBilliardRAF); sbmBilliardRAF = null; }
+      if (sbmBilliardCanvas) { sbmBilliardCanvas.remove(); sbmBilliardCanvas = null; sbmBilliardCtx = null; }
+      window.removeEventListener('mousemove', sbmBilliardOnMouseMove);
+      window.removeEventListener('touchmove', sbmBilliardOnTouchMove);
+      window.removeEventListener('resize', sbmBilliardResize);
+      sbmBalls = null;
+      sbmPockets = null;
+      sbmBilliardLastT = 0;
+      sbmBilliardRackTimer = 0;
+      return;
+    }
+    if (sbmBilliardCanvas) return; // 이미 떠 있음
+    sbmBilliardReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmBilliardCanvas = document.createElement('canvas');
+    sbmBilliardCanvas.id = 'sbm-billiard-layer';
+    sbmBilliardCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmBilliardCanvas);
+    sbmBilliardCtx = sbmBilliardCanvas.getContext('2d');
+    sbmBilliardResize(); // 크기 지정 + 랙 + 첫 프레임 렌더
+
+    if (sbmBilliardReducedMotion) return; // 정적 배치만 보여주고 마우스 반응·애니메이션은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmBilliardOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmBilliardOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmBilliardResize);
+    sbmBilliardLastT = 0;
+    sbmBilliardRAF = requestAnimationFrame(sbmBilliardLoop);
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
