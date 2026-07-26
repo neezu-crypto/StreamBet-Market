@@ -566,6 +566,30 @@ html.theme-winter-snow{
 }
 html.theme-winter-snow .devbar{ background: #ffffff; }
 html.theme-winter-snow .ticker{ background: linear-gradient(180deg, #dcedf7, transparent); }
+/* .topbar(로고·내비게이션·지갑)·.ticker·.verified-row(인증 스트리머 배너)는
+   자체 불투명 패널이 없어 3D 눈숲 배경(밝은 흰색·하늘색 톤)이 그대로 비친다.
+   원래 쓰던 하늘색 계열(--muted/--gold-text) 글자가 그 위에서 잘 안 보여서
+   검정색으로 바꾼다(여름 테마 때와 반대 방향 — 배경이 밝아서 어두운 글자가
+   필요하다). 흰 배경 위(.devbar 등) 텍스트는 건드리지 않는다. */
+html.theme-winter-snow .topnav a,
+html.theme-winter-snow .topnav a.active,
+html.theme-winter-snow .wallet-label,
+html.theme-winter-snow .wallet-amount,
+html.theme-winter-snow .wallet-amount small,
+html.theme-winter-snow .brand-name,
+html.theme-winter-snow .brand-name em,
+html.theme-winter-snow .ticker-track span,
+html.theme-winter-snow .verified-name,
+html.theme-winter-snow .verified-cta .verified-name,
+html.theme-winter-snow .verified-banner-head,
+html.theme-winter-snow .cta-plus,
+html.theme-winter-snow .section-label,
+html.theme-winter-snow .skin-panel-sub,
+html.theme-winter-snow .empty-state-desc,
+html.theme-winter-snow .app-footer a,
+html.theme-winter-snow .app-footer-sep{
+  color: #000000;
+}
 /* 눈밭 발자국 셰이더(#sbm-snow-layer) — 3D 회전 숲 배경으로 교체되면서 지금은
    js/skins.js에서 항상 꺼둔다(코드는 남겨둠, 규칙만 유지). */
 #sbm-snow-layer{
