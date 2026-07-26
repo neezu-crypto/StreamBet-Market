@@ -16,6 +16,8 @@ var rafId = null;
 var clock = null;
 var angle = 0;
 var reducedMotion = false;
+var sparkleMat = null; // 반짝이는 눈 파티클 셰이더(u_time 매 프레임 갱신용)
+var elapsed = 0;
 
 var ORBIT_RADIUS = 950;
 var ORBIT_HEIGHT = 260;
@@ -23,6 +25,93 @@ var ORBIT_SPEED = 0.045; // 라디안/초 — 1바퀴 도는 데 약 140초, 눈
 
 function isReducedMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+}
+
+// 태양 광원 위치 — 조명·해 스프라이트가 같은 방향을 향하도록 한 군데서 관리한다
+var SUN_POS = { x: 900, y: 1000, z: 350 };
+
+function makeRadialTexture(stops, size) {
+  var c = document.createElement('canvas');
+  c.width = c.height = size;
+  var ctx = c.getContext('2d');
+  var g = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+  for (var i = 0; i < stops.length; i++) g.addColorStop(stops[i][0], stops[i][1]);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  return new THREE.CanvasTexture(c);
+}
+
+function addSun() {
+  var glowTex = makeRadialTexture([
+    [0, 'rgba(255,252,235,1)'],
+    [0.25, 'rgba(255,246,210,0.9)'],
+    [0.6, 'rgba(255,238,180,0.35)'],
+    [1, 'rgba(255,238,180,0)']
+  ], 256);
+  var mat = new THREE.SpriteMaterial({ map: glowTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  var glow = new THREE.Sprite(mat);
+  glow.scale.set(1600, 1600, 1);
+  glow.position.set(SUN_POS.x, SUN_POS.y, SUN_POS.z);
+  scene.add(glow);
+
+  var coreTex = makeRadialTexture([
+    [0, 'rgba(255,255,250,1)'],
+    [0.5, 'rgba(255,253,240,1)'],
+    [1, 'rgba(255,253,240,0)']
+  ], 128);
+  var coreMat = new THREE.SpriteMaterial({ map: coreTex, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  var core = new THREE.Sprite(coreMat);
+  core.scale.set(340, 340, 1);
+  core.position.set(SUN_POS.x, SUN_POS.y, SUN_POS.z);
+  scene.add(core);
+}
+
+// 눈밭에 흩뿌려진 반짝이는 점들 — 햇빛이 눈 결정에 반사돼 반짝이는 느낌을
+// 저비용으로 흉내낸다. 정점(포인트) 단위로만 계산해서 개수가 많지 않고,
+// 화면 전체를 훑는 프래그먼트 연산이 없어 가볍다.
+function addSnowSparkle() {
+  var count = 500;
+  var positions = new Float32Array(count * 3);
+  var phases = new Float32Array(count);
+  for (var i = 0; i < count; i++) {
+    var a = Math.random() * Math.PI * 2;
+    var r = Math.random() * 1800;
+    positions[i * 3] = Math.cos(a) * r;
+    positions[i * 3 + 1] = -28 + Math.random() * 3;
+    positions[i * 3 + 2] = Math.sin(a) * r;
+    phases[i] = Math.random() * Math.PI * 2;
+  }
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  geo.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+
+  var dotTex = makeRadialTexture([[0, 'rgba(255,255,255,1)'], [1, 'rgba(255,255,255,0)']], 32);
+  sparkleMat = new THREE.ShaderMaterial({
+    uniforms: { u_time: { value: 0 }, u_tex: { value: dotTex } },
+    vertexShader:
+      'attribute float phase;' +
+      'uniform float u_time;' +
+      'varying float vAlpha;' +
+      'void main() {' +
+      '  vAlpha = 0.3 + 0.7 * (0.5 + 0.5 * sin(u_time * 2.2 + phase));' +
+      '  vec4 mv = modelViewMatrix * vec4(position, 1.0);' +
+      '  gl_PointSize = (4.0 + 3.0 * sin(u_time * 1.7 + phase * 1.3)) * (600.0 / -mv.z);' +
+      '  gl_Position = projectionMatrix * mv;' +
+      '}',
+    fragmentShader:
+      'precision mediump float;' +
+      'uniform sampler2D u_tex;' +
+      'varying float vAlpha;' +
+      'void main() {' +
+      '  vec4 tex = texture2D(u_tex, gl_PointCoord);' +
+      '  gl_FragColor = vec4(vec3(1.0, 0.98, 0.9), tex.a * vAlpha);' +
+      '}',
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending
+  });
+
+  scene.add(new THREE.Points(geo, sparkleMat));
 }
 
 function makeTree() {
@@ -58,8 +147,9 @@ function makeTree() {
 
 function buildScene() {
   scene = new THREE.Scene();
-  scene.fog = new THREE.Fog(0xdcedf7, 700, 2600);
-  scene.background = new THREE.Color(0xeaf4fb);
+  // 채도 낮은 저녁 톤 대신 밝은 대낮 하늘로 — 안개도 더 옅고 멀리까지 보이게
+  scene.fog = new THREE.Fog(0xcfe9fb, 1100, 3200);
+  scene.background = new THREE.Color(0xbfe2fb);
 
   camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 5000);
 
@@ -67,17 +157,28 @@ function buildScene() {
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(window.innerWidth, window.innerHeight);
 
-  scene.add(new THREE.AmbientLight(0xe4edf5, 1.0));
-  var dirLight = new THREE.DirectionalLight(0xffffff, 0.55);
-  dirLight.position.set(400, 700, 300);
+  // 전체적으로 더 밝게 + 따뜻한 햇볕 색의 직사광을 강하게(태양 스프라이트와 같은 위치)
+  scene.add(new THREE.AmbientLight(0xeaf3fb, 1.25));
+  var dirLight = new THREE.DirectionalLight(0xfff2d6, 1.35);
+  dirLight.position.set(SUN_POS.x, SUN_POS.y, SUN_POS.z);
   scene.add(dirLight);
+  var fillLight = new THREE.DirectionalLight(0xd9ecff, 0.35); // 그림자 쪽도 완전히 어둡지 않게 보조광
+  fillLight.position.set(-600, 400, -400);
+  scene.add(fillLight);
+
+  addSun();
 
   var groundGeo = new THREE.PlaneGeometry(5000, 5000);
-  var groundMat = new THREE.MeshPhongMaterial({ color: 0xf4f9fc, flatShading: true });
+  var groundMat = new THREE.MeshPhongMaterial({
+    color: 0xfbfdff, flatShading: true,
+    shininess: 70, specular: 0xffffff // 눈 표면이 햇빛을 받아 반짝이는 하이라이트
+  });
   var ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -30;
   scene.add(ground);
+
+  addSnowSparkle();
 
   var count = 150;
   for (var i = 0; i < count; i++) {
@@ -107,7 +208,10 @@ function renderFrame() {
 
 function animate() {
   rafId = requestAnimationFrame(animate);
-  angle += ORBIT_SPEED * clock.getDelta();
+  var dt = clock.getDelta();
+  angle += ORBIT_SPEED * dt;
+  elapsed += dt;
+  if (sparkleMat) sparkleMat.uniforms.u_time.value = elapsed;
   renderFrame();
 }
 
@@ -139,8 +243,9 @@ function hide() {
   window.removeEventListener('resize', onResize);
   if (renderer) { renderer.dispose(); }
   if (canvas) { canvas.remove(); }
-  scene = camera = renderer = canvas = clock = null;
+  scene = camera = renderer = canvas = clock = sparkleMat = null;
   angle = 0;
+  elapsed = 0;
 }
 
 function syncFromHtmlClass() {
