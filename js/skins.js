@@ -160,6 +160,12 @@ function sbmRenderSkinPurchaseLog() {
     '  img *= (1. + u_illumination * sn);' +
     '  color += img.rgb;' +
     '  color += u_illumination * vec3(1. - u_blueish, 1., 1.) * sn;' +
+    // 안개(feTurbulence 애니메이션) 대신, 이미 계산해둔 잔물결 노이즈(sn)를 그대로
+    // 재활용해 물결에 의해 빛이 덜 모이는 자리를 풀장 바닥 그림자로 어둡게 한다.
+    // sn을 셰이더가 어차피 굴절·발광에 쓰려고 매 프레임 계산하던 값이라 추가
+    // 연산 비용이 거의 없고, 별도 애니메이션 텍스처를 계속 다시 그릴 필요도 없다.
+    '  float shadow = smoothstep(0.15, 0.0, sn);' +
+    '  color -= shadow * (0.3 + u_illumination) * vec3(0.04, 0.12, 0.16);' +
     '  opacity += img.a;' +
     // 원본 데모의 edge_alpha 비네트(액자 속 사진처럼 가장자리를 투명하게 페이드아웃하는
     // 로직)는 제거했다 — 여기선 액자가 아니라 화면 전체가 물이어야 하므로, 가장자리도
