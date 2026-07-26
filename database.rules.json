@@ -104,6 +104,20 @@
       }
     },
 
+    "treasureChestRequests": {
+      ".read": false,
+      "$requestId": {
+        ".write": false
+      }
+    },
+
+    "treasureChestOpens": {
+      ".read": false,
+      "$openId": {
+        ".write": false
+      }
+    },
+
     "pinRequests": {
       ".read": false,
       "$requestId": {
