@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase, ServerValue } = require('firebase-admin/database');
-const { requireAuth, assertNotBanned } = require('./lib/auth');
+const { requireAuth, assertNotBanned, isAdminEmail } = require('./lib/auth');
 const { adjustBalance } = require('./lib/wallet');
 const { trimToLast } = require('./lib/capped-log');
 const { SKIN_CATALOG, SKIN_PURCHASE_LOG_CAP } = require('./constants');
@@ -61,8 +61,13 @@ const equipSkin = onCall(async (request) => {
   }
 
   if (!SKIN_CATALOG[skinId]) throw new HttpsError('invalid-argument', '존재하지 않는 스킨입니다.');
-  const ownedSnap = await db.ref('bettingMarket/ownedSkins/' + uid + '/' + skinId).get();
-  if (!ownedSnap.exists()) throw new HttpsError('permission-denied', '보유하지 않은 스킨입니다.');
+
+  // 관리자는 구매 없이 모든 스킨을 즉시 적용해볼 수 있어야 하므로 보유 체크를 건너뛴다.
+  const isAdmin = isAdminEmail(request.auth.token && request.auth.token.email);
+  if (!isAdmin) {
+    const ownedSnap = await db.ref('bettingMarket/ownedSkins/' + uid + '/' + skinId).get();
+    if (!ownedSnap.exists()) throw new HttpsError('permission-denied', '보유하지 않은 스킨입니다.');
+  }
 
   await equippedRef.set(skinId);
   return { status: 'equipped' };

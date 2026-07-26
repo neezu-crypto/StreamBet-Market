@@ -1353,10 +1353,17 @@ function sbmRenderSkinPurchaseLog() {
   }
   if (previewExitBtn) previewExitBtn.addEventListener('click', exitPreview);
 
+  // 관리자는 구매 없이도 모든 스킨을 즉시 장착할 수 있게, "보유 여부"를 관리자에겐
+  // 항상 true로 취급한다(실제 구매 내역과는 무관 — 서버 equipSkin도 관리자는
+  // 보유 체크를 건너뛰도록 맞춰뒀다).
+  function sbmOwnsSkin(skinId) {
+    return !!ownedSkins[skinId] || !!window.sbmIsAdmin;
+  }
+
   function renderSkinCards() {
     cards.forEach(function (card) {
       var skinId = card.getAttribute('data-skin-id');
-      var owned = !!ownedSkins[skinId];
+      var owned = sbmOwnsSkin(skinId);
       var equipped = equippedSkinId === skinId;
       card.classList.toggle('owned', owned && !equipped);
       card.classList.toggle('equipped', equipped);
@@ -1382,7 +1389,7 @@ function sbmRenderSkinPurchaseLog() {
       buyBtn.addEventListener('click', function () {
         if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
         if (!window.sbmFirebase) return;
-        var owned = !!ownedSkins[skinId];
+        var owned = sbmOwnsSkin(skinId);
         var equipped = equippedSkinId === skinId;
         var fnName, payload;
         if (equipped) {
