@@ -1097,8 +1097,8 @@ function sbmRenderSkinPurchaseLog() {
   var sbmBilliardReducedMotion = false;
   var sbmBilliardMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
   var sbmBilliardRackTimer = 0;
-  var SBM_BALL_R = 15;
-  var SBM_POCKET_R = 26;
+  var SBM_BALL_R = 30; // 기존(15)의 2배
+  var SBM_POCKET_R = 38; // 공이 커진 만큼 포켓도 같이 키워야 공이 들어갈 때 비율이 맞는다
   var SBM_MOUSE_CUE_R = 20;
   var SBM_BALL_COLORS = [
     '#fff7e6', // 큐볼(흰공)
@@ -1271,7 +1271,7 @@ function sbmRenderSkinPurchaseLog() {
       ctx.fill();
     }
 
-    ctx.font = '11px sans-serif'; // 공 개수가 적어 폰트 크기 고정 — 매 프레임 재설정해도 저렴하다
+    ctx.font = '18px sans-serif'; // 공이 커진 만큼 번호 폰트도 키움 — 개수가 적어 고정해도 저렴하다
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
