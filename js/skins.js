@@ -551,10 +551,9 @@ function sbmRenderSkinPurchaseLog() {
   var sbmLeafWindPhase = 0;
   var sbmLeafReducedMotion = false;
   var sbmLeafMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
-  var SBM_LEAF_FALL_CAP = 55; // 동시에 "떨어지는 중"인 낙엽 수 상한 — 쌓인 낙엽과 별개로 세서, 바닥이 다 차도 계속 떨어지는 낙엽이 끊이지 않는다
-  var SBM_LEAF_TOTAL_CAP = 260; // 쌓인 낙엽까지 합친 전체 상한(무한 누적 방지)
+  var SBM_LEAF_FALL_CAP = 55; // 동시에 "떨어지는 중"인 낙엽 수 상한 — 쌓인 낙엽과는 별개로 세서, 바닥이 다 쌓여도 새로 떨어지는 낙엽이 끊이지 않는다
   var SBM_LEAF_BUCKETS = 48;
-  var SBM_LEAF_PILE_MAX = 70;
+  var sbmLeafPileMaxPx = 700; // 리사이즈 때 화면 높이에 맞춰 다시 계산됨(sbmLeafReset)
   var SBM_LEAF_BLOW_RADIUS = 140;
   var SBM_LEAF_COLORS = ['#c0522a', '#d97742', '#e0a339', '#a8471b', '#8f6b18'];
 
@@ -577,6 +576,7 @@ function sbmRenderSkinPurchaseLog() {
   }
 
   function sbmLeafReset() {
+    sbmLeafPileMaxPx = Math.round(window.innerHeight * 0.85); // 화면 높이의 85%까지는 계속 쌓일 수 있게 넉넉히 잡는다
     sbmLeafPileHeights = new Array(SBM_LEAF_BUCKETS).fill(0);
     sbmLeaves = [];
     // 처음부터 화면이 텅 비어있지 않도록, 이미 어느 정도 떨어지고 있는 상태로 시작한다
@@ -664,7 +664,7 @@ function sbmRenderSkinPurchaseLog() {
           leaf.y = groundY;
           leaf.vx = 0; leaf.vy = 0; leaf.vr *= 0.3;
           leaf.bucket = bucket;
-          sbmLeafPileHeights[bucket] = Math.min(SBM_LEAF_PILE_MAX, sbmLeafPileHeights[bucket] + leaf.size * 0.5);
+          sbmLeafPileHeights[bucket] = Math.min(sbmLeafPileMaxPx, sbmLeafPileHeights[bucket] + leaf.size * 0.5);
         }
       }
 
@@ -679,27 +679,10 @@ function sbmRenderSkinPurchaseLog() {
       next.push(leaf);
     }
 
-    // 위에서 계속 보충 생성 — "떨어지는 중"인 낙엽 수만 기준으로 삼는다. 전체
-    // 개수(next.length)로 스폰을 막으면, 마우스로 안 치워서 쌓인 낙엽이 전체
-    // 상한에 닿는 순간 새로 떨어지는 낙엽까지 완전히 멈춰버린다 — 시간이 지나면
-    // 낙엽이 더 이상 안 떨어지던 원인이 이거였다.
+    // 위에서 계속 보충 생성 — "떨어지는 중"인 낙엽 수만 기준으로 삼는다. 바닥에
+    // 쌓인 낙엽은 마우스로 직접 흩날리기 전까지는 치우지 않고 계속 쌓이게 둔다.
     if (fallingCount < SBM_LEAF_FALL_CAP && Math.random() < 0.6 * dtFactor) {
       next.push(sbmLeafSpawn());
-    }
-
-    // 전체 개수가 상한을 넘으면 가장 오래 쌓인 낙엽부터 정리한다(스폰 자체는
-    // 위에서 막지 않으므로, 정리되는 동안에도 새 낙엽은 계속 떨어진다).
-    while (next.length > SBM_LEAF_TOTAL_CAP) {
-      var removeIdx = -1;
-      for (var j = 0; j < next.length; j++) {
-        if (next[j].state === 'settled') { removeIdx = j; break; }
-      }
-      if (removeIdx === -1) break;
-      var removed = next[removeIdx];
-      if (removed.bucket >= 0) {
-        sbmLeafPileHeights[removed.bucket] = Math.max(0, sbmLeafPileHeights[removed.bucket] - removed.size * 0.5);
-      }
-      next.splice(removeIdx, 1);
     }
 
     sbmLeaves = next;
