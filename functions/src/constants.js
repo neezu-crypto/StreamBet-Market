@@ -69,14 +69,14 @@ const RANKING_DISPLAY_CAP = 100; // 13번 — 자산·승률·누적수익 랭�
 const SKIN_CATALOG = {
   // 상표권 리스크 방지 — 특정 브랜드명 대신 시각적 특징으로 설명적인 이름을 쓴다
   // (내부 skinId는 기존 구매·장착 데이터 호환을 위해 그대로 유지).
-  'excel-default': { name: '스프레드시트 테마', category: 'theme', price: 200000 },
-  'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 200000 },
-  'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 200000 },
-  'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 200000 },
+  'excel-default': { name: '스프레드시트 테마', category: 'theme', price: 150000 },
+  'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 150000 },
+  'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 150000 },
+  'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 150000 },
   'spring-bloom': { name: '벚꽃 테마', category: 'theme', price: 200000 },
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
-  'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
-  'winter-snow': { name: '스노우 테마', category: 'theme', price: 200000 },
+  'autumn-maple': { name: '단풍 테마', category: 'theme', price: 150000 },
+  'winter-snow': { name: '스노우 테마', category: 'theme', price: 150000 },
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
