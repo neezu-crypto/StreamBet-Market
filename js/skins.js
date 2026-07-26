@@ -679,10 +679,27 @@ function sbmRenderSkinPurchaseLog() {
       next.push(leaf);
     }
 
-    // 위에서 계속 보충 생성 — 떨어지는 중인 낙엽 수가 상한 밑이면 바닥이 다 찼어도
-    // 계속 새로 떨어지는 낙엽이 끊이지 않는다(전체 개수는 별도 상한으로 방지).
-    if (fallingCount < SBM_LEAF_FALL_CAP && next.length < SBM_LEAF_TOTAL_CAP && Math.random() < 0.6 * dtFactor) {
+    // 위에서 계속 보충 생성 — "떨어지는 중"인 낙엽 수만 기준으로 삼는다. 전체
+    // 개수(next.length)로 스폰을 막으면, 마우스로 안 치워서 쌓인 낙엽이 전체
+    // 상한에 닿는 순간 새로 떨어지는 낙엽까지 완전히 멈춰버린다 — 시간이 지나면
+    // 낙엽이 더 이상 안 떨어지던 원인이 이거였다.
+    if (fallingCount < SBM_LEAF_FALL_CAP && Math.random() < 0.6 * dtFactor) {
       next.push(sbmLeafSpawn());
+    }
+
+    // 전체 개수가 상한을 넘으면 가장 오래 쌓인 낙엽부터 정리한다(스폰 자체는
+    // 위에서 막지 않으므로, 정리되는 동안에도 새 낙엽은 계속 떨어진다).
+    while (next.length > SBM_LEAF_TOTAL_CAP) {
+      var removeIdx = -1;
+      for (var j = 0; j < next.length; j++) {
+        if (next[j].state === 'settled') { removeIdx = j; break; }
+      }
+      if (removeIdx === -1) break;
+      var removed = next[removeIdx];
+      if (removed.bucket >= 0) {
+        sbmLeafPileHeights[removed.bucket] = Math.max(0, sbmLeafPileHeights[removed.bucket] - removed.size * 0.5);
+      }
+      next.splice(removeIdx, 1);
     }
 
     sbmLeaves = next;
