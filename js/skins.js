@@ -9,6 +9,7 @@ var SBM_SKIN_CATALOG = {
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
   'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
   'winter-snow': { name: '스노우 테마', category: 'theme', price: 200000 },
+  'trading-terminal': { name: '트레이딩 터미널 테마', category: 'theme', price: 200000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라

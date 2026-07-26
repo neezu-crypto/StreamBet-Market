@@ -699,6 +699,128 @@ html.theme-winter-snow .boot-card::before{
   box-shadow: 0 2px 6px rgba(0,0,0,0.12);
 }
 
+/* 16번 — 스킨: 트레이딩 터미널 테마. 실제 주식·코인 거래 앱(다크 모드 + 네온
+   시안 액센트 + 모노스페이스 숫자)처럼 페이지 전체를 리스킨한다. --gold를
+   시안 액센트로, --mint을 더 쨍한 네온 그린(상승)으로 재사용한다. */
+html.theme-trading-terminal{
+  color-scheme: dark;
+  --ink: #05080c;
+  --panel: #0c1117;
+  --panel-raised: #121922;
+  --hairline: #1f2933;
+  --gold: #35c4f0;
+  --gold-dim: rgba(53,196,240,0.12);
+  --gold-line: rgba(53,196,240,0.4);
+  --gold-text: #6fd7f7;
+  --mint: #1fe08a;
+  --mint-dim: rgba(31,224,138,0.14);
+  --coral: #ff5d6c;
+  --coral-dim: rgba(255,93,108,0.14);
+  --text: #e6edf3;
+  --muted: #7c8a99;
+  --muted-2: #4c5866;
+  --font-display: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", monospace;
+  --font-body: "Pretendard", "Apple SD Gothic Neo", -apple-system, sans-serif;
+}
+html.theme-trading-terminal .devbar{ background: #0a0f14; }
+html.theme-trading-terminal .ticker{ background: linear-gradient(180deg, rgba(53,196,240,0.08), transparent); }
+
+/* 마켓 카드 — 상단에 시세 표시줄처럼 민트→시안→코랄 그라데이션 라인을 굵게 얹고,
+   좌상단엔 깜빡이는 "LIVE" 점 태그를 붙여 실시간 시세창 느낌을 낸다. 모서리는
+   덜 둥글게(데이터 밀도 높은 핀테크 UI 느낌), 호버 시 시안 글로우. */
+html.theme-trading-terminal .ticket{
+  border-radius: 6px;
+  background: linear-gradient(180deg, var(--panel-raised), var(--panel) 60%);
+}
+html.theme-trading-terminal .ticket:not(.hero-ticket)::before{
+  content:""; top:0; left:0; right:0; height:3px;
+  background: linear-gradient(90deg, var(--mint), var(--gold) 50%, var(--coral));
+  opacity:1;
+}
+html.theme-trading-terminal .ticket:not(.hero-ticket)::after{
+  content:"● LIVE";
+  position:absolute; top:9px; left:14px;
+  font-family: var(--font-mono); font-size:9px; font-weight:700; letter-spacing:.04em;
+  color: var(--mint);
+  animation: sbm-trading-live-blink 1.6s ease-in-out infinite;
+}
+@keyframes sbm-trading-live-blink{ 0%, 100%{ opacity:1; } 50%{ opacity:.35; } }
+@media (prefers-reduced-motion: reduce){
+  html.theme-trading-terminal .ticket:not(.hero-ticket)::after{ animation: none; }
+}
+html.theme-trading-terminal .ticket-main{ padding-top: 26px; }
+html.theme-trading-terminal .ticket:not(.hero-ticket):hover{
+  border-color: var(--gold-line);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 0 0 1px var(--gold-dim), 0 18px 36px rgba(0,0,0,0.5);
+}
+html.theme-trading-terminal .ticket-title{ font-family: var(--font-mono); letter-spacing:-.01em; }
+html.theme-trading-terminal .hero-ticket{
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, rgba(53,196,240,0.12) 110deg, var(--mint) 200deg, rgba(53,196,240,0.12) 300deg, var(--gold) 360deg) border-box;
+}
+/* 배당 셀 — 매수(상승)/매도(하락) 호가창처럼 좌우 색 경계선을 굵게 줘서 대비시킨다 */
+html.theme-trading-terminal .odds-cell{ border-radius:4px; border-width:1px; border-left-width:3px; }
+html.theme-trading-terminal .odds-cell.side-yes{ border-left-color: var(--mint); }
+html.theme-trading-terminal .odds-cell.side-no{ border-left-color: var(--coral); }
+html.theme-trading-terminal .odds-cell .label{ font-family: var(--font-mono); text-transform:uppercase; letter-spacing:.03em; }
+html.theme-trading-terminal .outcome-row .bar > i{ background: var(--gold); }
+
+/* 모달창 — 상단에 다크 크롬 헤더 바(깜빡이는 LIVE 점 + 모노스페이스 라벨)를
+   얹어 실제 거래 주문창처럼 보이게 한다. 다른 스킨들의 밝은 윈도우 크롬 대신
+   짙은 터미널 헤더 + 시안 언더라인. */
+html.theme-trading-terminal .verify-modal,
+html.theme-trading-terminal .propose-modal,
+html.theme-trading-terminal .exchange-modal,
+html.theme-trading-terminal .bet-modal,
+html.theme-trading-terminal .review-modal,
+html.theme-trading-terminal .manage-modal,
+html.theme-trading-terminal .profile-modal,
+html.theme-trading-terminal .report-modal,
+html.theme-trading-terminal .boot-card{
+  position: relative;
+  background: var(--panel);
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 24px 60px rgba(0,0,0,0.6);
+  padding-top: 34px;
+}
+html.theme-trading-terminal .verify-modal::before,
+html.theme-trading-terminal .propose-modal::before,
+html.theme-trading-terminal .exchange-modal::before,
+html.theme-trading-terminal .bet-modal::before,
+html.theme-trading-terminal .review-modal::before,
+html.theme-trading-terminal .manage-modal::before,
+html.theme-trading-terminal .profile-modal::before,
+html.theme-trading-terminal .report-modal::before,
+html.theme-trading-terminal .boot-card::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:34px;
+  background: #0a0f14; border-bottom:1px solid var(--gold-line);
+  border-radius: 8px 8px 0 0;
+}
+html.theme-trading-terminal .verify-modal::after,
+html.theme-trading-terminal .propose-modal::after,
+html.theme-trading-terminal .exchange-modal::after,
+html.theme-trading-terminal .bet-modal::after,
+html.theme-trading-terminal .review-modal::after,
+html.theme-trading-terminal .manage-modal::after,
+html.theme-trading-terminal .profile-modal::after,
+html.theme-trading-terminal .report-modal::after,
+html.theme-trading-terminal .boot-card::after{
+  content:"● ORDER TICKET";
+  position:absolute; left:14px; top:0; height:34px;
+  display:flex; align-items:center;
+  font-family: var(--font-mono); font-size:10px; font-weight:700; letter-spacing:.05em;
+  color: var(--mint);
+}
+html.theme-trading-terminal .exchange-submit-btn,
+html.theme-trading-terminal .bet-submit-btn,
+html.theme-trading-terminal .propose-submit-btn,
+html.theme-trading-terminal .report-submit-btn,
+html.theme-trading-terminal .verify-submit-btn{
+  font-family: var(--font-mono); letter-spacing:.02em; border-radius:5px;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1187,6 +1309,23 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-summer{ background: linear-gradient(160deg, #cdf1f6, #eefcfd); }
 .skin-thumb-theme-autumn{ background: linear-gradient(160deg, #f6dcb8, #fdf3e6); }
 .skin-thumb-theme-winter{ background: linear-gradient(160deg, #dcedf8, #f4f9fd); }
+
+/* 테마 스킨 — 트레이딩 터미널 테마: 다크 헤더(LIVE 점) + 네온 캔들스틱 바 미리보기 */
+.skin-thumb-theme-trading{
+  display:flex; flex-direction:column; background:#05080c;
+  color-scheme: dark; forced-color-adjust: none;
+}
+.skin-thumb-theme-trading-titlebar{
+  height:18px; background:#0a0f14; border-bottom:1px solid rgba(53,196,240,0.4); flex-shrink:0;
+  display:flex; align-items:center; gap:4px; padding:0 6px;
+}
+.skin-thumb-theme-trading-dot{
+  width:5px; height:5px; border-radius:50%; background:#1fe08a;
+  box-shadow: 0 0 4px #1fe08a;
+}
+.skin-thumb-theme-trading-label{ color:#1fe08a; font-size:8px; font-family: ui-monospace, monospace; letter-spacing:.04em; }
+.skin-thumb-theme-trading-body{ flex:1; display:flex; align-items:flex-end; justify-content:center; gap:3px; padding:8px; }
+.skin-thumb-theme-trading-bar{ width:6px; border-radius:1px 1px 0 0; }
 
 .skin-card-body{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
 .skin-name{ font-size:13.5px; font-weight:600; color: var(--text); }

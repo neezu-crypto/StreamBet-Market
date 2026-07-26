@@ -77,6 +77,7 @@ const SKIN_CATALOG = {
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
   'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
   'winter-snow': { name: '스노우 테마', category: 'theme', price: 200000 },
+  'trading-terminal': { name: '트레이딩 터미널 테마', category: 'theme', price: 200000 },
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
