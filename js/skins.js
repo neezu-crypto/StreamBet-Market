@@ -1098,7 +1098,7 @@ function sbmRenderSkinPurchaseLog() {
   var sbmBilliardMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
   var sbmBilliardRackTimer = 0;
   var SBM_BALL_R = 30; // 기존(15)의 2배
-  var SBM_POCKET_R = 38; // 공이 커진 만큼 포켓도 같이 키워야 공이 들어갈 때 비율이 맞는다
+  var SBM_POCKET_R = 57; // 38에서 1.5배
   var SBM_MOUSE_CUE_R = 20;
   var SBM_BALL_COLORS = [
     '#fff7e6', // 큐볼(흰공)
@@ -1107,7 +1107,7 @@ function sbmRenderSkinPurchaseLog() {
   ];
 
   function sbmBilliardPockets() {
-    var w = window.innerWidth, h = window.innerHeight, m = 18;
+    var w = window.innerWidth, h = window.innerHeight, m = 30; // 포켓이 커진 만큼(1.5배) 화면 밖으로 너무 많이 잘려나가지 않게 여백도 같이 늘림
     return [
       { x: m, y: m }, { x: w / 2, y: m }, { x: w - m, y: m },
       { x: m, y: h - m }, { x: w / 2, y: h - m }, { x: w - m, y: h - m }
