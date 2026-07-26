@@ -53,6 +53,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdateWater(skinId === 'summer-ocean');
     sbmUpdateBigTube(skinId === 'summer-ocean');
     sbmUpdateLeaves(skinId === 'autumn-maple');
+    sbmUpdateSnow(skinId === 'winter-snow');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -746,6 +747,203 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('resize', sbmLeafResize);
     sbmLeafLastT = 0;
     sbmLeafRAF = requestAnimationFrame(sbmLeafLoop);
+  }
+
+  // 겨울 테마 — 실시간 WebGL 눈밭 셰이더. 마우스가 지나간 자리를 높이맵
+  // 텍스처에 "찍어서"(radial gradient + globalCompositeOperation:'lighten'로
+  // 같은 자리를 반복해서 지나가도 자연스럽게 최대치까지만 눌리게) 영구히
+  // 남기고, 프래그먼트 셰이더가 그 높이맵의 경사(주변 텍셀과의 차이)를
+  // 노멀처럼 써서 음영을 계산해 실제로 눌려서 움푹 들어간 것처럼 보이게 한다.
+  // 참고한 CodePen("A man walking on snow", Den, MIT — 원 개념은 Codrops의
+  // React Three Fiber 지형 변형 데모)은 3D 메시 지형이지만, 이 프로젝트는
+  // React·3D 엔진을 안 쓰므로 같은 "높이맵에 눌러서 남기고 그 경사로 음영을
+  // 낸다"는 핵심 아이디어만 2D 텍스처 + 셰이더 노멀 셰이딩으로 재구현했다.
+  // 걷는 사람 캐릭터는 요청대로 구현하지 않는다.
+  var sbmSnowCanvas = null;
+  var sbmSnowGL = null;
+  var sbmSnowUniforms = null;
+  var sbmSnowRAF = null;
+  var sbmSnowReducedMotion = false;
+  var sbmSnowTexCanvas = null;
+  var sbmSnowTexCtx = null;
+  var sbmSnowTex = null;
+  var sbmSnowTexDirty = true;
+  var sbmSnowLastPointer = null; // 텍스처 좌표계, 스탬프 사이 간격 보간용
+  var SBM_SNOW_TEX_W = 480;
+
+  var SBM_SNOW_FRAG_SRC =
+    'precision mediump float;' +
+    'varying vec2 vUv;' +
+    'uniform sampler2D u_snow_tex;' +
+    'uniform float u_texel_x;' +
+    'uniform float u_texel_y;' +
+    'void main() {' +
+    '  vec2 uv = vec2(vUv.x, 1.0 - vUv.y);' +
+    '  float d  = texture2D(u_snow_tex, uv).r;' +
+    '  float dl = texture2D(u_snow_tex, uv - vec2(u_texel_x, 0.0)).r;' +
+    '  float dr = texture2D(u_snow_tex, uv + vec2(u_texel_x, 0.0)).r;' +
+    '  float dt = texture2D(u_snow_tex, uv - vec2(0.0, u_texel_y)).r;' +
+    '  float db = texture2D(u_snow_tex, uv + vec2(0.0, u_texel_y)).r;' +
+    '  vec2 slope = vec2(dr - dl, db - dt);' +
+    '  vec3 lightDir = normalize(vec3(-0.5, -0.6, 0.6));' +
+    '  vec3 normal = normalize(vec3(-slope.x * 6.0, -slope.y * 6.0, 1.0));' +
+    '  float shade = dot(normal, lightDir);' +
+    '  vec3 base = mix(vec3(0.97, 0.98, 1.0), vec3(0.80, 0.85, 0.93), d);' +
+    '  vec3 color = base + shade * 0.28;' +
+    '  gl_FragColor = vec4(clamp(color, 0.0, 1.0), 1.0);' +
+    '}';
+
+  function sbmSnowInitGL(canvas) {
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    if (!gl) return null;
+    var vs = sbmWaterCompileShader(gl, SBM_WATER_VERT_SRC, gl.VERTEX_SHADER); // 정점 셰이더는 여름 수면 효과와 동일해 재사용
+    var fs = sbmWaterCompileShader(gl, SBM_SNOW_FRAG_SRC, gl.FRAGMENT_SHADER);
+    if (!vs || !fs) return null;
+    var program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+    gl.useProgram(program);
+
+    var uniforms = {};
+    var uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
+    for (var i = 0; i < uniformCount; i++) {
+      var name = gl.getActiveUniform(program, i).name;
+      uniforms[name] = gl.getUniformLocation(program, name);
+    }
+
+    var vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    var buffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    var posLoc = gl.getAttribLocation(program, 'a_position');
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    sbmSnowUniforms = uniforms;
+    return gl;
+  }
+
+  function sbmSnowResize() {
+    if (!sbmSnowCanvas || !sbmSnowGL) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var gl = sbmSnowGL;
+    sbmSnowCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmSnowCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmSnowCanvas.style.width = window.innerWidth + 'px';
+    sbmSnowCanvas.style.height = window.innerHeight + 'px';
+    gl.viewport(0, 0, sbmSnowCanvas.width, sbmSnowCanvas.height);
+
+    // 높이맵 텍스처는 화면 해상도와 무관한 작은 고정 폭만 쓴다(발자국은 부드러운
+    // 얼룩이라 이 정도 해상도로 충분하고, 매번 다시 만들면 찍힌 자국이 사라지므로
+    // 최초 1회만 생성한다).
+    if (!sbmSnowTexCanvas) {
+      sbmSnowTexCanvas = document.createElement('canvas');
+      sbmSnowTexCanvas.width = SBM_SNOW_TEX_W;
+      sbmSnowTexCanvas.height = Math.max(1, Math.round(SBM_SNOW_TEX_W * (window.innerHeight / window.innerWidth)));
+      sbmSnowTexCtx = sbmSnowTexCanvas.getContext('2d');
+      sbmSnowTexCtx.fillStyle = '#000000';
+      sbmSnowTexCtx.fillRect(0, 0, sbmSnowTexCanvas.width, sbmSnowTexCanvas.height);
+      sbmSnowTexCtx.globalCompositeOperation = 'lighten';
+    }
+    gl.uniform1f(sbmSnowUniforms.u_texel_x, 1 / sbmSnowTexCanvas.width);
+    gl.uniform1f(sbmSnowUniforms.u_texel_y, 1 / sbmSnowTexCanvas.height);
+
+    if (!sbmSnowTex) {
+      sbmSnowTex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, sbmSnowTex);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.uniform1i(sbmSnowUniforms.u_snow_tex, 0);
+    }
+    sbmSnowTexDirty = true;
+  }
+
+  function sbmSnowStampAt(tx, ty) {
+    var ctx = sbmSnowTexCtx;
+    var r = 15;
+    var grad = ctx.createRadialGradient(tx, ty, 0, tx, ty, r);
+    grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(tx, ty, r, 0, Math.PI * 2);
+    ctx.fill();
+    sbmSnowTexDirty = true;
+  }
+
+  function sbmSnowOnPointerMove(x, y) {
+    if (!sbmSnowTexCtx) return;
+    var texW = sbmSnowTexCanvas.width, texH = sbmSnowTexCanvas.height;
+    var tx = (x / window.innerWidth) * texW;
+    var ty = (y / window.innerHeight) * texH;
+    if (sbmSnowLastPointer) {
+      var dx = tx - sbmSnowLastPointer.x, dy = ty - sbmSnowLastPointer.y;
+      var dist = Math.sqrt(dx * dx + dy * dy);
+      var steps = Math.min(30, Math.max(1, Math.floor(dist / 4)));
+      for (var i = 1; i <= steps; i++) {
+        var t = i / steps;
+        sbmSnowStampAt(sbmSnowLastPointer.x + dx * t, sbmSnowLastPointer.y + dy * t);
+      }
+    } else {
+      sbmSnowStampAt(tx, ty);
+    }
+    sbmSnowLastPointer = { x: tx, y: ty };
+  }
+  function sbmSnowOnMouseMove(e) { sbmSnowOnPointerMove(e.clientX, e.clientY); }
+  function sbmSnowOnTouchMove(e) {
+    if (!e.touches || !e.touches.length) return;
+    sbmSnowOnPointerMove(e.touches[0].clientX, e.touches[0].clientY);
+  }
+
+  function sbmSnowLoop() {
+    if (!sbmSnowCanvas || !sbmSnowGL) return;
+    if (sbmSnowTexDirty) {
+      sbmSnowGL.bindTexture(sbmSnowGL.TEXTURE_2D, sbmSnowTex);
+      sbmSnowGL.texImage2D(sbmSnowGL.TEXTURE_2D, 0, sbmSnowGL.RGBA, sbmSnowGL.RGBA, sbmSnowGL.UNSIGNED_BYTE, sbmSnowTexCanvas);
+      sbmSnowTexDirty = false;
+    }
+    sbmSnowGL.drawArrays(sbmSnowGL.TRIANGLE_STRIP, 0, 4);
+    sbmSnowRAF = requestAnimationFrame(sbmSnowLoop);
+  }
+
+  function sbmUpdateSnow(shouldShow) {
+    if (!shouldShow) {
+      if (sbmSnowRAF) { cancelAnimationFrame(sbmSnowRAF); sbmSnowRAF = null; }
+      if (sbmSnowCanvas) { sbmSnowCanvas.remove(); sbmSnowCanvas = null; }
+      sbmSnowGL = null;
+      sbmSnowUniforms = null;
+      sbmSnowTex = null;
+      sbmSnowTexCanvas = null;
+      sbmSnowTexCtx = null;
+      sbmSnowLastPointer = null;
+      window.removeEventListener('mousemove', sbmSnowOnMouseMove);
+      window.removeEventListener('touchmove', sbmSnowOnTouchMove);
+      window.removeEventListener('resize', sbmSnowResize);
+      return;
+    }
+    if (sbmSnowCanvas) return; // 이미 떠 있음
+    sbmSnowReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    var canvas = document.createElement('canvas');
+    canvas.id = 'sbm-snow-layer';
+    canvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(canvas);
+    var gl = sbmSnowInitGL(canvas);
+    if (!gl) { canvas.remove(); return; } // WebGL 미지원 — CSS 단색 배경(--ink)으로 폴백
+    sbmSnowCanvas = canvas;
+    sbmSnowGL = gl;
+    sbmSnowResize();
+    sbmSnowRAF = requestAnimationFrame(sbmSnowLoop);
+
+    if (sbmSnowReducedMotion) return; // 발자국 인터랙션(마우스 반응)은 켜지 않는다
+
+    window.addEventListener('mousemove', sbmSnowOnMouseMove, { passive: true });
+    window.addEventListener('touchmove', sbmSnowOnTouchMove, { passive: true });
+    window.addEventListener('resize', sbmSnowResize);
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때

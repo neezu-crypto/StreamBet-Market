@@ -566,6 +566,13 @@ html.theme-winter-snow{
 }
 html.theme-winter-snow .devbar{ background: #ffffff; }
 html.theme-winter-snow .ticker{ background: linear-gradient(180deg, #dcedf7, transparent); }
+/* 실시간 WebGL 눈밭 셰이더 캔버스 — 마우스가 지나간 자리가 높이맵에 영구히
+   찍혀서, 프래그먼트 셰이더가 그 경사로 음영을 계산해 실제로 눌려서 움푹
+   들어간 것처럼 보이게 한다(js/skins.js). WebGL 미지원 환경에서는 이 캔버스가
+   아예 생성되지 않고 아래 --ink 단색 배경(body 기본 규칙)이 그대로 보인다. */
+#sbm-snow-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 /* 마켓 카드 · 모달 좌상단 이모지 배지 — 네 테마 공통 구조, 이모지와 색만 다르다.
    boot-card는 기본 CSS에 position:relative가 없어 배지를 위해 여기서 추가한다. */
