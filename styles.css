@@ -2040,6 +2040,70 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .propose-status{ font-size:12.5px; color:var(--mint); margin:12px 0 0; line-height:1.6; display:none; }
 .propose-status.show{ display:block; }
 
+/* ---------- 자산충전 — 보물상자 구매/열기 ---------- */
+.chest-choice-row{ display:flex; gap:12px; margin-top:16px; }
+.chest-choice-btn{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;
+  padding:22px 12px; background:var(--panel-raised); border:1px solid var(--hairline);
+  border-radius:12px; font-family:inherit; transition:border-color .15s ease, transform .15s ease;
+}
+.chest-choice-btn:hover{ border-color:var(--gold-line); transform:translateY(-2px); }
+.chest-choice-emoji{ font-size:32px; line-height:1; }
+.chest-choice-label{ font-size:13.5px; font-weight:700; }
+
+.chest-qty-row{ display:flex; align-items:center; justify-content:space-between; margin:14px 0; }
+.chest-qty-label{ font-size:12.5px; color:var(--muted); }
+.chest-qty-stepper{ display:flex; align-items:center; gap:6px; }
+.chest-qty-btn{
+  background:var(--panel-raised); border:1px solid var(--hairline); border-radius:6px;
+  padding:6px 10px; font-size:12px; font-weight:700; color:var(--text);
+}
+.chest-qty-btn:hover{ border-color:var(--gold-line); }
+.chest-qty-value{ min-width:38px; text-align:center; font-family:var(--font-mono); font-weight:700; font-size:15px; }
+
+.chest-summary{
+  background:var(--panel-raised); border:1px solid var(--hairline); border-radius:8px;
+  padding:10px 12px; margin-bottom:14px; display:flex; flex-direction:column; gap:6px;
+}
+.chest-summary-row{ display:flex; justify-content:space-between; font-size:12.5px; color:var(--muted); }
+.chest-summary-row.chest-summary-total{
+  color:var(--text); font-weight:700; border-top:1px dashed var(--hairline); padding-top:6px; margin-top:2px;
+}
+.chest-summary-bonus span:last-child{ color:var(--mint); }
+
+.chest-open-stage{ position:relative; display:flex; flex-direction:column; align-items:center; gap:10px; padding:12px 0 4px; text-align:center; }
+.chest-open-icon{ font-size:64px; line-height:1; }
+.chest-open-icon.sbm-chest-shake{ animation: sbm-chest-shake .6s ease-in-out; }
+@keyframes sbm-chest-shake{
+  0%, 100%{ transform:rotate(0deg) scale(1); }
+  20%{ transform:rotate(-14deg) scale(1.05); }
+  40%{ transform:rotate(11deg) scale(1.05); }
+  60%{ transform:rotate(-8deg) scale(1.02); }
+  80%{ transform:rotate(6deg) scale(1.02); }
+}
+@media (prefers-reduced-motion: reduce){
+  .chest-open-icon.sbm-chest-shake{ animation:none; }
+}
+.chest-open-count{ font-size:13px; color:var(--muted); margin:0; }
+.chest-open-count b{ color:var(--gold-text); font-family:var(--font-mono); }
+.chest-open-result{
+  margin-top:8px; padding:14px 18px; border-radius:10px; background:var(--gold-dim);
+  border:1px solid var(--gold-line); font-weight:800; font-size:18px; color:var(--gold-text);
+  animation: sbm-chest-reveal .4s ease;
+}
+@keyframes sbm-chest-reveal{ from{ opacity:0; transform:scale(.8); } to{ opacity:1; transform:scale(1); } }
+.chest-open-spark{
+  position:absolute; top:50%; left:50%; font-size:20px; pointer-events:none;
+  animation: sbm-chest-spark .7s ease-out forwards;
+}
+@keyframes sbm-chest-spark{
+  0%{ transform:translate(-50%,-50%) translate(0,0) scale(1); opacity:1; }
+  100%{ transform:translate(-50%,-50%) translate(var(--sbm-spark-x), var(--sbm-spark-y)) scale(.4); opacity:0; }
+}
+@media (prefers-reduced-motion: reduce){
+  .chest-open-spark{ display:none; }
+}
+
 /* ---------- Exchange modal ---------- */
 .exchange-backdrop{
   position: fixed; inset:0; z-index: 500;

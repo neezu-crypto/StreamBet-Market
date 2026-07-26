@@ -66,7 +66,7 @@
     // 아예 구독을 시도하지 않는다(어차피 막히지만 콘솔에 권한 오류가 안 남게).
     if (window.sbmIsAdmin) {
       sbmRenderVerifyRequests();
-      sbmRenderChargeRequests();
+      sbmRenderChestPurchaseRequests();
       sbmRenderStreamerRequests();
       sbmSubscribeBannedAccounts();
     }

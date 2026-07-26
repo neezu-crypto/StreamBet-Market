@@ -82,6 +82,17 @@ const SKIN_CATALOG = {
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
+// 자산충전 — 보물상자. 라이브 후원(룰렛) 방식 대신 SOOP 후원창(별풍선)으로 결제하고,
+// 관리자가 실제 후원을 확인한 뒤 승인하면 보물상자가 지급된다.
+const CHEST_PRICE_PER_UNIT = 33; // 보물상자 1개당 별풍선 개수
+const CHEST_BONUS_THRESHOLD = 10; // 이 개수 이상 한 번에 구매하면 보너스 지급
+const CHEST_BONUS_RATE = 0.1; // 보너스 비율(10%, 최소 1개 단위로 내림)
+const CHEST_PRIZE_LOW = 500000; // 95% 확률
+const CHEST_PRIZE_HIGH = 5000000; // 5% 확률
+const CHEST_PRIZE_HIGH_CHANCE = 0.05;
+const CHEST_OPEN_LOG_CAP = 200; // 관리 탭 "보물상자 오픈 내역" — 이 개수를 넘는 오래된 항목은 매번 삭제
+const CHEST_MAX_PURCHASE_QTY = 1000; // 1회 신청 최대 개수(오남용 방지)
+
 module.exports = {
   ADMIN_EMAIL,
   RAKE_RATE,
@@ -122,4 +133,12 @@ module.exports = {
   RANKING_DISPLAY_CAP,
   SKIN_CATALOG,
   SKIN_PURCHASE_LOG_CAP,
+  CHEST_PRICE_PER_UNIT,
+  CHEST_BONUS_THRESHOLD,
+  CHEST_BONUS_RATE,
+  CHEST_PRIZE_LOW,
+  CHEST_PRIZE_HIGH,
+  CHEST_PRIZE_HIGH_CHANCE,
+  CHEST_OPEN_LOG_CAP,
+  CHEST_MAX_PURCHASE_QTY,
 };

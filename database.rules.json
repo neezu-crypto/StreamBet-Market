@@ -323,9 +323,21 @@
         }
       },
 
-      "chargeRequests": {
+      "chestPurchaseRequests": {
         ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$requestId": { ".write": false }
+      },
+
+      "ownedChests": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid",
+          ".write": false
+        }
+      },
+
+      "chestOpenLog": {
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
+        "$logId": { ".write": false }
       },
 
       "streamerRequests": {

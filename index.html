@@ -50,7 +50,7 @@
         <li>배팅 참여, 배팅 주제 제안</li>
         <li>마켓 · 닉네임 신고</li>
         <li>출석 체크, 잭팟 확인하기</li>
-        <li>자산 충전 신청, 스트리머 인증 신청</li>
+        <li>보물상자 구매 · 열기, 스트리머 인증 신청</li>
       </ul>
     </div>
 
@@ -365,17 +365,63 @@
   <div class="propose-modal">
     <button class="propose-modal-close" id="charge-modal-close" type="button" aria-label="닫기">✕</button>
     <h3 class="propose-modal-title">자산충전</h3>
-    <div class="admin-tab-notice">
-      <b>안내</b> — 개발자의 라이브 방송에 후원하면 룰렛 결과에 따라 자산 충전을 받을 수 있습니다. 방송에서 사용한 닉네임을 입력해 신청해 주세요 — 실제 지급은 방송에서 후원·룰렛 결과를 확인한 관리자가 처리합니다.
+    <p class="propose-modal-sub">보물상자를 구매하거나, 보유한 보물상자를 열어보세요.</p>
+    <div class="chest-choice-row">
+      <button class="chest-choice-btn" id="chest-choice-buy-btn" type="button">
+        <span class="chest-choice-emoji">📦</span>
+        <span class="chest-choice-label">보물상자 구매</span>
+      </button>
+      <button class="chest-choice-btn" id="chest-choice-open-btn" type="button">
+        <span class="chest-choice-emoji">🎁</span>
+        <span class="chest-choice-label">보물상자 열기</span>
+      </button>
     </div>
-    <a class="dev-link charge-station-link" href="https://www.sooplive.com/station/skftodwocks2" target="_blank" rel="noopener noreferrer">방송국 바로가기 ↗</a>
+  </div>
+</div>
+
+<div class="propose-backdrop" id="chest-buy-backdrop">
+  <div class="propose-modal">
+    <button class="propose-modal-close" id="chest-buy-modal-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="propose-modal-title">보물상자 구매</h3>
+    <div class="admin-tab-notice">
+      <b>안내</b> — 보물상자 1개당 별풍선 33개입니다. 구매하기를 누르면 후원창이 열리고, 실제 후원 확인 후 관리자가 승인하면 보물상자가 지급됩니다. 10개 이상 한 번에 구매하면 10% 추가 지급됩니다.
+    </div>
     <label class="propose-field">
       <span>닉네임</span>
-      <input type="text" id="charge-nickname" maxlength="20" placeholder="방송에서 사용한 닉네임">
+      <input type="text" id="chest-buy-nickname" maxlength="20" placeholder="방송에서 사용한 닉네임">
     </label>
-    <p class="propose-error" id="charge-error"></p>
-    <button class="propose-submit-btn" id="charge-submit-btn" type="button">신청하기</button>
-    <p class="propose-status" id="charge-status"></p>
+    <div class="chest-qty-row">
+      <span class="chest-qty-label">구매 개수</span>
+      <div class="chest-qty-stepper">
+        <button class="chest-qty-btn" data-step="-10" type="button">-10</button>
+        <button class="chest-qty-btn" data-step="-1" type="button">-1</button>
+        <span class="chest-qty-value" id="chest-qty-value">1</span>
+        <button class="chest-qty-btn" data-step="1" type="button">+1</button>
+        <button class="chest-qty-btn" data-step="10" type="button">+10</button>
+      </div>
+    </div>
+    <div class="chest-summary">
+      <div class="chest-summary-row"><span>구매 개수</span><span class="num" id="chest-summary-qty">1개</span></div>
+      <div class="chest-summary-row chest-summary-bonus" id="chest-summary-bonus-row" style="display:none;"><span>보너스(10%)</span><span class="num" id="chest-summary-bonus">+0개</span></div>
+      <div class="chest-summary-row chest-summary-total"><span>총 지급 개수</span><span class="num" id="chest-summary-total">1개</span></div>
+      <div class="chest-summary-row"><span>결제 별풍선</span><span class="num" id="chest-summary-balloons">33개</span></div>
+    </div>
+    <p class="propose-error" id="chest-buy-error"></p>
+    <button class="propose-submit-btn" id="chest-buy-submit-btn" type="button">구매하기</button>
+    <p class="propose-status" id="chest-buy-status"></p>
+  </div>
+</div>
+
+<div class="propose-backdrop" id="chest-open-backdrop">
+  <div class="propose-modal">
+    <button class="propose-modal-close" id="chest-open-modal-close" type="button" aria-label="닫기">✕</button>
+    <h3 class="propose-modal-title">보물상자 열기</h3>
+    <div class="chest-open-stage">
+      <div class="chest-open-icon" id="chest-open-icon">🎁</div>
+      <p class="chest-open-count">보유 중인 보물상자 <b id="chest-open-owned-count">0</b>개</p>
+      <button class="propose-submit-btn" id="chest-open-btn" type="button">열기</button>
+      <div class="chest-open-result" id="chest-open-result" style="display:none;"></div>
+    </div>
   </div>
 </div>
 
@@ -807,9 +853,9 @@
         <li class="audit-empty">인증된 스트리머가 없습니다.</li>
       </ul>
 
-      <div class="section-label">자산 충전 신청 <span class="admin-only-tag">관리자 전용</span></div>
-      <ul class="audit-log verify-req-list" id="charge-requests-list">
-        <li class="audit-empty">대기 중인 충전 신청이 없습니다.</li>
+      <div class="section-label">보물상자 구매 신청 <span class="admin-only-tag">관리자 전용</span></div>
+      <ul class="audit-log verify-req-list" id="chest-purchase-requests-list">
+        <li class="audit-empty">대기 중인 보물상자 구매 신청이 없습니다.</li>
       </ul>
 
       <div class="section-label">스트리머 추가 요청 <span class="admin-only-tag">관리자 전용</span></div>

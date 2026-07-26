@@ -29,7 +29,7 @@ module.exports = {
   claimJackpotDraw,
   ...require('./src/reports'),
   ...require('./src/profile'),
-  ...require('./src/charge'),
+  ...require('./src/chest'),
   ...require('./src/admin-tools'),
   ...require('./src/streamer-requests'),
   ...require('./src/chat'),

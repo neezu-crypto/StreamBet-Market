@@ -7,7 +7,7 @@ var SBM_ADMIN_ALERT_SECTIONS = [
   { listId: 'report-queue-list', label: '마켓 신고 접수함', itemSelector: '.report-queue-item', adminOnly: false },
   { listId: 'nick-report-queue-list', label: '닉네임 신고 검수', itemSelector: '.report-queue-item', adminOnly: false },
   { listId: 'verify-requests-list', label: '스트리머 인증 신청', itemSelector: '.verify-req-item', adminOnly: true },
-  { listId: 'charge-requests-list', label: '자산 충전 신청', itemSelector: '.verify-req-item', adminOnly: true },
+  { listId: 'chest-purchase-requests-list', label: '보물상자 구매 신청', itemSelector: '.verify-req-item', adminOnly: true },
   { listId: 'streamer-requests-list', label: '스트리머 추가 요청', itemSelector: '.verify-req-item', adminOnly: true },
 ];
 
