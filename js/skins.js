@@ -551,16 +551,17 @@ function sbmRenderSkinPurchaseLog() {
   var sbmLeafWindPhase = 0;
   var sbmLeafReducedMotion = false;
   var sbmLeafMouse = { x: -9999, y: -9999, t: 0, vx: 0, vy: 0 };
-  var SBM_LEAF_CAP = 160;
+  var SBM_LEAF_FALL_CAP = 55; // 동시에 "떨어지는 중"인 낙엽 수 상한 — 쌓인 낙엽과 별개로 세서, 바닥이 다 차도 계속 떨어지는 낙엽이 끊이지 않는다
+  var SBM_LEAF_TOTAL_CAP = 260; // 쌓인 낙엽까지 합친 전체 상한(무한 누적 방지)
   var SBM_LEAF_BUCKETS = 48;
   var SBM_LEAF_PILE_MAX = 70;
   var SBM_LEAF_BLOW_RADIUS = 140;
-  var SBM_LEAF_COLORS = ['#c0522a', '#d97742', '#e0a339', '#a8471b', '#8f6b18'];
+  var SBM_LEAF_GLYPHS = ['🍁', '🍂']; // 단풍잎 · 낙엽 이모지를 섞어 색·모양에 변화를 준다
 
   function sbmLeafBucketWidth() { return window.innerWidth / SBM_LEAF_BUCKETS; }
 
   function sbmLeafSpawn() {
-    var size = 6 + Math.random() * 5;
+    var size = 15 + Math.random() * 10;
     return {
       x: Math.random() * window.innerWidth,
       y: -20,
@@ -569,7 +570,7 @@ function sbmRenderSkinPurchaseLog() {
       rot: Math.random() * Math.PI * 2,
       vr: (Math.random() - 0.5) * 0.05,
       size: size,
-      color: SBM_LEAF_COLORS[(Math.random() * SBM_LEAF_COLORS.length) | 0],
+      glyph: SBM_LEAF_GLYPHS[(Math.random() * SBM_LEAF_GLYPHS.length) | 0],
       state: 'falling',
       bucket: -1
     };
@@ -626,6 +627,7 @@ function sbmRenderSkinPurchaseLog() {
     var blowing = mouseSpeed > 1.2;
 
     var next = [];
+    var fallingCount = 0;
     for (var i = 0; i < sbmLeaves.length; i++) {
       var leaf = sbmLeaves[i];
 
@@ -673,11 +675,13 @@ function sbmRenderSkinPurchaseLog() {
         }
         continue; // 배열에서 제외(= 삭제)
       }
+      if (leaf.state === 'falling') fallingCount++;
       next.push(leaf);
     }
 
-    // 위에서 계속 보충 생성(상한 이하일 때만, 확률적으로 조금씩)
-    if (next.length < SBM_LEAF_CAP && Math.random() < 0.35 * dtFactor) {
+    // 위에서 계속 보충 생성 — 떨어지는 중인 낙엽 수가 상한 밑이면 바닥이 다 찼어도
+    // 계속 새로 떨어지는 낙엽이 끊이지 않는다(전체 개수는 별도 상한으로 방지).
+    if (fallingCount < SBM_LEAF_FALL_CAP && next.length < SBM_LEAF_TOTAL_CAP && Math.random() < 0.6 * dtFactor) {
       next.push(sbmLeafSpawn());
     }
 
@@ -690,15 +694,15 @@ function sbmRenderSkinPurchaseLog() {
     if (!sbmLeafCtx || !sbmLeaves) return;
     var ctx = sbmLeafCtx;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     for (var i = 0; i < sbmLeaves.length; i++) {
       var leaf = sbmLeaves[i];
       ctx.save();
       ctx.translate(leaf.x, leaf.y);
       ctx.rotate(leaf.rot);
-      ctx.fillStyle = leaf.color;
-      ctx.beginPath();
-      ctx.ellipse(0, 0, leaf.size, leaf.size * 0.62, 0, 0, Math.PI * 2);
-      ctx.fill();
+      ctx.font = leaf.size + 'px sans-serif';
+      ctx.fillText(leaf.glyph, 0, 0);
       ctx.restore();
     }
   }
