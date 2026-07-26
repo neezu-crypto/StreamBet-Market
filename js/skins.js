@@ -556,12 +556,12 @@ function sbmRenderSkinPurchaseLog() {
   var SBM_LEAF_BUCKETS = 48;
   var SBM_LEAF_PILE_MAX = 70;
   var SBM_LEAF_BLOW_RADIUS = 140;
-  var SBM_LEAF_GLYPHS = ['🍁', '🍂']; // 단풍잎 · 낙엽 이모지를 섞어 색·모양에 변화를 준다
+  var SBM_LEAF_COLORS = ['#c0522a', '#d97742', '#e0a339', '#a8471b', '#8f6b18'];
 
   function sbmLeafBucketWidth() { return window.innerWidth / SBM_LEAF_BUCKETS; }
 
   function sbmLeafSpawn() {
-    var size = 15 + Math.random() * 10;
+    var size = 6 + Math.random() * 5;
     return {
       x: Math.random() * window.innerWidth,
       y: -20,
@@ -570,7 +570,7 @@ function sbmRenderSkinPurchaseLog() {
       rot: Math.random() * Math.PI * 2,
       vr: (Math.random() - 0.5) * 0.05,
       size: size,
-      glyph: SBM_LEAF_GLYPHS[(Math.random() * SBM_LEAF_GLYPHS.length) | 0],
+      color: SBM_LEAF_COLORS[(Math.random() * SBM_LEAF_COLORS.length) | 0],
       state: 'falling',
       bucket: -1
     };
@@ -694,15 +694,15 @@ function sbmRenderSkinPurchaseLog() {
     if (!sbmLeafCtx || !sbmLeaves) return;
     var ctx = sbmLeafCtx;
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
     for (var i = 0; i < sbmLeaves.length; i++) {
       var leaf = sbmLeaves[i];
       ctx.save();
       ctx.translate(leaf.x, leaf.y);
       ctx.rotate(leaf.rot);
-      ctx.font = leaf.size + 'px sans-serif';
-      ctx.fillText(leaf.glyph, 0, 0);
+      ctx.fillStyle = leaf.color;
+      ctx.beginPath();
+      ctx.ellipse(0, 0, leaf.size, leaf.size * 0.62, 0, 0, Math.PI * 2);
+      ctx.fill();
       ctx.restore();
     }
   }
