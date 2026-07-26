@@ -49,7 +49,7 @@ function sbmRenderSkinPurchaseLog() {
     if (skinId) classes.push('theme-' + skinId);
     html.className = classes.join(' ');
     sbmUpdatePetals(skinId === 'spring-bloom');
-    sbmUpdatePoolToys(skinId === 'summer-ocean');
+    sbmUpdatePoolToys(false); // 프레임 드랍 방지 — 여름 테마엔 수면 셰이더 + 단색 배경만 남기고 비활성화
     sbmUpdateWater(skinId === 'summer-ocean');
   }
 
