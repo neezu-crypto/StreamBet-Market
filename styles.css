@@ -724,6 +724,11 @@ html.theme-trading-terminal{
 }
 html.theme-trading-terminal .devbar{ background: #0a0f14; }
 html.theme-trading-terminal .ticker{ background: linear-gradient(180deg, rgba(53,196,240,0.08), transparent); }
+/* 배경 캔들차트 캔버스(js/skins.js) — 카드보다 뒤(z-index -1), 은은한 워터마크
+   느낌으로 계속 흐른다. pointer-events:none이라 마우스 이벤트는 그대로 통과. */
+#sbm-candle-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
 
 /* 마켓 카드 — 상단에 시세 표시줄처럼 민트→시안→코랄 그라데이션 라인을 굵게 얹고,
    좌상단엔 깜빡이는 "LIVE" 점 태그를 붙여 실시간 시세창 느낌을 낸다. 모서리는

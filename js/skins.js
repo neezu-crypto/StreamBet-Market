@@ -55,6 +55,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdateBigTube(skinId === 'summer-ocean');
     sbmUpdateLeaves(skinId === 'autumn-maple');
     sbmUpdateSnow(false); // 3D 회전 숲 배경(js/winter-scene.js)으로 교체 — 발자국 셰이더는 비활성화(코드는 남겨둠)
+    sbmUpdateCandleChart(skinId === 'trading-terminal');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -945,6 +946,140 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('mousemove', sbmSnowOnMouseMove, { passive: true });
     window.addEventListener('touchmove', sbmSnowOnTouchMove, { passive: true });
     window.addEventListener('resize', sbmSnowResize);
+  }
+
+  // 트레이딩 터미널 테마 — 배경 레이어에 은은하게(카드 가독성을 해치지 않는
+  // 낮은 불투명도) 흐르는 캔들차트를 그린다. 랜덤워크로 가격을 생성하고, 시간이
+  // 지나면 오래된 캔들은 왼쪽으로 흘러 사라지고 오른쪽에 새 캔들이 생긴다.
+  // 도형만 그리는 저비용 canvas 2D라 프레임 드랍 걱정 없이 계속 켜둘 수 있다.
+  var sbmCandleCanvas = null;
+  var sbmCandleCtx = null;
+  var sbmCandles = null;
+  var sbmCandleLastPrice = 100;
+  var sbmCandleScrollAccum = 0;
+  var sbmCandleRAF = null;
+  var sbmCandleLastT = 0;
+  var sbmCandleReducedMotion = false;
+  var SBM_CANDLE_W = 16; // 캔들 하나 폭(간격 포함, px)
+  var SBM_CANDLE_SPEED = 5; // 흐르는 속도(px/초)
+
+  function sbmCandleGen(prevClose) {
+    var vol = 2 + Math.random() * 6;
+    var open = prevClose;
+    var close = open + (Math.random() - 0.5) * vol;
+    var high = Math.max(open, close) + Math.random() * vol * 0.5;
+    var low = Math.min(open, close) - Math.random() * vol * 0.5;
+    return { open: open, close: close, high: high, low: low };
+  }
+
+  function sbmCandleSeed() {
+    var count = Math.ceil(window.innerWidth / SBM_CANDLE_W) + 2;
+    var candles = [];
+    var price = sbmCandleLastPrice;
+    for (var i = 0; i < count; i++) {
+      var c = sbmCandleGen(price);
+      candles.push(c);
+      price = c.close;
+    }
+    sbmCandles = candles;
+    sbmCandleLastPrice = price;
+  }
+
+  function sbmCandleResize() {
+    if (!sbmCandleCanvas) return;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    sbmCandleCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmCandleCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmCandleCanvas.style.width = window.innerWidth + 'px';
+    sbmCandleCanvas.style.height = window.innerHeight + 'px';
+    sbmCandleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmCandleScrollAccum = 0;
+    sbmCandleSeed();
+    sbmCandleDraw();
+  }
+
+  function sbmCandleStep(dt) {
+    sbmCandleScrollAccum += SBM_CANDLE_SPEED * dt;
+    while (sbmCandleScrollAccum >= SBM_CANDLE_W) {
+      sbmCandleScrollAccum -= SBM_CANDLE_W;
+      sbmCandles.shift();
+      var next = sbmCandleGen(sbmCandleLastPrice);
+      sbmCandles.push(next);
+      sbmCandleLastPrice = next.close;
+    }
+  }
+
+  function sbmCandleDraw() {
+    if (!sbmCandleCtx || !sbmCandles) return;
+    var ctx = sbmCandleCtx;
+    var w = window.innerWidth, h = window.innerHeight;
+    ctx.clearRect(0, 0, w, h);
+
+    var candles = sbmCandles;
+    var min = Infinity, max = -Infinity;
+    for (var i = 0; i < candles.length; i++) {
+      if (candles[i].low < min) min = candles[i].low;
+      if (candles[i].high > max) max = candles[i].high;
+    }
+    var range = Math.max(1, max - min);
+    var padTop = h * 0.18, padBottom = h * 0.12;
+    var chartH = h - padTop - padBottom;
+    function toY(price) { return padTop + (1 - (price - min) / range) * chartH; }
+
+    ctx.globalAlpha = 0.14; // 카드 가독성을 해치지 않는 은은한 워터마크 느낌
+    for (var j = 0; j < candles.length; j++) {
+      var c = candles[j];
+      var x = w - (candles.length - j) * SBM_CANDLE_W - sbmCandleScrollAccum;
+      var up = c.close >= c.open;
+      var color = up ? '#1fe08a' : '#ff5d6c';
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x + SBM_CANDLE_W / 2, toY(c.high));
+      ctx.lineTo(x + SBM_CANDLE_W / 2, toY(c.low));
+      ctx.stroke();
+      var bodyTop = toY(Math.max(c.open, c.close));
+      var bodyH = Math.max(1.5, Math.abs(toY(c.open) - toY(c.close)));
+      ctx.fillRect(x + 2, bodyTop, SBM_CANDLE_W - 4, bodyH);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function sbmCandleLoop(t) {
+    if (!sbmCandleCanvas) return;
+    var dtMs = sbmCandleLastT ? (t - sbmCandleLastT) : 16.67;
+    sbmCandleLastT = t;
+    sbmCandleStep(dtMs / 1000);
+    sbmCandleDraw();
+    sbmCandleRAF = requestAnimationFrame(sbmCandleLoop);
+  }
+
+  function sbmUpdateCandleChart(shouldShow) {
+    if (!shouldShow) {
+      if (sbmCandleRAF) { cancelAnimationFrame(sbmCandleRAF); sbmCandleRAF = null; }
+      if (sbmCandleCanvas) { sbmCandleCanvas.remove(); sbmCandleCanvas = null; sbmCandleCtx = null; }
+      window.removeEventListener('resize', sbmCandleResize);
+      sbmCandles = null;
+      sbmCandleLastT = 0;
+      sbmCandleScrollAccum = 0;
+      return;
+    }
+    if (sbmCandleCanvas) return; // 이미 떠 있음
+    sbmCandleReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmCandleCanvas = document.createElement('canvas');
+    sbmCandleCanvas.id = 'sbm-candle-layer';
+    sbmCandleCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmCandleCanvas);
+    sbmCandleCtx = sbmCandleCanvas.getContext('2d');
+    sbmCandleResize(); // 크기 지정 + 캔들 시딩 + 첫 프레임 렌더
+
+    if (sbmCandleReducedMotion) return; // 정적 차트만 보여주고 흐르는 애니메이션은 켜지 않는다
+
+    window.addEventListener('resize', sbmCandleResize);
+    sbmCandleLastT = 0;
+    sbmCandleRAF = requestAnimationFrame(sbmCandleLoop);
   }
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
