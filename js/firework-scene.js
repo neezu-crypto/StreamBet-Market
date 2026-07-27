@@ -185,6 +185,12 @@ function Firework(startX) {
     this.colors.push(new THREE.Color().setHSL((baseHue + 0.66) % 1.0, 1.0, 0.6));
   }
 
+  var burstRand = Math.random();
+  if (burstRand < 0.4) this.burstType = 'sphere';
+  else if (burstRand < 0.65) this.burstType = 'ring';
+  else if (burstRand < 0.85) this.burstType = 'double';
+  else this.burstType = 'streamer';
+
   this.pos = new THREE.Vector3(startX, -80, (Math.random() - 0.5) * 50);
   this.vel = new THREE.Vector3(
     (Math.random() - 0.5) * 0.5,
@@ -272,19 +278,74 @@ Firework.prototype.explode = function () {
 
   var baseSpeed = CONFIG.explosionForce * (0.8 + Math.random() * 0.4);
 
+  // 링형 버스트용 랜덤 평면 기저 벡터 (u, v가 폭발 평면을 이룸)
+  var ringNormal = new THREE.Vector3(
+    Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5
+  ).normalize();
+  var ringHelper = Math.abs(ringNormal.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
+  var ringU = new THREE.Vector3().crossVectors(ringNormal, ringHelper).normalize();
+  var ringV = new THREE.Vector3().crossVectors(ringNormal, ringU).normalize();
+
+  // 이중 폭발용 안쪽/바깥쪽 색상 (colors가 1개뿐이면 밝기 차이로 대체)
+  var innerColor = this.colors[0];
+  var outerColor = this.colors.length > 1 ? this.colors[1] : this.colors[0];
+
+  // 스트리머(리본)용: 소수의 방향에 여러 파티클을 다른 속도로 배치해 늘어지는 궤적을 만든다
+  var streamerLineCount = Math.max(16, Math.floor(this.currentParticleCount / 40));
+  var streamerPerLine = Math.ceil(this.currentParticleCount / streamerLineCount);
+
   for (var i = 0; i < this.currentParticleCount; i++) {
     var i3 = i * 3;
     positions[i3] = this.pos.x; positions[i3 + 1] = this.pos.y; positions[i3 + 2] = this.pos.z;
 
-    var theta = Math.random() * Math.PI * 2;
-    var phi = Math.acos(2 * Math.random() - 1);
-    var speed = baseSpeed * (0.8 + Math.random() * 0.4);
+    var dirX, dirY, dirZ, speed, targetColor;
 
-    this.velocities[i3] = speed * Math.sin(phi) * Math.cos(theta);
-    this.velocities[i3 + 1] = speed * Math.sin(phi) * Math.sin(theta);
-    this.velocities[i3 + 2] = speed * Math.cos(phi);
+    if (this.burstType === 'ring') {
+      var ringAngle = Math.random() * Math.PI * 2;
+      var thickness = (Math.random() - 0.5) * 0.18;
+      dirX = ringU.x * Math.cos(ringAngle) + ringV.x * Math.sin(ringAngle) + ringNormal.x * thickness;
+      dirY = ringU.y * Math.cos(ringAngle) + ringV.y * Math.sin(ringAngle) + ringNormal.y * thickness;
+      dirZ = ringU.z * Math.cos(ringAngle) + ringV.z * Math.sin(ringAngle) + ringNormal.z * thickness;
+      speed = baseSpeed * (0.9 + Math.random() * 0.2);
+      targetColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+    } else if (this.burstType === 'double') {
+      var theta1 = Math.random() * Math.PI * 2;
+      var phi1 = Math.acos(2 * Math.random() - 1);
+      dirX = Math.sin(phi1) * Math.cos(theta1);
+      dirY = Math.sin(phi1) * Math.sin(theta1);
+      dirZ = Math.cos(phi1);
+      var isInner = i < this.currentParticleCount * 0.4;
+      speed = isInner ? baseSpeed * 0.45 * (0.85 + Math.random() * 0.3) : baseSpeed * (0.85 + Math.random() * 0.3);
+      targetColor = isInner ? innerColor : outerColor;
+    } else if (this.burstType === 'streamer') {
+      var lineIndex = Math.floor(i / streamerPerLine);
+      var posInLine = i % streamerPerLine;
+      var lineSeed = lineIndex * 12.9898;
+      var lineTheta = (Math.sin(lineSeed) * 43758.5453 % 1 + 1) % 1 * Math.PI * 2;
+      var linePhi = Math.acos(2 * ((Math.sin(lineSeed * 1.7) * 12345.6789 % 1 + 1) % 1) - 1);
+      var jitter = 0.03;
+      var theta2 = lineTheta + (Math.random() - 0.5) * jitter;
+      var phi2 = linePhi + (Math.random() - 0.5) * jitter;
+      dirX = Math.sin(phi2) * Math.cos(theta2);
+      dirY = Math.sin(phi2) * Math.sin(theta2);
+      dirZ = Math.cos(phi2);
+      var lineFrac = streamerPerLine > 1 ? posInLine / (streamerPerLine - 1) : 0;
+      speed = baseSpeed * (1.5 - lineFrac * 1.1);
+      targetColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+    } else {
+      var theta = Math.random() * Math.PI * 2;
+      var phi = Math.acos(2 * Math.random() - 1);
+      dirX = Math.sin(phi) * Math.cos(theta);
+      dirY = Math.sin(phi) * Math.sin(theta);
+      dirZ = Math.cos(phi);
+      speed = baseSpeed * (0.8 + Math.random() * 0.4);
+      targetColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+    }
 
-    var targetColor = this.colors[Math.floor(Math.random() * this.colors.length)];
+    this.velocities[i3] = dirX * speed;
+    this.velocities[i3 + 1] = dirY * speed;
+    this.velocities[i3 + 2] = dirZ * speed;
+
     var brightness = 0.5 + Math.random() * 0.8;
 
     this.baseColors[i3] = targetColor.r * brightness;
