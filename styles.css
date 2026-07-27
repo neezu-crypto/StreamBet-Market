@@ -941,20 +941,20 @@ html.theme-firework-market .boot-card::before{
 html.theme-pastel-dream{
   color-scheme: light;
   --ink: #f7f0fb;
-  --panel: #ffffff;
-  --panel-raised: #fdf7fc;
-  --hairline: #ecdcf4;
+  --panel: #fbdcee;
+  --panel-raised: #f6c9e6;
+  --hairline: #eba9d1;
   --gold: #f5a8c9;
   --gold-dim: rgba(245,168,201,0.16);
   --gold-line: rgba(245,168,201,0.45);
-  --gold-text: #c5568f;
-  --mint: #7bd6b3;
+  --gold-text: #a8386f;
+  --mint: #1f7a53;
   --mint-dim: rgba(123,214,179,0.16);
-  --coral: #ff9d9d;
+  --coral: #b83432;
   --coral-dim: rgba(255,157,157,0.16);
-  --text: #5c5266;
-  --muted: #9584a3;
-  --muted-2: #c2b3cf;
+  --text: #4a3f56;
+  --muted: #6b5875;
+  --muted-2: #9d84a8;
 }
 html.theme-pastel-dream body{
   background: linear-gradient(160deg, #fdf0f6, #f3ecfb 45%, #eaf8f2);
@@ -962,10 +962,25 @@ html.theme-pastel-dream body{
 html.theme-pastel-dream .devbar{ background: #ffffff; }
 html.theme-pastel-dream .ticker{ background: linear-gradient(180deg, #fbe4f0, transparent); }
 html.theme-pastel-dream .boot-card{ position: relative; }
-/* 카드·모달 모서리를 좀 더 둥글게, 그림자는 더 넓고 옅게(뉴모피즘 톤) */
+/* 카드·모달 모서리를 좀 더 둥글게, 그림자는 더 넓고 옅게(뉴모피즘 톤). 기본
+   디자인은 카드·모달 배경에 은은한 금색 그라데이션 워시(rgba(217,164,65,…))가
+   깔리는데, 파스텔 테마에선 그 워시를 걷어내고 --panel 단색으로만 채워서
+   "단색 파스텔 박스" 느낌을 낸다. */
 html.theme-pastel-dream .ticket{
+  background: var(--panel);
   border-radius: 18px;
-  box-shadow: 0 10px 28px rgba(197,86,143,0.1);
+  box-shadow: 0 10px 28px rgba(197,86,143,0.14);
+}
+html.theme-pastel-dream .verify-modal,
+html.theme-pastel-dream .propose-modal,
+html.theme-pastel-dream .exchange-modal,
+html.theme-pastel-dream .bet-modal,
+html.theme-pastel-dream .review-modal,
+html.theme-pastel-dream .manage-modal,
+html.theme-pastel-dream .profile-modal,
+html.theme-pastel-dream .report-modal,
+html.theme-pastel-dream .boot-card{
+  background: var(--panel);
 }
 html.theme-pastel-dream .verify-modal,
 html.theme-pastel-dream .propose-modal,
