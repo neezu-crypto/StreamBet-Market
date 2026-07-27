@@ -10,7 +10,6 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // 후보정 — ACES 필름톤 매핑(겨울 3D 숲과 동일)으로 블룸 하이라이트에 좀 더
@@ -66,8 +65,9 @@ var CONFIG = {
   soundEnabled: true,
   volume: 0.15, // 사운드 최대 크기 제한
   filmGrainAmount: 0.0175,
-  dofAperture: 0.0018, // 값이 작을수록 흐림이 은은해짐
-  dofMaxBlur: 0.006,
+  dofFocusRange: 90, // 초점 거리에서 이 값(월드 유닛)만큼 벗어나면 최대로 흐려짐
+  dofMaxSizeMult: 2.2, // 초점 밖 파티클의 최대 확대 배율(흐린 원반 느낌)
+  dofMaxFade: 0.45, // 초점 밖 파티클의 최대 밝기 감쇠
   flareDuration: 0.6,
   flareSize: 46
 };
@@ -267,32 +267,52 @@ function getStreakSprite() {
 // 돌려 텍스처를 샘플링하는 방식으로 직접 구현한다. 사이즈 감쇠(uScale)는
 // three.js가 내부적으로 쓰는 "렌더러 물리 픽셀 높이 / 2" 공식을 그대로 따라서
 // 기존 PointsMaterial과 크기 체감이 달라지지 않게 맞춘다.
+// 피사계심도(DoF) — 원래는 EffectComposer의 BokehPass(장면을 MeshDepthMaterial로
+// 덮어 그려 깊이 버퍼를 얻는 범용 후처리)를 썼는데, 그 깊이 셰이더는 gl_PointSize를
+// 전혀 설정하지 않고 Sprite 빌보드도 지원하지 않는다 — 이 씬은 파티클/로켓/별이
+// 전부 Points, 플레어가 전부 Sprite라 사실상 깊이 버퍼에 아무 것도 안 찍혀서
+// 흐림이 화면 전체에 균일하게 적용되는 것처럼 보였다. 그래서 포스트 프로세싱
+// 대신 스파크 셰이더 안에서 직접 카메라와의 거리(초점과의 차이)를 계산해,
+// 초점 밖 파티클일수록 포인트 크기를 키우고(흐릿한 원반처럼 보이게) 밝기를
+// 살짝 낮추는 "가짜 보케"를 파티클 단위로 적용한다 — 포인트 기반 씬에는 이
+// 방식이 실제로 더 정확하다.
 var SparkShader = {
   vertexShader:
     'attribute vec3 color;' +
     'attribute float aRotation;' +
     'varying vec3 vColor;' +
     'varying float vRotation;' +
+    'varying float vCoc;' +
     'uniform float uSize;' +
     'uniform float uScale;' +
+    'uniform float uFocus;' +
+    'uniform float uFocusRange;' +
+    'uniform float uMaxSizeMult;' +
     'void main() {' +
     '  vColor = color;' +
     '  vRotation = aRotation;' +
     '  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);' +
-    '  gl_PointSize = uSize * uScale / -mvPosition.z;' +
+    '  float viewDist = -mvPosition.z;' +
+    '  float coc = clamp(abs(viewDist - uFocus) / uFocusRange, 0.0, 1.0);' +
+    '  vCoc = coc;' +
+    '  float sizeMult = mix(1.0, uMaxSizeMult, coc);' +
+    '  gl_PointSize = uSize * sizeMult * uScale / viewDist;' +
     '  gl_Position = projectionMatrix * mvPosition;' +
     '}',
   fragmentShader:
     'precision mediump float;' +
     'uniform sampler2D uMap;' +
+    'uniform float uMaxFade;' +
     'varying vec3 vColor;' +
     'varying float vRotation;' +
+    'varying float vCoc;' +
     'void main() {' +
     '  vec2 uv = gl_PointCoord - 0.5;' +
     '  float s = sin(vRotation); float c = cos(vRotation);' +
     '  vec2 ruv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y) + 0.5;' +
     '  vec4 texel = texture2D(uMap, ruv);' +
-    '  gl_FragColor = vec4(vColor * texel.rgb, texel.a);' +
+    '  float fade = 1.0 - vCoc * uMaxFade;' +
+    '  gl_FragColor = vec4(vColor * texel.rgb * fade, texel.a * fade);' +
     '}'
 };
 
@@ -623,7 +643,11 @@ Firework.prototype.explode = function () {
     uniforms: {
       uMap: { value: this.spriteType === 'star' ? particleSpriteStar : particleSprite },
       uSize: { value: CONFIG.particleSize },
-      uScale: { value: sparkScaleValue }
+      uScale: { value: sparkScaleValue },
+      uFocus: { value: camera.position.distanceTo(CAM_LOOK_TARGET) },
+      uFocusRange: { value: CONFIG.dofFocusRange },
+      uMaxSizeMult: { value: CONFIG.dofMaxSizeMult },
+      uMaxFade: { value: CONFIG.dofMaxFade }
     },
     vertexShader: SparkShader.vertexShader,
     fragmentShader: SparkShader.fragmentShader,
@@ -693,15 +717,6 @@ function buildScene() {
   sparkScaleValue = window.innerHeight * dpr * 0.5;
 
   var renderScene = new RenderPass(scene, camera);
-  // 피사계심도(DoF) — 드론 카메라가 항상 바라보는 CAM_LOOK_TARGET까지의 거리에
-  // 초점을 자동으로 맞춰(매 프레임 animate()에서 focus 갱신), 그 부근에 몰려
-  // 터지는 불꽃은 선명하게, 화면 가장자리·먼 배경은 살짝 흐려지게 한다.
-  // 값은 은은하게 — 너무 세게 걸면 불꽃 디테일 자체가 뭉개진다.
-  var bokehPass = new BokehPass(scene, camera, {
-    focus: camera.position.distanceTo(CAM_LOOK_TARGET),
-    aperture: CONFIG.dofAperture,
-    maxblur: CONFIG.dofMaxBlur
-  });
   // UnrealBloomPass는 성능을 위해 자체적으로 여러 단계 축소(mip)해서 블러를
   // 계산한 뒤 다시 확대·합성한다 — 여기에 넘기는 해상도가 실제 픽셀 밀도
   // (devicePixelRatio)를 반영하지 않으면, 본 화면(고해상도)보다 훨씬 낮은
@@ -715,13 +730,11 @@ function buildScene() {
   filmGrainPass.uniforms.uAmount.value = CONFIG.filmGrainAmount;
   composer = new EffectComposer(renderer);
   composer.addPass(renderScene);
-  composer.addPass(bokehPass);
   composer.addPass(bloomPass);
   composer.addPass(vignettePass);
   composer.addPass(filmGrainPass);
   composer.addPass(new OutputPass());
   composer.bloomPass = bloomPass;
-  composer.bokehPass = bokehPass;
   composer.filmGrainPass = filmGrainPass;
 
   var starsGeo = new THREE.BufferGeometry();
@@ -760,15 +773,17 @@ function animate() {
   rafId = requestAnimationFrame(animate);
   var dt = clock.getDelta();
   updateCameraPath(dt);
-  if (composer.bokehPass) {
-    composer.bokehPass.materialBokeh.uniforms.focus.value = camera.position.distanceTo(CAM_LOOK_TARGET);
-  }
   if (composer.filmGrainPass) {
     composer.filmGrainPass.uniforms.uTime.value = clock.elapsedTime;
   }
+  // 드론 카메라가 항상 바라보는 지점까지의 거리를 파티클 셰이더의 초점 거리로
+  // 매 프레임 갱신 — 그 부근에 몰려 터지는 불꽃은 선명하게, 화면 가장자리·
+  // 카메라에 가깝거나 먼 파티클은 살짝 흐려진다.
+  var focusDist = camera.position.distanceTo(CAM_LOOK_TARGET);
   updateQueue(performance.now());
   for (var i = fireworks.length - 1; i >= 0; i--) {
     var fw = fireworks[i];
+    if (fw.sparkSystem) fw.sparkSystem.material.uniforms.uFocus.value = focusDist;
     fw.update(dt);
     if (fw.isDead) fireworks.splice(i, 1);
   }
