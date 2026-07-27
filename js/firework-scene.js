@@ -350,13 +350,18 @@ function buildScene() {
 
   renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  renderer.setPixelRatio(dpr);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
 
   var renderScene = new RenderPass(scene, camera);
+  // UnrealBloomPass는 성능을 위해 자체적으로 여러 단계 축소(mip)해서 블러를
+  // 계산한 뒤 다시 확대·합성한다 — 여기에 넘기는 해상도가 실제 픽셀 밀도
+  // (devicePixelRatio)를 반영하지 않으면, 본 화면(고해상도)보다 훨씬 낮은
+  // 해상도로 블러가 계산돼 부드러운 블러 대신 뭉텅뭉텅 픽셀진 블룸이 된다.
   var bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    new THREE.Vector2(window.innerWidth * dpr, window.innerHeight * dpr),
     CONFIG.bloomStrength, CONFIG.bloomRadius, 0.0
   );
   var vignettePass = new ShaderPass(VignetteShader);
@@ -389,7 +394,8 @@ function onResize() {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.bloomPass.resolution.set(window.innerWidth, window.innerHeight);
+  var dpr = renderer.getPixelRatio();
+  composer.bloomPass.resolution.set(window.innerWidth * dpr, window.innerHeight * dpr);
   composer.setSize(window.innerWidth, window.innerHeight);
 }
 
