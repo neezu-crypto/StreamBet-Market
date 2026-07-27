@@ -1390,7 +1390,7 @@ function sbmRenderSkinPurchaseLog() {
     var speedBase = (type === 'willow' ? 2.1 : 3.3) * 2; // 폭발 범위 2배
     var gravity = type === 'willow' ? 0.055 : 0.035;
     var baseSize = type === 'willow' ? 1.6 : 2;
-    sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 0.25 }); // 줄어드는 속도 2배(수명 절반)
+    sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 1.0 }); // 터지는 순간 최대 밝기는 그대로 유지하고, 어두워지는(fade-out) 시간만 더 길게
     for (var i = 0; i < count; i++) {
       var angle = Math.random() * Math.PI * 2;
       var speed = speedBase * (0.55 + Math.random() * 0.65);
