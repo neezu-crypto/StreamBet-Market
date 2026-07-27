@@ -140,29 +140,56 @@ var AudioSys = {
   }
 };
 
+// 가우시안류 곡선을 다수의 색상 정지점으로 샘플링해 방사형/선형 그라디언트에
+// 채운다 — 정지점을 3~5개만 쓰던 예전 방식은 확대·블룸을 거치면 계단(밴딩)이
+// 보이기 쉬운데, 곡선을 32단계로 촘촘히 샘플링하면 사실상 연속적인 부드러운
+// 발광으로 보인다.
+var GRADIENT_STEPS = 32;
+function fillGaussianRadial(ctx, cx, cy, r, curve) {
+  var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  for (var i = 0; i <= GRADIENT_STEPS; i++) {
+    var t = i / GRADIENT_STEPS;
+    var a = Math.max(0, Math.min(1, curve(t)));
+    grad.addColorStop(t, 'rgba(255,255,255,' + a.toFixed(4) + ')');
+  }
+  return grad;
+}
+function fillGaussianLinear(ctx, x0, y0, x1, y1, curve) {
+  var grad = ctx.createLinearGradient(x0, y0, x1, y1);
+  for (var i = 0; i <= GRADIENT_STEPS; i++) {
+    var t = i / GRADIENT_STEPS;
+    var a = Math.max(0, Math.min(1, curve(t)));
+    grad.addColorStop(t, 'rgba(255,255,255,' + a.toFixed(4) + ')');
+  }
+  return grad;
+}
+
+// 파티클용 기본 발광 스프라이트 — 중심의 밝고 단단한 코어(좁은 가우시안)와
+// 그 바깥을 감싸는 넓고 옅은 헤일로(넓은 가우시안)를 합쳐서, 실제 사진에서
+// 밝은 광원이 렌즈에 맺히는 느낌에 가깝게 만든다. 128px 해상도라 화면에
+// 크게 확대돼도(블룸까지 겹쳐도) 계단/밴딩 없이 매끈하다.
 function getSprite() {
+  var size = 128, cx = size / 2, cy = size / 2, r = size / 2;
   var canvas = document.createElement('canvas');
-  canvas.width = 32;
-  canvas.height = 32;
+  canvas.width = size;
+  canvas.height = size;
   var ctx = canvas.getContext('2d');
-  var gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-  gradient.addColorStop(0, 'rgba(255,255,255,1)');
-  gradient.addColorStop(0.3, 'rgba(255,255,255,0.9)');
-  gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
-  gradient.addColorStop(1, 'rgba(0,0,0,0)');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 32, 32);
+  ctx.fillStyle = fillGaussianRadial(ctx, cx, cy, r, function (t) {
+    return Math.exp(-t * t * 7.0) + 0.55 * Math.exp(-t * t * 2.2);
+  });
+  ctx.fillRect(0, 0, size, size);
   return new THREE.CanvasTexture(canvas);
 }
 
 // 별 모양 스프라이트 — 파티클 형태에 변화를 주기 위해 원형 글로우 외에 5각별
 // 실루엣을 발광 그라데이션과 함께 그려서 별도의 텍스처로 만든다.
 function getStarSprite() {
+  var size = 128, cx = size / 2, cy = size / 2;
   var canvas = document.createElement('canvas');
-  canvas.width = 32;
-  canvas.height = 32;
+  canvas.width = size;
+  canvas.height = size;
   var ctx = canvas.getContext('2d');
-  var cx = 16, cy = 16, spikes = 5, outerR = 15, innerR = 6;
+  var spikes = 5, outerR = size * 0.47, innerR = size * 0.19;
   ctx.save();
   ctx.translate(cx, cy);
   ctx.rotate(-Math.PI / 2);
@@ -174,11 +201,9 @@ function getStarSprite() {
   }
   ctx.closePath();
   ctx.restore();
-  var gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-  gradient.addColorStop(0, 'rgba(255,255,255,1)');
-  gradient.addColorStop(0.4, 'rgba(255,255,255,0.85)');
-  gradient.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = fillGaussianRadial(ctx, cx, cy, size / 2, function (t) {
+    return Math.exp(-t * t * 4.0);
+  });
   ctx.fill();
   return new THREE.CanvasTexture(canvas);
 }
@@ -187,32 +212,31 @@ function getStarSprite() {
 // 이미지 자산 없이 이 씬의 다른 스프라이트들과 동일한 방식) ---
 
 // 속이 빈 고리(halo ring) — 반사면 사이에서 튕겨 생기는 도넛 모양 고스트.
+// 링 반경(ringT) 위치에서 봉우리를 이루는 가우시안 "종 모양"을 반경 방향으로
+// 그려서, 예전의 stroke 기반 하드 엣지 링보다 훨씬 부드러운 도넛이 된다.
 function getRingSprite() {
+  var size = 128, cx = size / 2, cy = size / 2, r = size / 2;
   var canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
+  canvas.width = size;
+  canvas.height = size;
   var ctx = canvas.getContext('2d');
-  ctx.strokeStyle = 'rgba(255,255,255,1)';
-  ctx.lineWidth = 5;
-  var grad = ctx.createRadialGradient(32, 32, 20, 32, 32, 30);
-  grad.addColorStop(0, 'rgba(255,255,255,0)');
-  grad.addColorStop(0.5, 'rgba(255,255,255,0.9)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.beginPath();
-  ctx.arc(32, 32, 24, 0, Math.PI * 2);
-  ctx.strokeStyle = grad;
-  ctx.lineWidth = 8;
-  ctx.stroke();
+  var ringT = 0.5, spread = 55;
+  ctx.fillStyle = fillGaussianRadial(ctx, cx, cy, r, function (t) {
+    var d = t - ringT;
+    return Math.exp(-d * d * spread);
+  });
+  ctx.fillRect(0, 0, size, size);
   return new THREE.CanvasTexture(canvas);
 }
 
 // 6각형 조리개(iris) 블롭 — 카메라 조리개 날 모양이 그대로 찍히는 작은 고스트.
 function getHexSprite() {
+  var size = 128, cx = size / 2, cy = size / 2;
   var canvas = document.createElement('canvas');
-  canvas.width = 64;
-  canvas.height = 64;
+  canvas.width = size;
+  canvas.height = size;
   var ctx = canvas.getContext('2d');
-  var cx = 32, cy = 32, sides = 6, r = 26;
+  var sides = 6, r = size * 0.4;
   ctx.beginPath();
   for (var i = 0; i < sides; i++) {
     var a = (i / sides) * Math.PI * 2 - Math.PI / 2;
@@ -220,45 +244,34 @@ function getHexSprite() {
     if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
   }
   ctx.closePath();
-  var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
-  grad.addColorStop(0, 'rgba(255,255,255,0.95)');
-  grad.addColorStop(0.7, 'rgba(255,255,255,0.4)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
+  ctx.fillStyle = fillGaussianRadial(ctx, cx, cy, r, function (t) {
+    return Math.exp(-t * t * 3.0);
+  });
   ctx.fill();
   return new THREE.CanvasTexture(canvas);
 }
 
 // 가로로 넓게 퍼지는 아나모픽 스트릭 — 실제 조리개 소스 지점에만 붙는
 // 얇고 긴 하이라이트 줄기(빔). 스프라이트의 x/y 스케일을 다르게 줘서
-// 이 텍스처 하나로 다양한 종횡비를 표현한다.
+// 이 텍스처 하나로 다양한 종횡비를 표현한다. 가로·세로 모두 가우시안
+// 곡선으로 부드럽게 감쇠시켜 예전의 5단계 정지점 대비 훨씬 매끈하다.
 function getStreakSprite() {
+  var w = 512, h = 64;
   var canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 32;
+  canvas.width = w;
+  canvas.height = h;
   var ctx = canvas.getContext('2d');
-  var grad = ctx.createLinearGradient(0, 0, 256, 0);
-  grad.addColorStop(0, 'rgba(255,255,255,0)');
-  grad.addColorStop(0.45, 'rgba(255,255,255,0.6)');
-  grad.addColorStop(0.5, 'rgba(255,255,255,1)');
-  grad.addColorStop(0.55, 'rgba(255,255,255,0.6)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 256, 32);
-  var vgrad = ctx.createLinearGradient(0, 0, 0, 32);
-  vgrad.addColorStop(0, 'rgba(0,0,0,1)');
-  vgrad.addColorStop(0.5, 'rgba(255,255,255,1)');
-  vgrad.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle = fillGaussianLinear(ctx, 0, 0, w, 0, function (t) {
+    var d = (t - 0.5) * 2.0;
+    return Math.exp(-d * d * 8.0);
+  });
+  ctx.fillRect(0, 0, w, h);
   ctx.globalCompositeOperation = 'multiply';
-  ctx.fillStyle = vgrad;
-  ctx.fillRect(0, 0, 256, 32);
-  ctx.globalCompositeOperation = 'destination-in';
-  var mask = ctx.createLinearGradient(0, 0, 256, 0);
-  mask.addColorStop(0, 'rgba(255,255,255,0)');
-  mask.addColorStop(0.5, 'rgba(255,255,255,1)');
-  mask.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = mask;
-  ctx.fillRect(0, 0, 256, 32);
+  ctx.fillStyle = fillGaussianLinear(ctx, 0, 0, 0, h, function (t) {
+    var d = (t - 0.5) * 2.0;
+    return Math.exp(-d * d * 3.0);
+  });
+  ctx.fillRect(0, 0, w, h);
   return new THREE.CanvasTexture(canvas);
 }
 
