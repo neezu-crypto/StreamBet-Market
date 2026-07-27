@@ -183,6 +183,85 @@ function getStarSprite() {
   return new THREE.CanvasTexture(canvas);
 }
 
+// --- 렌즈 플레어용 고스트 텍스처 3종 (모두 순수 캔버스 절차 생성 — 외부
+// 이미지 자산 없이 이 씬의 다른 스프라이트들과 동일한 방식) ---
+
+// 속이 빈 고리(halo ring) — 반사면 사이에서 튕겨 생기는 도넛 모양 고스트.
+function getRingSprite() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  var ctx = canvas.getContext('2d');
+  ctx.strokeStyle = 'rgba(255,255,255,1)';
+  ctx.lineWidth = 5;
+  var grad = ctx.createRadialGradient(32, 32, 20, 32, 32, 30);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.beginPath();
+  ctx.arc(32, 32, 24, 0, Math.PI * 2);
+  ctx.strokeStyle = grad;
+  ctx.lineWidth = 8;
+  ctx.stroke();
+  return new THREE.CanvasTexture(canvas);
+}
+
+// 6각형 조리개(iris) 블롭 — 카메라 조리개 날 모양이 그대로 찍히는 작은 고스트.
+function getHexSprite() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 64;
+  canvas.height = 64;
+  var ctx = canvas.getContext('2d');
+  var cx = 32, cy = 32, sides = 6, r = 26;
+  ctx.beginPath();
+  for (var i = 0; i < sides; i++) {
+    var a = (i / sides) * Math.PI * 2 - Math.PI / 2;
+    var x = cx + r * Math.cos(a), y = cy + r * Math.sin(a);
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath();
+  var grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, r);
+  grad.addColorStop(0, 'rgba(255,255,255,0.95)');
+  grad.addColorStop(0.7, 'rgba(255,255,255,0.4)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+  return new THREE.CanvasTexture(canvas);
+}
+
+// 가로로 넓게 퍼지는 아나모픽 스트릭 — 실제 조리개 소스 지점에만 붙는
+// 얇고 긴 하이라이트 줄기(빔). 스프라이트의 x/y 스케일을 다르게 줘서
+// 이 텍스처 하나로 다양한 종횡비를 표현한다.
+function getStreakSprite() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 32;
+  var ctx = canvas.getContext('2d');
+  var grad = ctx.createLinearGradient(0, 0, 256, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,0)');
+  grad.addColorStop(0.45, 'rgba(255,255,255,0.6)');
+  grad.addColorStop(0.5, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.55, 'rgba(255,255,255,0.6)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 256, 32);
+  var vgrad = ctx.createLinearGradient(0, 0, 0, 32);
+  vgrad.addColorStop(0, 'rgba(0,0,0,1)');
+  vgrad.addColorStop(0.5, 'rgba(255,255,255,1)');
+  vgrad.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.globalCompositeOperation = 'multiply';
+  ctx.fillStyle = vgrad;
+  ctx.fillRect(0, 0, 256, 32);
+  ctx.globalCompositeOperation = 'destination-in';
+  var mask = ctx.createLinearGradient(0, 0, 256, 0);
+  mask.addColorStop(0, 'rgba(255,255,255,0)');
+  mask.addColorStop(0.5, 'rgba(255,255,255,1)');
+  mask.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = mask;
+  ctx.fillRect(0, 0, 256, 32);
+  return new THREE.CanvasTexture(canvas);
+}
+
 // 파티클 포인트 스프라이트용 커스텀 셰이더 — PointsMaterial은 포인트 단위
 // 회전을 지원하지 않아서, 회전(aRotation)을 프래그먼트 셰이더에서 gl_PointCoord를
 // 돌려 텍스처를 샘플링하는 방식으로 직접 구현한다. 사이즈 감쇠(uScale)는
@@ -221,6 +300,15 @@ var scene = null, camera = null, renderer = null, composer = null, canvas = null
 var particleSprite = null;
 var particleSpriteStar = null;
 var sparkScaleValue = 400;
+var flareTexRing = null;
+var flareTexHex = null;
+var flareTexStreak = null;
+var flareNdcScratch = new THREE.Vector3();
+var flareNearScratch = new THREE.Vector3();
+var flareFarScratch = new THREE.Vector3();
+var flareDirScratch = new THREE.Vector3();
+var flareWorldScratch = new THREE.Vector3();
+var FLARE_DEPTH = 190; // 카메라 앞 고정 거리 — 이 씬에서 불꽃이 보통 터지는 거리대와 맞춘 값
 var fireworks = [];
 var clock = null;
 var rafId = null;
@@ -315,15 +403,39 @@ Firework.prototype.update = function (dt) {
   } else {
     this.timer += dt;
 
-    if (this.flareSprite) {
+    if (this.flareGhosts) {
       this.flareTimer += dt;
       var flareT = Math.min(1, this.flareTimer / CONFIG.flareDuration);
-      this.flareSprite.material.opacity = (1 - flareT) * (1 - flareT);
-      this.flareSprite.scale.setScalar(CONFIG.flareSize * (1 + flareT * 0.6));
+      var flareAlpha = (1 - flareT) * (1 - flareT);
+      var ndc = flareNdcScratch.copy(this.pos).project(camera);
+      var behindCamera = ndc.z > 1 || ndc.z < -1 || flareAlpha <= 0.001;
+      for (var g = 0; g < this.flareGhosts.length; g++) {
+        var ghost = this.flareGhosts[g];
+        if (behindCamera) { ghost.obj.visible = false; continue; }
+        ghost.obj.visible = true;
+        // 소스(distance=0)~화면 중심(distance=1)을 잇는 직선 위, 그리고 그
+        // 너머(distance>1, 반대편)까지 고스트를 배치하는 표준 렌즈플레어 공식.
+        var gx = ndc.x * (1 - ghost.distance);
+        var gy = ndc.y * (1 - ghost.distance);
+        // NDC (gx,gy)를 지나는 카메라 광선을 near/far 두 점으로 구해 방향을
+        // 뽑고, 카메라로부터 고정 거리(FLARE_DEPTH)에 배치한다. near-plane
+        // 근처(ndc.z가 -1에 가까운 값)로 직접 unproject하면 원근 투영의
+        // 비선형성 때문에 카메라에서 실제 거리가 극히 작게 나와 스프라이트가
+        // 거의 안 보이게 되는 문제가 있어, 이 방식으로 우회한다.
+        var nearP = flareNearScratch.set(gx, gy, -1).unproject(camera);
+        var farP = flareFarScratch.set(gx, gy, 1).unproject(camera);
+        var rayDir = flareDirScratch.subVectors(farP, nearP).normalize();
+        var worldPos = flareWorldScratch.copy(camera.position).addScaledVector(rayDir, FLARE_DEPTH);
+        ghost.obj.position.copy(worldPos);
+        ghost.obj.scale.set(ghost.sizeX, ghost.sizeY, 1);
+        ghost.obj.material.opacity = flareAlpha * ghost.baseOpacity;
+      }
       if (flareT >= 1) {
-        scene.remove(this.flareSprite);
-        this.flareSprite.material.dispose();
-        this.flareSprite = null;
+        for (var g2 = 0; g2 < this.flareGhosts.length; g2++) {
+          scene.remove(this.flareGhosts[g2].obj);
+          this.flareGhosts[g2].obj.material.dispose();
+        }
+        this.flareGhosts = null;
       }
     }
 
@@ -378,20 +490,36 @@ Firework.prototype.explode = function () {
   this.timer = 0;
   this.currentParticleCount = CONFIG.particleCount;
 
-  // 렌즈 플레어 — 진짜 고스트 체인 대신, 폭발 중심에서 빠르게 커지며 사그라드는
-  // 부드러운 발광 스프라이트로 "밝은 빛이 렌즈에 번지는" 느낌만 가볍게 낸다.
+  // 렌즈 플레어 — 실제 카메라 렌즈처럼 소스~화면 중심을 잇는 축 위에 여러
+  // "고스트"(아나모픽 스트릭 + 코어 + 6각 조리개 고스트 + 링 고스트)를 화면
+  // 좌표계(NDC) 기준으로 배치하는 고스트 체인 방식. THREE.Lensflare 내장
+  // 오클루전(프레임버퍼 복사) 방식은 EffectComposer 체인과 충돌 위험이 있어
+  // 쓰지 않고, 매 프레임 직접 스프라이트를 화면 좌표로 재배치한다.
   this.flareTimer = 0;
-  this.flareSprite = new THREE.Sprite(new THREE.SpriteMaterial({
-    map: particleSprite,
-    color: this.colors[0],
-    transparent: true,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    opacity: 1
-  }));
-  this.flareSprite.position.copy(this.pos);
-  this.flareSprite.scale.setScalar(CONFIG.flareSize);
-  scene.add(this.flareSprite);
+  var flareColorA = this.colors[0];
+  var flareColorB = this.colors.length > 1 ? this.colors[1] : this.colors[0];
+  var flareWhite = new THREE.Color(1, 1, 1);
+  var flareDefs = [
+    { texture: flareTexStreak, distance: 0.0, sizeX: CONFIG.flareSize * 2.4, sizeY: CONFIG.flareSize * 0.22, color: flareWhite, baseOpacity: 0.9 },
+    { texture: particleSprite, distance: 0.0, sizeX: CONFIG.flareSize * 0.9, sizeY: CONFIG.flareSize * 0.9, color: flareWhite, baseOpacity: 1.0 },
+    { texture: flareTexHex, distance: 0.35, sizeX: CONFIG.flareSize * 0.32, sizeY: CONFIG.flareSize * 0.32, color: flareColorA.clone().lerp(flareWhite, 0.3), baseOpacity: 0.55 },
+    { texture: flareTexRing, distance: 0.65, sizeX: CONFIG.flareSize * 0.5, sizeY: CONFIG.flareSize * 0.5, color: flareColorB.clone().lerp(flareWhite, 0.2), baseOpacity: 0.45 },
+    { texture: flareTexHex, distance: 0.9, sizeX: CONFIG.flareSize * 0.18, sizeY: CONFIG.flareSize * 0.18, color: flareColorA.clone(), baseOpacity: 0.35 },
+    { texture: flareTexHex, distance: 1.15, sizeX: CONFIG.flareSize * 0.24, sizeY: CONFIG.flareSize * 0.24, color: flareColorB.clone().multiplyScalar(0.7), baseOpacity: 0.3 }
+  ];
+  this.flareGhosts = flareDefs.map(function (def) {
+    var sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: def.texture,
+      color: def.color,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+      opacity: 0
+    }));
+    sprite.visible = false;
+    scene.add(sprite);
+    return { obj: sprite, distance: def.distance, sizeX: def.sizeX, sizeY: def.sizeY, baseOpacity: def.baseOpacity };
+  });
 
   var geo = new THREE.BufferGeometry();
   var positions = new Float32Array(this.currentParticleCount * 3);
@@ -518,10 +646,12 @@ Firework.prototype.cleanup = function () {
     this.rocketMesh.geometry.dispose();
     this.rocketMesh.material.dispose();
   }
-  if (this.flareSprite) {
-    scene.remove(this.flareSprite);
-    this.flareSprite.material.dispose();
-    this.flareSprite = null;
+  if (this.flareGhosts) {
+    for (var g = 0; g < this.flareGhosts.length; g++) {
+      scene.remove(this.flareGhosts[g].obj);
+      this.flareGhosts[g].obj.material.dispose();
+    }
+    this.flareGhosts = null;
   }
 };
 
@@ -541,6 +671,9 @@ function updateQueue(time) {
 function buildScene() {
   particleSprite = getSprite();
   particleSpriteStar = getStarSprite();
+  flareTexRing = getRingSprite();
+  flareTexHex = getHexSprite();
+  flareTexStreak = getStreakSprite();
 
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x000000, 0.002);
