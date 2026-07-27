@@ -131,8 +131,72 @@ function getSprite() {
   return new THREE.CanvasTexture(canvas);
 }
 
+// 별 모양 스프라이트 — 파티클 형태에 변화를 주기 위해 원형 글로우 외에 5각별
+// 실루엣을 발광 그라데이션과 함께 그려서 별도의 텍스처로 만든다.
+function getStarSprite() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 32;
+  canvas.height = 32;
+  var ctx = canvas.getContext('2d');
+  var cx = 16, cy = 16, spikes = 5, outerR = 15, innerR = 6;
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.rotate(-Math.PI / 2);
+  ctx.beginPath();
+  for (var i = 0; i < spikes * 2; i++) {
+    var r = i % 2 === 0 ? outerR : innerR;
+    var a = (i * Math.PI) / spikes;
+    ctx.lineTo(r * Math.cos(a), r * Math.sin(a));
+  }
+  ctx.closePath();
+  ctx.restore();
+  var gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+  gradient.addColorStop(0, 'rgba(255,255,255,1)');
+  gradient.addColorStop(0.4, 'rgba(255,255,255,0.85)');
+  gradient.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = gradient;
+  ctx.fill();
+  return new THREE.CanvasTexture(canvas);
+}
+
+// 파티클 포인트 스프라이트용 커스텀 셰이더 — PointsMaterial은 포인트 단위
+// 회전을 지원하지 않아서, 회전(aRotation)을 프래그먼트 셰이더에서 gl_PointCoord를
+// 돌려 텍스처를 샘플링하는 방식으로 직접 구현한다. 사이즈 감쇠(uScale)는
+// three.js가 내부적으로 쓰는 "렌더러 물리 픽셀 높이 / 2" 공식을 그대로 따라서
+// 기존 PointsMaterial과 크기 체감이 달라지지 않게 맞춘다.
+var SparkShader = {
+  vertexShader:
+    'attribute vec3 color;' +
+    'attribute float aRotation;' +
+    'varying vec3 vColor;' +
+    'varying float vRotation;' +
+    'uniform float uSize;' +
+    'uniform float uScale;' +
+    'void main() {' +
+    '  vColor = color;' +
+    '  vRotation = aRotation;' +
+    '  vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);' +
+    '  gl_PointSize = uSize * uScale / -mvPosition.z;' +
+    '  gl_Position = projectionMatrix * mvPosition;' +
+    '}',
+  fragmentShader:
+    'precision mediump float;' +
+    'uniform sampler2D uMap;' +
+    'varying vec3 vColor;' +
+    'varying float vRotation;' +
+    'void main() {' +
+    '  vec2 uv = gl_PointCoord - 0.5;' +
+    '  float s = sin(vRotation); float c = cos(vRotation);' +
+    '  vec2 ruv = vec2(c * uv.x - s * uv.y, s * uv.x + c * uv.y) + 0.5;' +
+    '  vec4 texel = texture2D(uMap, ruv);' +
+    '  gl_FragColor = vec4(vColor * texel.rgb, texel.a);' +
+    '}'
+};
+
 var scene = null, camera = null, renderer = null, composer = null, canvas = null;
 var particleSprite = null;
+var particleSpriteStar = null;
+var sparkScaleValue = 400;
 var fireworks = [];
 var clock = null;
 var rafId = null;
@@ -191,6 +255,8 @@ function Firework(startX) {
   else if (burstRand < 0.85) this.burstType = 'double';
   else this.burstType = 'streamer';
 
+  this.spriteType = Math.random() < 0.5 ? 'round' : 'star';
+
   this.pos = new THREE.Vector3(startX, -80, (Math.random() - 0.5) * 50);
   this.vel = new THREE.Vector3(
     (Math.random() - 0.5) * 0.5,
@@ -213,7 +279,7 @@ function Firework(startX) {
 }
 
 Firework.prototype.update = function (dt) {
-  if (this.sparkSystem) this.sparkSystem.material.size = CONFIG.particleSize;
+  if (this.sparkSystem) this.sparkSystem.material.uniforms.uSize.value = CONFIG.particleSize;
   if (this.rocketMesh) this.rocketMesh.material.size = CONFIG.rocketSize;
 
   if (this.phase === 'rocket') {
@@ -226,6 +292,7 @@ Firework.prototype.update = function (dt) {
     this.timer += dt;
     var positions = this.sparkSystem.geometry.attributes.position.array;
     var colors = this.sparkSystem.geometry.attributes.color.array;
+    var rotations = this.sparkSystem.geometry.attributes.aRotation.array;
     var aliveCount = 0;
     var isHovering = this.timer < CONFIG.hoverDuration;
     var gravityFactor = THREE.MathUtils.smoothstep(this.timer, CONFIG.hoverDuration, CONFIG.hoverDuration + 0.5);
@@ -237,6 +304,7 @@ Firework.prototype.update = function (dt) {
         positions[i3] += this.velocities[i3];
         positions[i3 + 1] += this.velocities[i3 + 1];
         positions[i3 + 2] += this.velocities[i3 + 2];
+        rotations[i] += this.rotSpeeds[i] * dt;
 
         if (isHovering) {
           this.velocities[i3] *= CONFIG.friction;
@@ -250,14 +318,18 @@ Firework.prototype.update = function (dt) {
           this.lifetimes[i] -= CONFIG.fadeSpeed;
         }
 
+        // 색 식힘(cooling) — 터진 직후엔 흰빛에 가깝게 밝다가(hot), 수명이
+        // 줄어들수록 고유 색으로, 이후 밝기와 함께 어두워지며 꺼진다.
         var alpha = Math.max(0, this.lifetimes[i]);
-        colors[i3] = this.baseColors[i3] * alpha * 1.5;
-        colors[i3 + 1] = this.baseColors[i3 + 1] * alpha * 1.5;
-        colors[i3 + 2] = this.baseColors[i3 + 2] * alpha * 1.5;
+        var coolT = Math.min(1, Math.max(0, (1.0 - alpha) / 0.35));
+        colors[i3] = THREE.MathUtils.lerp(1.0, this.baseColors[i3], coolT) * alpha * 1.5;
+        colors[i3 + 1] = THREE.MathUtils.lerp(1.0, this.baseColors[i3 + 1], coolT) * alpha * 1.5;
+        colors[i3 + 2] = THREE.MathUtils.lerp(1.0, this.baseColors[i3 + 2], coolT) * alpha * 1.5;
       }
     }
     this.sparkSystem.geometry.attributes.position.needsUpdate = true;
     this.sparkSystem.geometry.attributes.color.needsUpdate = true;
+    this.sparkSystem.geometry.attributes.aRotation.needsUpdate = true;
     if (aliveCount === 0) this.cleanup();
   }
 };
@@ -272,9 +344,11 @@ Firework.prototype.explode = function () {
   var geo = new THREE.BufferGeometry();
   var positions = new Float32Array(this.currentParticleCount * 3);
   var colors = new Float32Array(this.currentParticleCount * 3);
+  var rotations = new Float32Array(this.currentParticleCount);
   this.baseColors = new Float32Array(this.currentParticleCount * 3);
   this.velocities = new Float32Array(this.currentParticleCount * 3);
   this.lifetimes = new Float32Array(this.currentParticleCount);
+  this.rotSpeeds = new Float32Array(this.currentParticleCount);
 
   var baseSpeed = CONFIG.explosionForce * (0.8 + Math.random() * 0.4);
 
@@ -357,17 +431,24 @@ Firework.prototype.explode = function () {
     colors[i3 + 2] = this.baseColors[i3 + 2];
 
     this.lifetimes[i] = 1.0;
+    rotations[i] = Math.random() * Math.PI * 2;
+    this.rotSpeeds[i] = (Math.random() - 0.5) * 4.0;
   }
 
   geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
   geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+  geo.setAttribute('aRotation', new THREE.BufferAttribute(rotations, 1));
 
-  this.sparkSystem = new THREE.Points(geo, new THREE.PointsMaterial({
-    size: CONFIG.particleSize,
-    map: particleSprite,
+  this.sparkSystem = new THREE.Points(geo, new THREE.ShaderMaterial({
+    uniforms: {
+      uMap: { value: this.spriteType === 'star' ? particleSpriteStar : particleSprite },
+      uSize: { value: CONFIG.particleSize },
+      uScale: { value: sparkScaleValue }
+    },
+    vertexShader: SparkShader.vertexShader,
+    fragmentShader: SparkShader.fragmentShader,
     transparent: true,
     depthWrite: false,
-    vertexColors: true,
     blending: THREE.AdditiveBlending
   }));
   scene.add(this.sparkSystem);
@@ -402,6 +483,7 @@ function updateQueue(time) {
 
 function buildScene() {
   particleSprite = getSprite();
+  particleSpriteStar = getStarSprite();
 
   scene = new THREE.Scene();
   scene.fog = new THREE.FogExp2(0x000000, 0.002);
@@ -415,6 +497,10 @@ function buildScene() {
   renderer.setPixelRatio(dpr);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
+  // 커스텀 스파크 셰이더의 포인트 크기 감쇠 계수 — three.js가 내장 Points
+  // 셰이더에서 쓰는 "물리 픽셀 높이 / 2" 공식과 맞춰서 기존 PointsMaterial 대비
+  // 파티클 크기 체감이 달라지지 않게 한다.
+  sparkScaleValue = window.innerHeight * dpr * 0.5;
 
   var renderScene = new RenderPass(scene, camera);
   // UnrealBloomPass는 성능을 위해 자체적으로 여러 단계 축소(mip)해서 블러를
@@ -458,6 +544,11 @@ function onResize() {
   var dpr = renderer.getPixelRatio();
   composer.bloomPass.resolution.set(window.innerWidth * dpr, window.innerHeight * dpr);
   composer.setSize(window.innerWidth, window.innerHeight);
+  sparkScaleValue = window.innerHeight * dpr * 0.5;
+  for (var i = 0; i < fireworks.length; i++) {
+    var mat = fireworks[i].sparkSystem && fireworks[i].sparkSystem.material;
+    if (mat && mat.uniforms && mat.uniforms.uScale) mat.uniforms.uScale.value = sparkScaleValue;
+  }
 }
 
 function animate() {
