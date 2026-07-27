@@ -726,7 +726,7 @@
     <li><strong>관리자 · 인증 스트리머 채팅</strong>이 추가되어(<span class="chip">sendAdminChatMessage</span>), 관리 탭 상단에서 서로 실시간으로 대화할 수 있다. 재화가 걸린 기능은 아니지만 다른 관리 전용 데이터와 동일한 원칙으로, 클라이언트가 <span class="chip">bettingMarket/adminChat</span>에 직접 쓰지 못하게 막고 Cloud Function을 거치도록 해 정지 계정 차단 · 메시지 길이 제한(300자)을 서버에서 항상 보장한다. 읽기 권한도 관리자 · 인증 스트리머로 한정된다</li>
   </ul>
 
-  <div class="callout"><b>Security Rules 원칙 재확인</b> — <span class="chip">chargeRequests</span> · <span class="chip">streamerRequests</span> · <span class="chip">verifyRequests</span> · <span class="chip">bannedAccounts</span>는 관리자 이메일 계정만 읽을 수 있고, <span class="chip">marketReports</span> · <span class="chip">nicknameReports</span> · <span class="chip">auditLog</span> · <span class="chip">adminChat</span>는 관리자 또는 <span class="chip">verifiedStreamerUids</span> 미러 노드에 등록된 인증 스트리머만 읽을 수 있도록 좁혔다. 그 외 공개 열람이 필요한 <span class="chip">blockedNicknames</span> · <span class="chip">profiles</span>는 기존처럼 로그인 유저 전체에게 열려 있다.</div>
+  <div class="callout"><b>Security Rules 원칙 재확인</b> — <span class="chip">chestPurchaseRequests</span> · <span class="chip">streamerRequests</span> · <span class="chip">verifyRequests</span> · <span class="chip">bannedAccounts</span>는 관리자 이메일 계정만 읽을 수 있고, <span class="chip">marketReports</span> · <span class="chip">nicknameReports</span> · <span class="chip">auditLog</span> · <span class="chip">adminChat</span>는 관리자 또는 <span class="chip">verifiedStreamerUids</span> 미러 노드에 등록된 인증 스트리머만 읽을 수 있도록 좁혔다. 그 외 공개 열람이 필요한 <span class="chip">blockedNicknames</span> · <span class="chip">profiles</span>는 기존처럼 로그인 유저 전체에게 열려 있다.</div>
 
   <h3>관리 탭 검수 알림 배너</h3>
   <p>인증 스트리머 홍보 배너 바로 아래, 관리 탭 최상단에 검수가 필요한 항목(검수 대기 제안 · 마켓 신고 · 닉네임 신고, 관리자 전용으로는 인증 신청 · 충전 신청 · 스트리머 추가 요청)을 모아 알림 형태로 보여주고 총 건수를 배지로 표시한다. 각 항목 클릭 시 해당 섹션으로 스크롤 이동하며, 각 목록 DOM을 <span class="chip">MutationObserver</span>로 관찰해 검수가 완료되어 항목이 사라지는 즉시 알림도 함께 갱신된다(기존 렌더링 로직은 건드리지 않는 방식).</p>
@@ -786,6 +786,16 @@
 
   <h3>다크모드 강제 적용 방지 (color-scheme)</h3>
   <p>일부 안드로이드 기기의 "웹 콘텐츠 다크모드 자동 적용" 기능이 스킨 상점의 흰색 미리보기 그리드 같은 의도적으로 밝은 요소를 임의로 어둡게 반전시키는 현상이 확인됐다. 모든 테마에 <span class="chip">color-scheme</span>을 명시(기본 테마는 dark, 밝은 테마들은 light)해 브라우저가 페이지를 항상 의도한 대로 인식하게 했다.</p>
+
+  <h3>자산충전 전면 개편 — 라이브 후원(룰렛) → 보물상자 (07번 갱신)</h3>
+  <p>기존에는 개발자 라이브 방송에 후원하면 방송 중 룰렛 결과에 따라 관리자가 직접 지급액을 입력해 자산을 지급하는 방식(<span class="chip">submitChargeRequest</span>/<span class="chip">grantChargeRequest</span>)이었다. 방송 시간에 매여있어야 한다는 한계가 있어, 방송과 무관하게 언제든 후원 → 확인 → 지급이 가능한 <strong>보물상자</strong> 방식으로 완전히 대체했다(기존 함수 3개는 삭제).</p>
+  <ul>
+    <li><strong>구매</strong> — 보물상자 1개당 <strong>별풍선 33개</strong>. 1개/10개 단위로 구매 개수를 조절하면 총 지급 개수 · 결제 별풍선이 자동 계산된다. 구매하기를 누르면 <span class="chip">bettingMarket/chestPurchaseRequests</span>에 신청이 접수되고, SOOP 후원창(<span class="chip">gift_starballoon.php</span>)이 새 탭으로 열린다</li>
+    <li><strong>보너스</strong> — <strong>10개 이상 한 번에 구매</strong>하면 <strong>10%</strong>를 추가로 지급한다(최소 1개 단위로 내림 계산, 예: 10개 구매 시 +1개)</li>
+    <li><strong>승인</strong> — 관리자가 관리 탭 "보물상자 구매 신청" 큐에서 실제 후원 내역을 확인한 뒤 승인하면 <span class="chip">bettingMarket/ownedChests/{uid}</span>가 그만큼 증가한다. 이중 승인 방지는 기존 패턴과 동일하게 클레임 카운터(<span class="chip">ServerValue.increment</span>)로 신청 건을 먼저 선점하는 방식을 쓴다</li>
+    <li><strong>열기</strong> — 보유한 보물상자를 하나씩 열어 <strong>95% 확률로 500,000원</strong>, <strong>5% 확률로 5,000,000원</strong>을 받는다. 소모(차감)도 <span class="chip">ownedChests</span>를 원자적으로 증감 후 결과가 음수가 되면 즉시 되돌리는, 이 세션에서 확립한 <span class="chip">ref.transaction()</span> 회피 패턴을 그대로 따른다</li>
+    <li><strong>기록</strong> — 오픈 결과는 <span class="chip">bettingMarket/chestOpenLog</span>(관리자 전용 열람, 최근 200건 유지)에 남는다</li>
+  </ul>
 </section>
 
 <section>
