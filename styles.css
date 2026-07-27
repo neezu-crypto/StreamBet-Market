@@ -940,7 +940,7 @@ html.theme-firework-market .boot-card::before{
    비눗방울 캔버스(js/skins.js)만 얹고 구조는 건드리지 않는다. */
 html.theme-pastel-dream{
   color-scheme: light;
-  --ink: #f7f0fb;
+  --ink: #dcf3e8;
   --panel: #fbdcee;
   --panel-raised: #f6c9e6;
   --hairline: #eba9d1;
@@ -957,7 +957,7 @@ html.theme-pastel-dream{
   --muted-2: #9d84a8;
 }
 html.theme-pastel-dream body{
-  background: linear-gradient(160deg, #fdf0f6, #f3ecfb 45%, #eaf8f2);
+  background: var(--ink);
 }
 html.theme-pastel-dream .devbar{ background: #ffffff; }
 html.theme-pastel-dream .ticker{ background: linear-gradient(180deg, #fbe4f0, transparent); }
