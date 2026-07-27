@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase, ServerValue } = require('firebase-admin/database');
-const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
+const { requireAuth, isTrustedAccount, assertNotBanned, isAdminEmail } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, kstDateKey, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
 const {
@@ -30,7 +30,13 @@ const claimAttendance = onCall(async (request) => {
   }
   const yesterday = kstDateKey(new Date(Date.now() - DAY_MS));
   const streak = wallet.lastAttendanceDate === yesterday ? (wallet.attendanceStreak || 0) + 1 : 1;
-  const reward = ATTENDANCE_SCHEDULE[(streak - 1) % ATTENDANCE_SCHEDULE.length];
+  const baseReward = ATTENDANCE_SCHEDULE[(streak - 1) % ATTENDANCE_SCHEDULE.length];
+
+  // 광고 시청 시 2배 지급 — 우선 관리자 시범 운영 단계라 일반 유저 요청은 무시하고
+  // 기본 보상만 지급한다(UI도 관리자에게만 광고 선택지를 보여준다).
+  const { watchedAd } = request.data || {};
+  const isAdmin = isAdminEmail(request.auth.token && request.auth.token.email);
+  const reward = watchedAd && isAdmin ? baseReward * 2 : baseReward;
 
   await adjustBalance(uid, reward);
   await walletRef(uid).update({ attendanceStreak: streak, lastAttendanceDate: today });

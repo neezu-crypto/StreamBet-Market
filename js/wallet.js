@@ -53,15 +53,32 @@ function sbmRenderAttendance(wallet) {
     }
     unsubscribeWallet = fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/wallets/' + user.uid), function (snap) {
       var wallet = snap.val() || { balance: 1000000 };
+      window.sbmLastWallet = wallet; // js/checkin-modal.js가 오늘 보상 금액 계산에 재사용
       if (walletAmountEl) walletAmountEl.innerHTML = Math.round(wallet.balance || 0).toLocaleString('ko-KR') + '<small>원</small>';
       sbmRenderAttendance(wallet);
       if (window.sbmRenderJackpotEligibility) window.sbmRenderJackpotEligibility(wallet);
     });
   });
 
+  // 출석 스케줄상 "오늘" 받을 기본 보상 금액(dayIndex 계산은 sbmRenderAttendance와 동일 로직) —
+  // js/checkin-modal.js가 모달에 표시할 금액을 계산할 때도 재사용한다.
+  window.sbmGetTodayAttendanceAmount = function (wallet) {
+    if (!wallet) return ATTENDANCE_SCHEDULE[0];
+    var today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+    var yesterday = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date(Date.now() - 86400000));
+    var streak = wallet.attendanceStreak || 0;
+    var claimedToday = wallet.lastAttendanceDate === today;
+    var nextStreak = claimedToday ? streak : (wallet.lastAttendanceDate === yesterday ? streak + 1 : 1);
+    var dayIndex = (nextStreak - 1) % 7;
+    return ATTENDANCE_SCHEDULE[dayIndex];
+  };
+
   if (claimBtn) {
     claimBtn.addEventListener('click', function () {
       if (!window.sbmUser) { window.sbmOpenLoginModal && window.sbmOpenLoginModal(); return; }
+      // 관리자는 "오늘 받기 / 광고보고 2배 받기" 선택 모달로(우선 관리자 시범 운영),
+      // 그 외 계정은 기존처럼 바로 기본 보상을 받는다.
+      if (window.sbmIsAdmin && window.sbmOpenCheckinModal) { window.sbmOpenCheckinModal(); return; }
       claimBtn.disabled = true;
       fb.httpsCallable('claimAttendance')({}).catch(function (e) {
         alert(e.message);
