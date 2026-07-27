@@ -2045,7 +2045,8 @@ body.sbm-can-manage .js-manage-market, .js-open-review{ cursor: pointer; }
 .chest-choice-btn{
   flex:1; display:flex; flex-direction:column; align-items:center; gap:8px;
   padding:22px 12px; background:var(--panel-raised); border:1px solid var(--hairline);
-  border-radius:12px; font-family:inherit; transition:border-color .15s ease, transform .15s ease;
+  border-radius:12px; font-family:inherit; color: var(--text);
+  transition:border-color .15s ease, transform .15s ease;
 }
 .chest-choice-btn:hover{ border-color:var(--gold-line); transform:translateY(-2px); }
 .chest-choice-emoji{ font-size:32px; line-height:1; }
