@@ -934,6 +934,83 @@ html.theme-firework-market .boot-card::before{
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
 }
 
+/* 16번 — 스킨: 파스텔 드림 테마. 다른 실사/테마 스킨들과 달리 "포근하고
+   부드러운" 무드가 핵심이라, 카드·모달 모서리를 더 둥글게 하고 그림자도 더
+   퍼지게(부드러운 뉴모피즘 톤) 바꾼다. 배경엔 은은하게 떠오르는 파스텔
+   비눗방울 캔버스(js/skins.js)만 얹고 구조는 건드리지 않는다. */
+html.theme-pastel-dream{
+  color-scheme: light;
+  --ink: #f7f0fb;
+  --panel: #ffffff;
+  --panel-raised: #fdf7fc;
+  --hairline: #ecdcf4;
+  --gold: #f5a8c9;
+  --gold-dim: rgba(245,168,201,0.16);
+  --gold-line: rgba(245,168,201,0.45);
+  --gold-text: #c5568f;
+  --mint: #7bd6b3;
+  --mint-dim: rgba(123,214,179,0.16);
+  --coral: #ff9d9d;
+  --coral-dim: rgba(255,157,157,0.16);
+  --text: #5c5266;
+  --muted: #9584a3;
+  --muted-2: #c2b3cf;
+}
+html.theme-pastel-dream body{
+  background: linear-gradient(160deg, #fdf0f6, #f3ecfb 45%, #eaf8f2);
+}
+html.theme-pastel-dream .devbar{ background: #ffffff; }
+html.theme-pastel-dream .ticker{ background: linear-gradient(180deg, #fbe4f0, transparent); }
+html.theme-pastel-dream .boot-card{ position: relative; }
+/* 카드·모달 모서리를 좀 더 둥글게, 그림자는 더 넓고 옅게(뉴모피즘 톤) */
+html.theme-pastel-dream .ticket{
+  border-radius: 18px;
+  box-shadow: 0 10px 28px rgba(197,86,143,0.1);
+}
+html.theme-pastel-dream .verify-modal,
+html.theme-pastel-dream .propose-modal,
+html.theme-pastel-dream .exchange-modal,
+html.theme-pastel-dream .bet-modal,
+html.theme-pastel-dream .review-modal,
+html.theme-pastel-dream .manage-modal,
+html.theme-pastel-dream .profile-modal,
+html.theme-pastel-dream .report-modal,
+html.theme-pastel-dream .boot-card{
+  border-radius: 20px;
+  box-shadow: 0 20px 50px rgba(197,86,143,0.16);
+}
+html.theme-pastel-dream .ticket:not(.hero-ticket)::before,
+html.theme-pastel-dream .verify-modal::before,
+html.theme-pastel-dream .propose-modal::before,
+html.theme-pastel-dream .exchange-modal::before,
+html.theme-pastel-dream .bet-modal::before,
+html.theme-pastel-dream .review-modal::before,
+html.theme-pastel-dream .manage-modal::before,
+html.theme-pastel-dream .profile-modal::before,
+html.theme-pastel-dream .report-modal::before,
+html.theme-pastel-dream .boot-card::before{ content:"🎀"; }
+html.theme-pastel-dream .ticket:not(.hero-ticket)::before,
+html.theme-pastel-dream .verify-modal::before,
+html.theme-pastel-dream .propose-modal::before,
+html.theme-pastel-dream .exchange-modal::before,
+html.theme-pastel-dream .bet-modal::before,
+html.theme-pastel-dream .review-modal::before,
+html.theme-pastel-dream .manage-modal::before,
+html.theme-pastel-dream .profile-modal::before,
+html.theme-pastel-dream .report-modal::before,
+html.theme-pastel-dream .boot-card::before{
+  position:absolute; top:-12px; left:16px; width:28px; height:28px;
+  background: var(--panel); border:1px solid var(--gold-line); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+/* 은은하게 떠오르는 파스텔 비눗방울 캔버스(js/skins.js) — 마우스 반응 없이
+   표류만 하는 가벼운 애니메이션. z-index는 마켓 카드보다 뒤, pointer-events:none
+   이라 마우스 이벤트는 그대로 아래 UI로 통과한다. */
+#sbm-pastel-bubble-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1423,6 +1500,7 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-autumn{ background: linear-gradient(160deg, #f6dcb8, #fdf3e6); }
 .skin-thumb-theme-winter{ background: linear-gradient(160deg, #dcedf8, #f4f9fd); }
 .skin-thumb-theme-billiard{ background: linear-gradient(160deg, #164a30, #0b3d24); }
+.skin-thumb-theme-pastel{ background: linear-gradient(160deg, #ffd9ec, #e0d4fb 55%, #d4f5e6); }
 
 /* 테마 스킨 — 불꽃놀이 야시장 테마: 짙은 밤하늘 + 색색 폭죽 점 미리보기 */
 .skin-thumb-theme-firework{

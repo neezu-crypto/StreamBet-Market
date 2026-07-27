@@ -12,6 +12,7 @@ var SBM_SKIN_CATALOG = {
   'trading-terminal': { name: '트레이딩 터미널 테마', category: 'theme', price: 200000 },
   'billiard-table': { name: '당구대 테마', category: 'theme', price: 200000 },
   'firework-market': { name: '불꽃놀이 야시장 테마', category: 'theme', price: 200000 },
+  'pastel-dream': { name: '파스텔 드림 테마', category: 'theme', price: 200000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
@@ -62,6 +63,7 @@ function sbmRenderSkinPurchaseLog() {
     // 불꽃놀이 야시장 테마는 js/firework-scene.js(three.js WebGL, winter-scene.js와
     // 동일하게 MutationObserver로 theme-firework-market 클래스를 직접 관찰)로 교체 —
     // 여기서 별도로 호출할 필요가 없다.
+    sbmUpdatePastelBubbles(skinId === 'pastel-dream');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
@@ -1516,6 +1518,123 @@ function sbmRenderSkinPurchaseLog() {
     window.addEventListener('resize', sbmPetalResize);
     sbmPetalLastT = 0;
     sbmPetalRAF = requestAnimationFrame(sbmPetalLoop);
+  }
+
+  // 파스텔 드림 테마 — 화면 아래에서 위로 천천히 둥둥 떠오르는 파스텔 톤
+  // 비눗방울. 마우스 반응 없이 은은하게 표류만 하는 가벼운 캔버스 애니메이션
+  // (좌우로 사인파 흔들림 + 상승, 화면 위로 나가면 아래에서 다시 리스폰).
+  var sbmBubbleCanvas = null;
+  var sbmBubbleCtx = null;
+  var sbmBubbleParticles = null;
+  var sbmBubbleRAF = null;
+  var sbmBubbleLastT = 0;
+  var sbmBubbleReducedMotion = false;
+  var SBM_BUBBLE_COLORS = ['#ffc9de', '#d9c9f5', '#bdf0dd', '#ffe0c2', '#c9e4f5'];
+
+  function sbmBubbleSeed() {
+    var w = window.innerWidth, h = window.innerHeight;
+    var count = Math.min(46, Math.max(16, Math.round((w * h) / 42000)));
+    var particles = [];
+    for (var i = 0; i < count; i++) {
+      particles.push({
+        x: Math.random() * w,
+        y: h + Math.random() * h, // 화면 아래~더 아래에 흩어져 시작해 순차적으로 떠오르게
+        r: 10 + Math.random() * 26,
+        speed: 10 + Math.random() * 18, // px/s
+        swayAmp: 12 + Math.random() * 26,
+        swayFreq: 0.4 + Math.random() * 0.5,
+        swayPhase: Math.random() * Math.PI * 2,
+        color: SBM_BUBBLE_COLORS[(Math.random() * SBM_BUBBLE_COLORS.length) | 0],
+        alpha: 0.35 + Math.random() * 0.35
+      });
+    }
+    sbmBubbleParticles = particles;
+  }
+
+  function sbmBubbleResize() {
+    if (!sbmBubbleCanvas) return;
+    var dpr = window.devicePixelRatio || 1;
+    sbmBubbleCanvas.width = Math.round(window.innerWidth * dpr);
+    sbmBubbleCanvas.height = Math.round(window.innerHeight * dpr);
+    sbmBubbleCanvas.style.width = window.innerWidth + 'px';
+    sbmBubbleCanvas.style.height = window.innerHeight + 'px';
+    sbmBubbleCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    sbmBubbleSeed();
+    sbmBubbleDraw();
+  }
+
+  function sbmBubbleStep(dtSec) {
+    var particles = sbmBubbleParticles;
+    if (!particles) return;
+    var w = window.innerWidth, h = window.innerHeight;
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.y -= p.speed * dtSec;
+      var sway = Math.sin(p.swayPhase + (h - p.y) * 0.01 * p.swayFreq) * p.swayAmp * dtSec * 0.6;
+      p.x += sway;
+      if (p.y < -p.r * 2) {
+        p.y = h + p.r * 2 + Math.random() * 80;
+        p.x = Math.random() * w;
+      }
+      if (p.x < -p.r) p.x = w + p.r; else if (p.x > w + p.r) p.x = -p.r;
+    }
+  }
+
+  function sbmBubbleDraw() {
+    if (!sbmBubbleCtx || !sbmBubbleParticles) return;
+    var ctx = sbmBubbleCtx;
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = 0; i < sbmBubbleParticles.length; i++) {
+      var p = sbmBubbleParticles[i];
+      ctx.globalAlpha = p.alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
+      // 비눗방울 특유의 하이라이트 점 — 왼쪽 위에 작은 흰 점
+      ctx.globalAlpha = p.alpha * 0.9;
+      ctx.beginPath();
+      ctx.arc(p.x - p.r * 0.35, p.y - p.r * 0.35, p.r * 0.25, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function sbmBubbleLoop(t) {
+    if (!sbmBubbleCanvas) return;
+    var dtMs = sbmBubbleLastT ? (t - sbmBubbleLastT) : 16.67;
+    sbmBubbleLastT = t;
+    var dtSec = Math.min(0.05, dtMs / 1000); // 탭 전환 복귀 등으로 dt가 튀어도 한 번에 과하게 점프하지 않도록 상한
+    sbmBubbleStep(dtSec);
+    sbmBubbleDraw();
+    sbmBubbleRAF = requestAnimationFrame(sbmBubbleLoop);
+  }
+
+  function sbmUpdatePastelBubbles(shouldShow) {
+    if (!shouldShow) {
+      if (sbmBubbleRAF) { cancelAnimationFrame(sbmBubbleRAF); sbmBubbleRAF = null; }
+      if (sbmBubbleCanvas) { sbmBubbleCanvas.remove(); sbmBubbleCanvas = null; sbmBubbleCtx = null; }
+      window.removeEventListener('resize', sbmBubbleResize);
+      sbmBubbleParticles = null;
+      sbmBubbleLastT = 0;
+      return;
+    }
+    if (sbmBubbleCanvas) return; // 이미 떠 있음
+    sbmBubbleReducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    sbmBubbleCanvas = document.createElement('canvas');
+    sbmBubbleCanvas.id = 'sbm-pastel-bubble-layer';
+    sbmBubbleCanvas.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(sbmBubbleCanvas);
+    sbmBubbleCtx = sbmBubbleCanvas.getContext('2d');
+    sbmBubbleResize(); // 크기 지정 + 시딩 + 첫 프레임 렌더
+
+    if (sbmBubbleReducedMotion) return; // 정적인 첫 프레임만 보여주고 애니메이션은 켜지 않는다
+
+    window.addEventListener('resize', sbmBubbleResize);
+    sbmBubbleLastT = 0;
+    sbmBubbleRAF = requestAnimationFrame(sbmBubbleLoop);
   }
 
   // 여름 테마 — 풀장 탑뷰 배경(assets/summer-pool.svg) 위에 비치볼 · 튜브 · 오리
