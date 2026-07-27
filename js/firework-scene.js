@@ -43,7 +43,6 @@ var CONFIG = {
   rocketSize: 2.0,
   bloomStrength: 1.495,
   bloomRadius: 0.5,
-  trailOpacity: 0.39707,
   launchInterval: 3856.5,
   soundEnabled: true,
   volume: 0.15 // 사운드 최대 크기 제한
@@ -134,7 +133,6 @@ function getSprite() {
 
 var scene = null, camera = null, renderer = null, composer = null, canvas = null;
 var particleSprite = null;
-var fullScreenQuad = null;
 var fireworks = [];
 var clock = null;
 var rafId = null;
@@ -353,7 +351,6 @@ function buildScene() {
   renderer = new THREE.WebGLRenderer({ antialias: false, preserveDrawingBuffer: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
-  renderer.autoClearColor = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
 
@@ -381,34 +378,10 @@ function buildScene() {
   });
   scene.add(new THREE.Points(starsGeo, starsMat));
 
-  // side:DoubleSide — 카메라가 8자로 계속 움직이며 매 프레임 이 패널을 다시
-  // lookAt()하는데, 배치·회전 계산상 앞면(front face)이 우연히 카메라 반대쪽을
-  // 향하면 기본 FrontSide 컬링 때문에 이 패널이 안 보여서 잔상(트레일)이 전혀
-  // 지워지지 않고, 별·파티클이 계속 가산 블렌딩으로 쌓이기만 하다가 화면이
-  // 하얗게 포화되는 문제가 있었다. 양면 렌더링으로 바꿔 항상 보이게 한다.
-  var fadeMaterial = new THREE.MeshBasicMaterial({
-    color: 0x000000, transparent: true, opacity: CONFIG.trailOpacity, side: THREE.DoubleSide
-  });
-  fullScreenQuad = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), fadeMaterial);
-  fullScreenQuad.position.z = camera.position.z - 50;
-  fullScreenQuad.lookAt(camera.position);
-  scene.add(fullScreenQuad);
-
   fireworks = [];
   lastLaunchTime = 0;
   nextLaunchDelay = 0;
   camAngle = 0;
-}
-
-var camDirScratch = new THREE.Vector3();
-// fullScreenQuad(잔상용 반투명 패널)는 카메라가 고정이던 원본에서는 한 번만
-// 배치해도 됐지만, 이제 카메라가 8자로 움직이므로 매 프레임 카메라 앞
-// 50유닛 지점으로 따라가며 카메라를 향해 다시 정렬해야 화면 전체를 덮는
-// 페이드 효과가 계속 유지된다.
-function updateFadeQuad() {
-  camera.getWorldDirection(camDirScratch);
-  fullScreenQuad.position.copy(camera.position).addScaledVector(camDirScratch, 50);
-  fullScreenQuad.lookAt(camera.position);
 }
 
 function onResize() {
@@ -424,7 +397,6 @@ function animate() {
   rafId = requestAnimationFrame(animate);
   var dt = clock.getDelta();
   updateCameraPath(dt);
-  updateFadeQuad();
   updateQueue(performance.now());
   for (var i = fireworks.length - 1; i >= 0; i--) {
     var fw = fireworks[i];
@@ -460,7 +432,6 @@ function show() {
 
   if (reducedMotion) {
     updateCameraPath(0);
-    updateFadeQuad();
     launchFirework(); // 정적인 상태 대신 최소한 한 번은 터진 모습을 보여준다
     composer.render();
     return;
@@ -482,7 +453,7 @@ function hide() {
   fireworks = [];
   if (renderer) renderer.dispose();
   if (canvas) canvas.remove();
-  scene = camera = renderer = composer = canvas = clock = fullScreenQuad = null;
+  scene = camera = renderer = composer = canvas = clock = null;
 }
 
 function syncFromHtmlClass() {
