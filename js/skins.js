@@ -1390,7 +1390,7 @@ function sbmRenderSkinPurchaseLog() {
     var speedBase = (type === 'willow' ? 2.1 : 3.3) * 2; // 폭발 범위 2배
     var gravity = type === 'willow' ? 0.055 : 0.035;
     var baseSize = type === 'willow' ? 1.6 : 2;
-    sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 0.5 });
+    sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 0.25 }); // 줄어드는 속도 2배(수명 절반)
     for (var i = 0; i < count; i++) {
       var angle = Math.random() * Math.PI * 2;
       var speed = speedBase * (0.55 + Math.random() * 0.65);
@@ -1517,7 +1517,7 @@ function sbmRenderSkinPurchaseLog() {
     var flashRadius = Math.max(w, h) * 0.55;
     for (var f = 0; f < sbmFwFlashes.length; f++) {
       var fl = sbmFwFlashes[f];
-      var flashAlpha = (1 - fl.life / fl.maxLife) * 0.35;
+      var flashAlpha = (1 - fl.life / fl.maxLife) * 0.175; // 최대 밝기 절반
       var grad = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, flashRadius);
       grad.addColorStop(0, sbmFwRgba(fl.color, flashAlpha));
       grad.addColorStop(1, sbmFwRgba(fl.color, 0));
