@@ -122,6 +122,27 @@ var nextLaunchDelay = 0;
 var reducedMotion = false;
 var audioUnlockHandler = null;
 
+// 카메라 무빙 — 회전(orbit) 대신 드론이 8자(∞) 궤적을 그리며 나는 느낌.
+// 8자형(lemniscate)은 x = sin(t), z-오프셋 = sin(t)*cos(t)로 만들고, 높이도
+// 살짝 다른 주기로 흔들어 실제 드론 촬영처럼 불규칙한 입체감을 준다. 항상
+// CAM_LOOK_TARGET을 바라보게 해서(lookAt) 폭죽이 계속 화면 중심에 걸린다.
+var CAM_LOOK_TARGET = new THREE.Vector3(0, 15, 0);
+var CAM_RADIUS_X = 130;
+var CAM_RADIUS_Z = 100;
+var CAM_BASE_Z = 150;
+var CAM_HEIGHT_VARY = 18;
+var CAM_SPEED = 0.09; // 라디안/초 — 8자 한 바퀴 도는 데 약 70초
+var camAngle = 0;
+
+function updateCameraPath(dt) {
+  camAngle += CAM_SPEED * dt;
+  var x = CAM_RADIUS_X * Math.sin(camAngle);
+  var z = CAM_BASE_Z + CAM_RADIUS_Z * Math.sin(camAngle) * Math.cos(camAngle);
+  var y = CAM_LOOK_TARGET.y + CAM_HEIGHT_VARY * Math.sin(camAngle * 0.5 + 1.2);
+  camera.position.set(x, y, z);
+  camera.lookAt(CAM_LOOK_TARGET);
+}
+
 function isReducedMotion() {
   return !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 }
@@ -345,6 +366,18 @@ function buildScene() {
   fireworks = [];
   lastLaunchTime = 0;
   nextLaunchDelay = 0;
+  camAngle = 0;
+}
+
+var camDirScratch = new THREE.Vector3();
+// fullScreenQuad(잔상용 반투명 패널)는 카메라가 고정이던 원본에서는 한 번만
+// 배치해도 됐지만, 이제 카메라가 8자로 움직이므로 매 프레임 카메라 앞
+// 50유닛 지점으로 따라가며 카메라를 향해 다시 정렬해야 화면 전체를 덮는
+// 페이드 효과가 계속 유지된다.
+function updateFadeQuad() {
+  camera.getWorldDirection(camDirScratch);
+  fullScreenQuad.position.copy(camera.position).addScaledVector(camDirScratch, 50);
+  fullScreenQuad.lookAt(camera.position);
 }
 
 function onResize() {
@@ -359,6 +392,8 @@ function onResize() {
 function animate() {
   rafId = requestAnimationFrame(animate);
   var dt = clock.getDelta();
+  updateCameraPath(dt);
+  updateFadeQuad();
   updateQueue(performance.now());
   for (var i = fireworks.length - 1; i >= 0; i--) {
     var fw = fireworks[i];
@@ -393,6 +428,8 @@ function show() {
   unlockAudioOnFirstInteraction();
 
   if (reducedMotion) {
+    updateCameraPath(0);
+    updateFadeQuad();
     launchFirework(); // 정적인 상태 대신 최소한 한 번은 터진 모습을 보여준다
     composer.render();
     return;
