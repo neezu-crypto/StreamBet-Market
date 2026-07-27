@@ -21,6 +21,7 @@ var VignetteShader = {
     'varying vec2 vUv;' +
     'void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
   fragmentShader:
+    'precision mediump float;' +
     'uniform sampler2D tDiffuse; uniform float darkness; varying vec2 vUv;' +
     'void main() {' +
     '  vec4 texel = texture2D(tDiffuse, vUv);' +
