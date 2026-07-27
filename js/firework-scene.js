@@ -65,7 +65,7 @@ var CONFIG = {
   launchInterval: 3856.5,
   soundEnabled: true,
   volume: 0.15, // 사운드 최대 크기 제한
-  filmGrainAmount: 0.035,
+  filmGrainAmount: 0.0175,
   dofAperture: 0.0018, // 값이 작을수록 흐림이 은은해짐
   dofMaxBlur: 0.006,
   flareDuration: 0.6,
