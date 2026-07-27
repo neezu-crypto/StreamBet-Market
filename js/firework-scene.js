@@ -381,8 +381,13 @@ function buildScene() {
   });
   scene.add(new THREE.Points(starsGeo, starsMat));
 
+  // side:DoubleSide — 카메라가 8자로 계속 움직이며 매 프레임 이 패널을 다시
+  // lookAt()하는데, 배치·회전 계산상 앞면(front face)이 우연히 카메라 반대쪽을
+  // 향하면 기본 FrontSide 컬링 때문에 이 패널이 안 보여서 잔상(트레일)이 전혀
+  // 지워지지 않고, 별·파티클이 계속 가산 블렌딩으로 쌓이기만 하다가 화면이
+  // 하얗게 포화되는 문제가 있었다. 양면 렌더링으로 바꿔 항상 보이게 한다.
   var fadeMaterial = new THREE.MeshBasicMaterial({
-    color: 0x000000, transparent: true, opacity: CONFIG.trailOpacity
+    color: 0x000000, transparent: true, opacity: CONFIG.trailOpacity, side: THREE.DoubleSide
   });
   fullScreenQuad = new THREE.Mesh(new THREE.PlaneGeometry(4000, 4000), fadeMaterial);
   fullScreenQuad.position.z = camera.position.z - 50;
