@@ -1372,7 +1372,7 @@ function sbmRenderSkinPurchaseLog() {
   var sbmFwLastT = 0;
   var sbmFwNextLaunchIn = 0.6;
   var sbmFwReducedMotion = false;
-  var SBM_FW_MAX_PARTICLES = 700;
+  var SBM_FW_MAX_PARTICLES = 1400; // 파티클 양이 2배가 된 만큼 상한도 같이 올림
   var SBM_FW_PALETTES = [
     ['#ff5e5e', '#ff9d5e', '#ffd35e'],
     ['#5ecbff', '#5e8bff', '#c15eff'],
@@ -1386,9 +1386,10 @@ function sbmRenderSkinPurchaseLog() {
   function sbmFwPickColor(palette) { return palette[(Math.random() * palette.length) | 0]; }
 
   function sbmFwSpawnBurst(x, y, palette, type) {
-    var count = type === 'peony' ? 90 : type === 'willow' ? 70 : 80;
+    var count = (type === 'peony' ? 90 : type === 'willow' ? 70 : 80) * 2; // 파티클 양 2배
     var speedBase = (type === 'willow' ? 2.1 : 3.3) * 2; // 폭발 범위 2배
     var gravity = type === 'willow' ? 0.055 : 0.035;
+    var baseSize = type === 'willow' ? 1.6 : 2;
     sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 0.5 });
     for (var i = 0; i < count; i++) {
       var angle = Math.random() * Math.PI * 2;
@@ -1398,7 +1399,7 @@ function sbmRenderSkinPurchaseLog() {
         x: x, y: y,
         vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
         life: 0, maxLife: maxLife, gravity: gravity, drag: 0.985,
-        color: sbmFwPickColor(palette), size: type === 'willow' ? 1.6 : 2,
+        color: sbmFwPickColor(palette), size: baseSize * (0.5 + Math.random() * 1.5), // 크기도 다양하게
         crackleAt: type === 'crackle' ? maxLife * (0.4 + Math.random() * 0.3) : -1,
         crackled: false
       });
@@ -1479,7 +1480,7 @@ function sbmRenderSkinPurchaseLog() {
           sbmFwParticles.push({
             x: p.x, y: p.y, vx: Math.cos(a2) * s2, vy: Math.sin(a2) * s2,
             life: 0, maxLife: 0.35 + Math.random() * 0.25, gravity: 0.02, drag: 0.97,
-            color: p.color, size: 1.4, crackleAt: -1, crackled: true
+            color: p.color, size: 1.4 * (0.5 + Math.random() * 1.5), crackleAt: -1, crackled: true
           });
         }
       }
