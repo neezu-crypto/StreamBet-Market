@@ -78,6 +78,54 @@ function isReducedMotion() {
 // 태양 광원 위치 — 조명·해 스프라이트가 같은 방향을 향하도록 한 군데서 관리한다
 var SUN_POS = { x: 900, y: 1000, z: 350 };
 
+// 나무 테두리 림 라이트(rim light) — 태양 쪽을 향한 나무 실루엣 가장자리가
+// 햇빛을 받아 반짝이는 것처럼 additive glow를 얹는다. 모든 나무 재질이 이
+// 하나의 uniform 객체를 "참조"로 공유하게 만들어서(아래 applyRimLight), 매
+// 프레임 uTime 하나만 갱신해도 수백 그루 전체에 한 번에 반영된다.
+var rimUniforms = {
+  uRimColor: { value: new THREE.Color(0xfff2c2) },
+  uRimPower: { value: 2.4 },
+  uRimIntensity: { value: 1.6 },
+  uSunDir: { value: new THREE.Vector3(SUN_POS.x, SUN_POS.y, SUN_POS.z).normalize() },
+  uTime: { value: 0 }
+};
+
+// MeshPhongMaterial의 기존 퐁 셰이딩(그림자·스펙큘러 포함)은 그대로 둔 채,
+// onBeforeCompile로 프래그먼트 셰이더 끝부분(outgoingLight가 확정된 직후,
+// 최종 출력 직전인 opaque_fragment 청크 앞)에 프레넬 기반 림 라이트 코드만
+// 추가로 끼워 넣는다. customProgramCacheKey를 지정해 three.js가 이 커스텀
+// 셰이더를 일반 MeshPhongMaterial과 같은 캐시로 잘못 재사용하지 않게 한다.
+function applyRimLight(material) {
+  material.onBeforeCompile = function (shader) {
+    shader.uniforms.uRimColor = rimUniforms.uRimColor;
+    shader.uniforms.uRimPower = rimUniforms.uRimPower;
+    shader.uniforms.uRimIntensity = rimUniforms.uRimIntensity;
+    shader.uniforms.uSunDir = rimUniforms.uSunDir;
+    shader.uniforms.uTime = rimUniforms.uTime;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <common>',
+      'uniform vec3 uRimColor;\n' +
+      'uniform float uRimPower;\n' +
+      'uniform float uRimIntensity;\n' +
+      'uniform vec3 uSunDir;\n' +
+      'uniform float uTime;\n' +
+      '#include <common>'
+    );
+    shader.fragmentShader = shader.fragmentShader.replace(
+      '#include <opaque_fragment>',
+      '{\n' +
+      '  vec3 rimViewDir = normalize(vViewPosition);\n' +
+      '  float rim = pow(1.0 - clamp(dot(rimViewDir, normal), 0.0, 1.0), uRimPower);\n' +
+      '  float sunFacing = smoothstep(-0.5, 0.6, dot(normal, uSunDir));\n' +
+      '  float shimmer = 0.7 + 0.3 * sin(uTime * 2.6 + (vViewPosition.x + vViewPosition.z) * 0.08);\n' +
+      '  outgoingLight += uRimColor * rim * sunFacing * uRimIntensity * shimmer;\n' +
+      '}\n' +
+      '#include <opaque_fragment>'
+    );
+  };
+  material.customProgramCacheKey = function () { return 'treeRimLight'; };
+}
+
 function makeRadialTexture(stops, size) {
   var c = document.createElement('canvas');
   c.width = c.height = size;
@@ -167,6 +215,7 @@ function makeTree() {
 
   var trunkGeo = new THREE.CylinderGeometry(6, 8, 60, 6, 1);
   var trunkMat = new THREE.MeshPhongMaterial({ color: 0x5b4a3f, flatShading: true });
+  applyRimLight(trunkMat);
   var trunk = new THREE.Mesh(trunkGeo, trunkMat);
   trunk.position.y = -20;
   trunk.castShadow = true;
@@ -185,6 +234,7 @@ function makeTree() {
     var radiusBottom = 28 + i * 7;
     var geo = new THREE.CylinderGeometry(radiusTop, radiusBottom, 46, 6, 1);
     var mat = new THREE.MeshPhongMaterial({ color: color, flatShading: true });
+    applyRimLight(mat);
     var mesh = new THREE.Mesh(geo, mat);
     mesh.position.y = 55 - i * 20;
     var rot = i > 0 ? (Math.random() - 0.5) * 0.08 : 0;
@@ -321,6 +371,7 @@ function animate() {
   angle += ORBIT_SPEED * dt;
   elapsed += dt;
   if (sparkleMat) sparkleMat.uniforms.u_time.value = elapsed;
+  rimUniforms.uTime.value = elapsed;
   renderFrame();
 }
 
