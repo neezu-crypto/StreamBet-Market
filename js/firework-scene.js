@@ -25,7 +25,7 @@ var CONFIG = {
   trailOpacity: 0.39707,
   launchInterval: 3856.5,
   soundEnabled: true,
-  volume: 0.5
+  volume: 0.15 // 사운드 최대 크기 제한
 };
 
 // --- 오디오(딥 베이스 "쿵" 폭발음) — 오디오 파일 없이 오실레이터 + 노이즈로 직접 합성 ---
