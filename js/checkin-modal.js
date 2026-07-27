@@ -40,9 +40,10 @@
   var adsLoader = null;
   var adsManager = null;
   var adDisplayContainer = null;
-  var rewardGranted = false;
 
   function cleanupAd() {
+    adRequestSettled = true;
+    clearAdTimeout();
     if (adsManager) { try { adsManager.destroy(); } catch (e) { /* noop */ } adsManager = null; }
     if (adsLoader) { try { adsLoader.destroy(); } catch (e) { /* noop */ } adsLoader = null; }
     adDisplayContainer = null;
@@ -97,16 +98,30 @@
 
   plainBtn.addEventListener('click', function () { claim(false); });
 
+  // IMA SDK가 네트워크 자체 실패(DNS 차단 등) 상황에서 AD_ERROR 이벤트를 우리
+  // 리스너까지 깔끔하게 전달하지 못하는 경우가 있어(내부 프라미스 reject로만
+  // 끝나는 케이스 관찰됨), 일정 시간 안에 광고가 뜨지도 실패 이벤트가 오지도
+  // 않으면 강제로 에러 처리하는 타임아웃 안전장치를 둔다.
+  var adRequestSettled = true;
+  var adTimeoutId = null;
+  function clearAdTimeout() {
+    if (adTimeoutId) { clearTimeout(adTimeoutId); adTimeoutId = null; }
+  }
+
   function onAdError() {
-    setStatus('광고를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.');
+    if (adRequestSettled) return;
+    adRequestSettled = true;
+    clearAdTimeout();
+    setStatus('광고를 불러오지 못했습니다. 광고 차단기·DNS 설정을 확인하거나 잠시 후 다시 시도해주세요.');
     cleanupAd();
     plainBtn.disabled = false;
     adBtn.disabled = false;
   }
 
   function onAdRewardEarned() {
-    if (rewardGranted) return;
-    rewardGranted = true;
+    if (adRequestSettled) return;
+    adRequestSettled = true;
+    clearAdTimeout();
     cleanupAd();
     claim(true);
   }
@@ -116,7 +131,9 @@
     plainBtn.disabled = true;
     if (adStage) adStage.style.display = '';
     setStatus('광고를 불러오는 중...');
-    rewardGranted = false;
+    adRequestSettled = false;
+    clearAdTimeout();
+    adTimeoutId = setTimeout(onAdError, 8000);
 
     // adDisplayContainer.initialize()는 브라우저 자동재생 정책 때문에 반드시
     // "사용자 클릭 핸들러 안에서 동기적으로" 호출해야 한다 — SDK가 이미
@@ -135,7 +152,7 @@
           adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
           // 보상형 광고 시청 완료 시점 — REWARD 이벤트를 우선 쓰고, 이 데모 태그가
           // REWARD를 안 쏘는 경우를 대비해 ALL_ADS_COMPLETED에서도 한 번 더 잡는다
-          // (rewardGranted 플래그로 중복 지급은 막는다).
+          // (adRequestSettled 플래그로 중복 지급은 막는다).
           adsManager.addEventListener(google.ima.AdEvent.Type.REWARD, onAdRewardEarned);
           adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, onAdRewardEarned);
           try {
