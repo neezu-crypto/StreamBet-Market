@@ -10,6 +10,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
 // 후보정 — ACES 필름톤 매핑(겨울 3D 숲과 동일)으로 블룸 하이라이트에 좀 더
@@ -31,6 +32,24 @@ var VignetteShader = {
     '}'
 };
 
+// 필름 그레인 — 화면 전체에 시간에 따라 흔들리는 미세한 노이즈를 얹어 아날로그
+// 필름 같은 질감을 준다. uv 기반 의사난수라 별도 텍스처 없이 순수 셰이더로 계산.
+var FilmGrainShader = {
+  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 }, uAmount: { value: 0.035 } },
+  vertexShader:
+    'varying vec2 vUv;' +
+    'void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader:
+    'precision mediump float;' +
+    'uniform sampler2D tDiffuse; uniform float uTime; uniform float uAmount; varying vec2 vUv;' +
+    'float grainRand(vec2 co) { return fract(sin(dot(co, vec2(12.9898, 78.233))) * 43758.5453); }' +
+    'void main() {' +
+    '  vec4 texel = texture2D(tDiffuse, vUv);' +
+    '  float n = (grainRand(vUv * 1000.0 + uTime) - 0.5) * uAmount;' +
+    '  gl_FragColor = vec4(texel.rgb + n, texel.a);' +
+    '}'
+};
+
 var CONFIG = {
   particleCount: 8000,
   particleSize: 0.8,
@@ -45,7 +64,12 @@ var CONFIG = {
   bloomRadius: 0.5,
   launchInterval: 3856.5,
   soundEnabled: true,
-  volume: 0.15 // 사운드 최대 크기 제한
+  volume: 0.15, // 사운드 최대 크기 제한
+  filmGrainAmount: 0.035,
+  dofAperture: 0.0018, // 값이 작을수록 흐림이 은은해짐
+  dofMaxBlur: 0.006,
+  flareDuration: 0.6,
+  flareSize: 46
 };
 
 // --- 오디오(딥 베이스 "쿵" 폭발음) — 오디오 파일 없이 오실레이터 + 노이즈로 직접 합성 ---
@@ -290,6 +314,19 @@ Firework.prototype.update = function (dt) {
     if (this.vel.y < 0.2 || this.pos.y >= this.targetY) this.explode();
   } else {
     this.timer += dt;
+
+    if (this.flareSprite) {
+      this.flareTimer += dt;
+      var flareT = Math.min(1, this.flareTimer / CONFIG.flareDuration);
+      this.flareSprite.material.opacity = (1 - flareT) * (1 - flareT);
+      this.flareSprite.scale.setScalar(CONFIG.flareSize * (1 + flareT * 0.6));
+      if (flareT >= 1) {
+        scene.remove(this.flareSprite);
+        this.flareSprite.material.dispose();
+        this.flareSprite = null;
+      }
+    }
+
     var positions = this.sparkSystem.geometry.attributes.position.array;
     var colors = this.sparkSystem.geometry.attributes.color.array;
     var rotations = this.sparkSystem.geometry.attributes.aRotation.array;
@@ -340,6 +377,21 @@ Firework.prototype.explode = function () {
   this.phase = 'explode';
   this.timer = 0;
   this.currentParticleCount = CONFIG.particleCount;
+
+  // 렌즈 플레어 — 진짜 고스트 체인 대신, 폭발 중심에서 빠르게 커지며 사그라드는
+  // 부드러운 발광 스프라이트로 "밝은 빛이 렌즈에 번지는" 느낌만 가볍게 낸다.
+  this.flareTimer = 0;
+  this.flareSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: particleSprite,
+    color: this.colors[0],
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    opacity: 1
+  }));
+  this.flareSprite.position.copy(this.pos);
+  this.flareSprite.scale.setScalar(CONFIG.flareSize);
+  scene.add(this.flareSprite);
 
   var geo = new THREE.BufferGeometry();
   var positions = new Float32Array(this.currentParticleCount * 3);
@@ -466,6 +518,11 @@ Firework.prototype.cleanup = function () {
     this.rocketMesh.geometry.dispose();
     this.rocketMesh.material.dispose();
   }
+  if (this.flareSprite) {
+    scene.remove(this.flareSprite);
+    this.flareSprite.material.dispose();
+    this.flareSprite = null;
+  }
 };
 
 function launchFirework() {
@@ -503,6 +560,15 @@ function buildScene() {
   sparkScaleValue = window.innerHeight * dpr * 0.5;
 
   var renderScene = new RenderPass(scene, camera);
+  // 피사계심도(DoF) — 드론 카메라가 항상 바라보는 CAM_LOOK_TARGET까지의 거리에
+  // 초점을 자동으로 맞춰(매 프레임 animate()에서 focus 갱신), 그 부근에 몰려
+  // 터지는 불꽃은 선명하게, 화면 가장자리·먼 배경은 살짝 흐려지게 한다.
+  // 값은 은은하게 — 너무 세게 걸면 불꽃 디테일 자체가 뭉개진다.
+  var bokehPass = new BokehPass(scene, camera, {
+    focus: camera.position.distanceTo(CAM_LOOK_TARGET),
+    aperture: CONFIG.dofAperture,
+    maxblur: CONFIG.dofMaxBlur
+  });
   // UnrealBloomPass는 성능을 위해 자체적으로 여러 단계 축소(mip)해서 블러를
   // 계산한 뒤 다시 확대·합성한다 — 여기에 넘기는 해상도가 실제 픽셀 밀도
   // (devicePixelRatio)를 반영하지 않으면, 본 화면(고해상도)보다 훨씬 낮은
@@ -512,12 +578,18 @@ function buildScene() {
     CONFIG.bloomStrength, CONFIG.bloomRadius, 0.0
   );
   var vignettePass = new ShaderPass(VignetteShader);
+  var filmGrainPass = new ShaderPass(FilmGrainShader);
+  filmGrainPass.uniforms.uAmount.value = CONFIG.filmGrainAmount;
   composer = new EffectComposer(renderer);
   composer.addPass(renderScene);
+  composer.addPass(bokehPass);
   composer.addPass(bloomPass);
   composer.addPass(vignettePass);
+  composer.addPass(filmGrainPass);
   composer.addPass(new OutputPass());
   composer.bloomPass = bloomPass;
+  composer.bokehPass = bokehPass;
+  composer.filmGrainPass = filmGrainPass;
 
   var starsGeo = new THREE.BufferGeometry();
   var starsCnt = 3000;
@@ -555,6 +627,12 @@ function animate() {
   rafId = requestAnimationFrame(animate);
   var dt = clock.getDelta();
   updateCameraPath(dt);
+  if (composer.bokehPass) {
+    composer.bokehPass.materialBokeh.uniforms.focus.value = camera.position.distanceTo(CAM_LOOK_TARGET);
+  }
+  if (composer.filmGrainPass) {
+    composer.filmGrainPass.uniforms.uTime.value = clock.elapsedTime;
+  }
   updateQueue(performance.now());
   for (var i = fireworks.length - 1; i >= 0; i--) {
     var fw = fireworks[i];
