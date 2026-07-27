@@ -9,6 +9,26 @@ import * as THREE from 'three';
 import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// 후보정 — ACES 필름톤 매핑(겨울 3D 숲과 동일)으로 블룸 하이라이트에 좀 더
+// 영화 같은 색 반응을 주고, 비네트로 화면 가장자리를 살짝 어둡게 눌러 시선이
+// 중앙(불꽃)에 모이게 한다.
+var VignetteShader = {
+  uniforms: { tDiffuse: { value: null }, darkness: { value: 1.1 } },
+  vertexShader:
+    'varying vec2 vUv;' +
+    'void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+  fragmentShader:
+    'uniform sampler2D tDiffuse; uniform float darkness; varying vec2 vUv;' +
+    'void main() {' +
+    '  vec4 texel = texture2D(tDiffuse, vUv);' +
+    '  vec2 uv = vUv - 0.5;' +
+    '  float vig = 1.0 - dot(uv, uv) * darkness;' +
+    '  gl_FragColor = vec4(texel.rgb * clamp(vig, 0.0, 1.0), texel.a);' +
+    '}'
+};
 
 var CONFIG = {
   particleCount: 8000,
@@ -333,15 +353,20 @@ function buildScene() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
   renderer.autoClearColor = false;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.15;
 
   var renderScene = new RenderPass(scene, camera);
   var bloomPass = new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
     CONFIG.bloomStrength, CONFIG.bloomRadius, 0.0
   );
+  var vignettePass = new ShaderPass(VignetteShader);
   composer = new EffectComposer(renderer);
   composer.addPass(renderScene);
   composer.addPass(bloomPass);
+  composer.addPass(vignettePass);
+  composer.addPass(new OutputPass());
   composer.bloomPass = bloomPass;
 
   var starsGeo = new THREE.BufferGeometry();
