@@ -880,6 +880,60 @@ html.theme-billiard-table .boot-card::before{
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
 }
 
+/* 16번 — 스킨: 불꽃놀이 야시장 테마. 카드·모달 형태는 기본 디자인을 그대로 두고
+   (배경의 불꽃놀이 캔버스가 주인공), 짙은 밤하늘 팔레트 + 좌상단 불꽃 배지로만
+   무드를 입힌다(당구대 · 트레이딩 터미널과 동일한 가벼운 패턴). */
+html.theme-firework-market{
+  color-scheme: dark;
+  --ink: #0c0620;
+  --panel: #16102c;
+  --panel-raised: #1c1536;
+  --hairline: #332a52;
+  --gold: #ff9d5e;
+  --gold-dim: rgba(255,157,94,0.14);
+  --gold-line: rgba(255,157,94,0.4);
+  --mint: #5ecbff;
+  --mint-dim: rgba(94,203,255,0.14);
+  --text: #f3eefc;
+  --muted: #a99bc9;
+  --muted-2: #6e6191;
+}
+html.theme-firework-market .devbar{ background: #150c2c; }
+html.theme-firework-market .ticker{ background: linear-gradient(180deg, rgba(255,157,94,0.1), transparent); }
+html.theme-firework-market .boot-card{ position: relative; }
+html.theme-firework-market .ticket:not(.hero-ticket)::before,
+html.theme-firework-market .verify-modal::before,
+html.theme-firework-market .propose-modal::before,
+html.theme-firework-market .exchange-modal::before,
+html.theme-firework-market .bet-modal::before,
+html.theme-firework-market .review-modal::before,
+html.theme-firework-market .manage-modal::before,
+html.theme-firework-market .profile-modal::before,
+html.theme-firework-market .report-modal::before,
+html.theme-firework-market .boot-card::before{ content:"🎆"; }
+html.theme-firework-market .ticket:not(.hero-ticket)::before,
+html.theme-firework-market .verify-modal::before,
+html.theme-firework-market .propose-modal::before,
+html.theme-firework-market .exchange-modal::before,
+html.theme-firework-market .bet-modal::before,
+html.theme-firework-market .review-modal::before,
+html.theme-firework-market .manage-modal::before,
+html.theme-firework-market .profile-modal::before,
+html.theme-firework-market .report-modal::before,
+html.theme-firework-market .boot-card::before{
+  position:absolute; top:-12px; left:16px; width:28px; height:28px;
+  background: var(--panel); border:1px solid var(--gold-line); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+}
+/* 불꽃놀이 캔버스(js/skins.js) — 로켓이 솟아올랐다 터지는 걸 계속 반복한다.
+   매 프레임 완전히 지우지 않고 옅은 남색을 겹쳐 칠해 잔상을 남기는 방식이라
+   이 레이어 자체가 밤하늘 배경도 겸한다. z-index는 마켓 카드보다 뒤,
+   pointer-events:none이라 마우스 이벤트는 그대로 아래 UI로 통과한다. */
+#sbm-firework-layer{
+  position: fixed; inset: 0; z-index: -1; pointer-events: none;
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1369,6 +1423,13 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-autumn{ background: linear-gradient(160deg, #f6dcb8, #fdf3e6); }
 .skin-thumb-theme-winter{ background: linear-gradient(160deg, #dcedf8, #f4f9fd); }
 .skin-thumb-theme-billiard{ background: linear-gradient(160deg, #164a30, #0b3d24); }
+
+/* 테마 스킨 — 불꽃놀이 야시장 테마: 짙은 밤하늘 + 색색 폭죽 점 미리보기 */
+.skin-thumb-theme-firework{
+  position:relative; background: radial-gradient(ellipse at 50% 80%, #1c1536, #08051a);
+  overflow:hidden;
+}
+.skin-thumb-theme-firework-dot{ position:absolute; width:5px; height:5px; border-radius:50%; }
 
 /* 테마 스킨 — 트레이딩 터미널 테마: 다크 헤더(LIVE 점) + 네온 캔들스틱 바 미리보기 */
 .skin-thumb-theme-trading{
