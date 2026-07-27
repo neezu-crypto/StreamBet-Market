@@ -1367,6 +1367,7 @@ function sbmRenderSkinPurchaseLog() {
   var sbmFwCtx = null;
   var sbmFwRockets = null;
   var sbmFwParticles = null;
+  var sbmFwFlashes = null; // 폭발 순간 밤하늘이 잠깐 밝아지는 효과
   var sbmFwRAF = null;
   var sbmFwLastT = 0;
   var sbmFwNextLaunchIn = 0.6;
@@ -1386,8 +1387,9 @@ function sbmRenderSkinPurchaseLog() {
 
   function sbmFwSpawnBurst(x, y, palette, type) {
     var count = type === 'peony' ? 90 : type === 'willow' ? 70 : 80;
-    var speedBase = type === 'willow' ? 2.1 : 3.3;
+    var speedBase = (type === 'willow' ? 2.1 : 3.3) * 2; // 폭발 범위 2배
     var gravity = type === 'willow' ? 0.055 : 0.035;
+    sbmFwFlashes.push({ x: x, y: y, color: sbmFwPickColor(palette), life: 0, maxLife: 0.5 });
     for (var i = 0; i < count; i++) {
       var angle = Math.random() * Math.PI * 2;
       var speed = speedBase * (0.55 + Math.random() * 0.65);
@@ -1420,6 +1422,7 @@ function sbmRenderSkinPurchaseLog() {
   function sbmFwSeed() {
     sbmFwRockets = [];
     sbmFwParticles = [];
+    sbmFwFlashes = [];
     sbmFwNextLaunchIn = 0.4;
   }
 
@@ -1486,6 +1489,14 @@ function sbmRenderSkinPurchaseLog() {
       }
     }
     sbmFwParticles = nextParticles;
+
+    var nextFlashes = [];
+    for (var m = 0; m < sbmFwFlashes.length; m++) {
+      var fl = sbmFwFlashes[m];
+      fl.life += dtSec;
+      if (fl.life < fl.maxLife) nextFlashes.push(fl);
+    }
+    sbmFwFlashes = nextFlashes;
   }
 
   function sbmFwDraw() {
@@ -1499,6 +1510,19 @@ function sbmRenderSkinPurchaseLog() {
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+
+    // 폭발 순간 그 자리를 중심으로 밤하늘이 잠깐 밝아지는 플래시 — 배경이 너무
+    // 단조롭지 않게, 터질 때마다 색이 살짝 번지는 느낌을 준다
+    var flashRadius = Math.max(w, h) * 0.55;
+    for (var f = 0; f < sbmFwFlashes.length; f++) {
+      var fl = sbmFwFlashes[f];
+      var flashAlpha = (1 - fl.life / fl.maxLife) * 0.35;
+      var grad = ctx.createRadialGradient(fl.x, fl.y, 0, fl.x, fl.y, flashRadius);
+      grad.addColorStop(0, sbmFwRgba(fl.color, flashAlpha));
+      grad.addColorStop(1, sbmFwRgba(fl.color, 0));
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, w, h);
+    }
 
     for (var i = 0; i < sbmFwRockets.length; i++) {
       var r = sbmFwRockets[i];
@@ -1562,6 +1586,7 @@ function sbmRenderSkinPurchaseLog() {
       window.removeEventListener('resize', sbmFwResize);
       sbmFwRockets = null;
       sbmFwParticles = null;
+      sbmFwFlashes = null;
       sbmFwLastT = 0;
       return;
     }
