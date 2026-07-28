@@ -48,9 +48,40 @@
   var adDisplayContainer = null;
   var adResizeHandler = null;
 
+  function isMobileDevice() {
+    return /Android|iPhone|iPad|iPod|Mobi/i.test(navigator.userAgent);
+  }
+
+  // 모바일에서 광고 시청 시작 시 자동 전체화면 — Fullscreen API는 반드시
+  // 사용자 클릭(제스처) 안에서 동기적으로 호출해야 브라우저가 허용하므로,
+  // proceed() 맨 앞(사용자 클릭 핸들러 체인 안)에서 호출한다. iOS Safari는
+  // 구버전에서 일반 div의 requestFullscreen을 지원하지 않아 video 자체의
+  // webkitEnterFullscreen으로 폴백한다.
+  function requestAdFullscreen() {
+    if (!isMobileDevice() || !adContainer) return;
+    var req = adContainer.requestFullscreen || adContainer.webkitRequestFullscreen ||
+      adContainer.mozRequestFullScreen || adContainer.msRequestFullscreen;
+    if (req) {
+      try { req.call(adContainer); return; } catch (e) { /* 폴백으로 진행 */ }
+    }
+    if (adVideo && adVideo.webkitEnterFullscreen) {
+      try { adVideo.webkitEnterFullscreen(); } catch (e) { /* noop */ }
+    }
+  }
+
+  function exitAdFullscreen() {
+    var fsEl = document.fullscreenElement || document.webkitFullscreenElement ||
+      document.mozFullScreenElement || document.msFullscreenElement;
+    if (!fsEl) return;
+    var exit = document.exitFullscreen || document.webkitExitFullscreen ||
+      document.mozCancelFullScreen || document.msExitFullscreen;
+    if (exit) { try { exit.call(document); } catch (e) { /* noop */ } }
+  }
+
   function cleanupAd() {
     adRequestSettled = true;
     clearAdTimeout();
+    exitAdFullscreen(); // 광고 완료·에러·모달 닫기 등 모든 종료 경로에서 전체화면도 같이 해제
     if (adResizeHandler) { window.removeEventListener('resize', adResizeHandler); adResizeHandler = null; }
     if (adsManager) { try { adsManager.destroy(); } catch (e) { /* noop */ } adsManager = null; }
     if (adsLoader) { try { adsLoader.destroy(); } catch (e) { /* noop */ } adsLoader = null; }
@@ -173,6 +204,7 @@
       try {
         adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, adVideo);
         adDisplayContainer.initialize();
+        requestAdFullscreen();
 
         adsLoader = new google.ima.AdsLoader(adDisplayContainer);
         adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError, false);
