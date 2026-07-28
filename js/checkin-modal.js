@@ -139,7 +139,7 @@
     setStatus('광고를 불러오는 중...');
     adRequestSettled = false;
     clearAdTimeout();
-    adTimeoutId = setTimeout(onAdError, 8000);
+    adTimeoutId = setTimeout(onAdError, 15000); // 광고 "로딩" 단계만 지킴 — 로드 성공 시 ADS_MANAGER_LOADED에서 해제
 
     // adDisplayContainer.initialize()는 브라우저 자동재생 정책 때문에 반드시
     // "사용자 클릭 핸들러 안에서 동기적으로" 호출해야 한다 — SDK가 이미
@@ -154,6 +154,12 @@
         adsLoader = new google.ima.AdsLoader(adDisplayContainer);
         adsLoader.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError, false);
         adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (event) {
+          // 여기까지 오면 광고 로딩(네트워크) 자체는 성공한 것 — 로딩 단계를
+          // 지키던 타임아웃을 해제한다. 안 그러면 영상 길이(예: 8초)가 타임아웃
+          // 시간과 맞물려, 실제로는 광고가 끝까지 재생됐는데도 타임아웃이 먼저
+          // 발동해 adsManager를 파괴해버리고 ALL_ADS_COMPLETED를 놓치는 문제가
+          // 생긴다(실제 관찰된 버그).
+          clearAdTimeout();
           adsManager = event.getAdsManager(adVideo);
           adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
           // 웹 IMA SDK엔 REWARD 이벤트 자체가 없으므로(모바일 전용 개념), 광고를
