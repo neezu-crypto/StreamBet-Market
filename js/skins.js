@@ -1936,8 +1936,17 @@ function sbmRenderSkinPurchaseLog() {
           fnName = 'purchaseSkin';
           payload = { skinId: skinId };
         }
+        var isPurchase = fnName === 'purchaseSkin';
         buyBtn.disabled = true;
         window.sbmFirebase.httpsCallable(fnName)(payload)
+          .then(function () {
+            // 구매 직후에만 물어본다 — 장착/해제 액션 자체에는 필요 없음.
+            // equippedSkin 실시간 구독(applyEquippedTheme)이 있어서 여기서 화면을
+            // 직접 갱신할 필요 없이 equipSkin 호출만 하면 테마가 알아서 바뀐다.
+            if (isPurchase && confirm('구매했습니다. 지금 바로 적용할까요?')) {
+              return window.sbmFirebase.httpsCallable('equipSkin')({ skinId: skinId });
+            }
+          })
           .catch(function (e) { alert(e.message); })
           .then(function () { buyBtn.disabled = false; });
       });
