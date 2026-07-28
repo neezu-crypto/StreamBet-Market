@@ -115,10 +115,6 @@ function sbmRenderVerifiedStreamers() {
         .catch(function (e) { alert(e.message); btn.disabled = false; });
     });
   });
-
-  // "게시글 홍보 현황"(js/promoted-streamers.js)의 이름 자동완성 목록도 인증
-  // 스트리머 캐시가 갱신될 때마다 같이 최신화한다.
-  if (window.sbmRefreshPromotedStreamerDatalist) window.sbmRefreshPromotedStreamerDatalist();
 }
 
 // 05번 — 배팅시장 자체 신청함 (verifyRequests). 결과는 저장하지 않고 위 공유 노드로 승인 시 이관된다.

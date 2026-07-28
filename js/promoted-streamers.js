@@ -1,17 +1,25 @@
-// 16번 — 관리 탭 "게시글 홍보 현황"(관리자 전용). 배팅시장 홍보를 완료한 인증
-// 스트리머를 검색(datalist 자동완성, streamer-verification.js의 인증 목록
-// 캐시 재사용)해서 추가해두고 날짜와 함께 보여준다. RTDB 규칙상 관리자만
-// 읽을 수 있는 경로라 다른 관리자 전용 목록과 동일하게 구독 가드를 둔다.
+// 16번 — 관리 탭 "게시글 홍보 현황"(관리자 전용). "인증 스트리머가 홍보했다"가
+// 아니라 "관리자가 이 스트리머 게시판에 홍보글을 올렸는지" 스스로 기억해두는
+// 개인 체크리스트라, 인증 여부와 무관하게 모든 스트리머를 검색 대상으로 삼는다
+// — 자동완성은 주제 제안(propose-modal.js)과 동일하게 stocks(주식시장과 공유하는
+// 전체 스트리머 목록) 노드를 쓴다. 자주 안 바뀌는 참조 데이터라 페이지당 1회만 받아온다.
 var sbmPromotedStreamersSubscribed = false;
+var sbmPromotedStreamerNamesLoaded = false;
 
 function sbmRefreshPromotedStreamerDatalist() {
   var datalist = document.getElementById('promoted-streamer-datalist');
-  if (!datalist) return;
-  var cache = window.sbmVerifiedCache || {};
-  var names = Object.keys(cache).map(function (key) { return cache[key].nickname; }).filter(Boolean);
-  datalist.innerHTML = names.map(function (n) {
-    return '<option value="' + sbmEscapeHtml(n) + '"></option>';
-  }).join('');
+  if (!datalist || sbmPromotedStreamerNamesLoaded || !window.sbmFirebase || !window.sbmDb) return;
+  sbmPromotedStreamerNamesLoaded = true;
+  var fb = window.sbmFirebase;
+  fb.get(fb.ref(window.sbmDb, 'stocks')).then(function (snap) {
+    var val = snap.val() || {};
+    var names = Object.keys(val).map(function (id) { return val[id].name; }).filter(Boolean);
+    datalist.innerHTML = names.map(function (n) {
+      return '<option value="' + sbmEscapeHtml(n) + '"></option>';
+    }).join('');
+  }).catch(function () {
+    sbmPromotedStreamerNamesLoaded = false; // 실패 시 다음 진입 때 재시도 가능하게
+  });
 }
 
 function sbmRenderPromotedStreamers(list) {
