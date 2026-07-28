@@ -147,13 +147,36 @@
     if (adTimeoutId) { clearTimeout(adTimeoutId); adTimeoutId = null; }
   }
 
+  // 광고 차단기 감지 — 광고 차단 확장/브라우저 내장 차단 기능은 대부분
+  // "adsbygoogle", "ads", "advertisement" 같은 흔한 클래스명을 가진 엘리먼트를
+  // CSS로 숨기거나 크기를 0으로 만드는 방식(코스메틱 필터)으로 동작한다. 실제
+  // 광고 요청은 전혀 안 하고, 화면에만 잠깐 미끼(bait) 엘리먼트를 넣어서 그게
+  // 숨겨지는지로 판별한다 — 네트워크/DNS 문제와는 별개의, 차단기 전용 신호.
+  function detectAdBlocker() {
+    return new Promise(function (resolve) {
+      try {
+        var bait = document.createElement('div');
+        bait.className = 'adsbygoogle ad ads ad-banner advertisement banner-ad';
+        bait.style.cssText = 'position:absolute;top:-9999px;left:-9999px;width:2px;height:2px;';
+        document.body.appendChild(bait);
+        setTimeout(function () {
+          var blocked = !bait.offsetParent || bait.offsetHeight === 0 || bait.clientHeight === 0 ||
+            window.getComputedStyle(bait).display === 'none' || window.getComputedStyle(bait).visibility === 'hidden';
+          if (bait.parentNode) bait.parentNode.removeChild(bait);
+          resolve(blocked);
+        }, 100);
+      } catch (e) {
+        resolve(false);
+      }
+    });
+  }
+
   function onAdError(errorEvent) {
     if (adRequestSettled) return;
     adRequestSettled = true;
     clearAdTimeout();
-    // 원인을 계속 추측만 하지 않도록, IMA가 주는 실제 에러 코드/메시지를 콘솔과
-    // 화면 문구에 그대로 노출한다 — 다음에 또 실패하면 이 코드로 바로 원인을
-    // 좁힐 수 있다.
+    // 원인을 계속 추측만 하지 않도록, IMA가 주는 실제 에러 코드/메시지를 콘솔에
+    // 그대로 남긴다 — 다음에 또 실패하면 이 코드로 바로 원인을 좁힐 수 있다.
     var detail = '';
     try {
       var err = errorEvent && errorEvent.getError && errorEvent.getError();
@@ -162,10 +185,14 @@
         console.error('출석체크 광고 오류', err.getErrorCode(), err.getMessage(), err);
       }
     } catch (e) { /* noop */ }
-    setStatus('광고를 불러오지 못했습니다.' + detail);
     cleanupAd();
     plainBtn.disabled = false;
     adBtn.disabled = false;
+    detectAdBlocker().then(function (blocked) {
+      setStatus(blocked
+        ? '광고 차단 기능이 감지되었습니다. 꺼주신 뒤 다시 시도해주세요.'
+        : '광고를 불러오지 못했습니다.' + detail);
+    });
   }
 
   function onAdRewardEarned() {
