@@ -32,6 +32,7 @@ module.exports = {
   ...require('./src/chest'),
   ...require('./src/admin-tools'),
   ...require('./src/streamer-requests'),
+  ...require('./src/promotion'),
   ...require('./src/chat'),
   ...require('./src/skins'),
 };

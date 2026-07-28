@@ -880,6 +880,17 @@
         <li class="audit-empty">인증된 스트리머가 없습니다.</li>
       </ul>
 
+      <div class="section-label">게시글 홍보 현황 <span class="admin-only-tag">관리자 전용</span></div>
+      <p class="admin-item-sub" style="margin-bottom:10px;">배팅시장 홍보를 완료한 인증 스트리머를 검색해서 추가해두는 목록입니다.</p>
+      <div class="admin-chat-composer" style="margin-bottom:10px;">
+        <input type="text" id="promoted-streamer-input" list="promoted-streamer-datalist" placeholder="인증 스트리머 이름 검색" maxlength="40">
+        <datalist id="promoted-streamer-datalist"></datalist>
+        <button class="verify-req-approve" id="promoted-streamer-add-btn" type="button">추가</button>
+      </div>
+      <ul class="audit-log verify-req-list" id="promoted-streamers-list">
+        <li class="audit-empty">아직 추가된 스트리머가 없습니다.</li>
+      </ul>
+
       <div class="section-label">보물상자 구매 신청 <span class="admin-only-tag">관리자 전용</span></div>
       <ul class="audit-log verify-req-list" id="chest-purchase-requests-list">
         <li class="audit-empty">대기 중인 보물상자 구매 신청이 없습니다.</li>
@@ -1210,6 +1221,7 @@
 <script type="module" src="js/winter-scene.js"></script>
 <script type="module" src="js/firework-scene.js"></script>
 <script defer src="js/streamer-verification.js"></script>
+<script defer src="js/promoted-streamers.js"></script>
 <script defer src="js/market-report.js"></script>
 <script defer src="js/boot.js"></script>
 <script defer src="js/intro-modal.js"></script>

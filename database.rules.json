@@ -345,6 +345,11 @@
         "$requestId": { ".write": false }
       },
 
+      "promotedStreamers": {
+        ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
+        "$entryId": { ".write": false }
+      },
+
       "bannedAccounts": {
         ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
         "$uid": { ".write": false }

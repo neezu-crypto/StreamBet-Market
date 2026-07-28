@@ -69,6 +69,8 @@
       sbmRenderChestPurchaseRequests();
       sbmRenderStreamerRequests();
       sbmSubscribeBannedAccounts();
+      if (window.sbmSubscribePromotedStreamers) window.sbmSubscribePromotedStreamers();
+      if (window.sbmRefreshPromotedStreamerDatalist) window.sbmRefreshPromotedStreamerDatalist();
     }
   });
   navRanking.addEventListener('click', function (e) {
