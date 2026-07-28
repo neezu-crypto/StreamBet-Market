@@ -114,11 +114,22 @@
     if (adTimeoutId) { clearTimeout(adTimeoutId); adTimeoutId = null; }
   }
 
-  function onAdError() {
+  function onAdError(errorEvent) {
     if (adRequestSettled) return;
     adRequestSettled = true;
     clearAdTimeout();
-    setStatus('광고를 불러오지 못했습니다. 광고 차단기·DNS 설정을 확인하거나 잠시 후 다시 시도해주세요.');
+    // 원인을 계속 추측만 하지 않도록, IMA가 주는 실제 에러 코드/메시지를 콘솔과
+    // 화면 문구에 그대로 노출한다 — 다음에 또 실패하면 이 코드로 바로 원인을
+    // 좁힐 수 있다.
+    var detail = '';
+    try {
+      var err = errorEvent && errorEvent.getError && errorEvent.getError();
+      if (err) {
+        detail = ' [' + err.getErrorCode() + '] ' + err.getMessage();
+        console.error('출석체크 광고 오류', err.getErrorCode(), err.getMessage(), err);
+      }
+    } catch (e) { /* noop */ }
+    setStatus('광고를 불러오지 못했습니다.' + detail);
     cleanupAd();
     plainBtn.disabled = false;
     adBtn.disabled = false;
