@@ -1,4 +1,5 @@
 const { getDatabase, ServerValue } = require('firebase-admin/database');
+const { HttpsError } = require('firebase-functions/v2/https');
 
 const INITIAL_BALANCE = 1000000; // 07번 초기 자산
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -57,9 +58,11 @@ async function adjustBalance(uid, delta) {
   const balance = snap.val() || 0;
   if (balance < 0) {
     await ref.set(ServerValue.increment(-delta)); // 되돌리기
-    const err = new Error('잔액이 부족합니다.');
-    err.code = 'insufficient-balance';
-    throw err;
+    // 일반 Error를 던지면 onCall 핸들러가 클라이언트에 메시지를 그대로 안
+    // 넘기고 "INTERNAL"로 뭉개버린다(HttpsError만 메시지가 전달됨) — 배팅·
+    // 환전·스킨구매 등 adjustBalance를 쓰는 모든 곳에서 겪는 문제라 여기
+    // 한 곳에서 HttpsError로 고친다.
+    throw new HttpsError('failed-precondition', '잔액이 부족합니다.');
   }
   return { balance };
 }
