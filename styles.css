@@ -1035,10 +1035,10 @@ html.theme-sns-feed{
   --panel: #ffffff;
   --panel-raised: #fafafa;
   --hairline: #dbdbdb;
-  --gold: #d6249f;
-  --gold-dim: rgba(214,36,159,0.12);
-  --gold-line: rgba(214,36,159,0.35);
-  --gold-text: #b7295a;
+  --gold: #d17ba3;
+  --gold-dim: rgba(209,123,163,0.14);
+  --gold-line: rgba(209,123,163,0.4);
+  --gold-text: #a8527d;
   --mint: #2e9e5b;
   --mint-dim: rgba(46,158,91,0.14);
   --coral: #ed4956;
