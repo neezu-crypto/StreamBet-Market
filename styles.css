@@ -1049,13 +1049,28 @@ html.theme-sns-feed{
 }
 html.theme-sns-feed .devbar{ background: #ffffff; }
 html.theme-sns-feed .ticker{ background: linear-gradient(180deg, #ffffff, transparent); border-bottom: 1px solid var(--hairline); }
-/* 마켓 카드 — 실제 SNS 피드 게시물처럼 그림자 없이 얇은 테두리만, 모서리는
-   더 둥글게. 좌상단 배지는 이모지 대신 SNS 인증 마크(파란 체크) 느낌으로. */
+/* 마켓 카드 — 실제 SNS 피드 게시물처럼 얇지만 인스타그램류 그라데이션이 도는
+   테두리(스토리 링과 같은 톤). border-box에만 그라데이션을 칠하고 안쪽은
+   padding-box로 카드 배경색을 덮는 이중 배경 기법(위 cta-ring과 동일 원리)
+   이라, 카드 안 콘텐츠 배경은 그대로 --panel 단색을 유지한다. 좌상단 배지는
+   이모지 대신 SNS 인증 마크(파란 체크) 느낌으로. */
 html.theme-sns-feed .ticket{
   border-radius: 16px;
   box-shadow: none;
 }
+/* .hero-ticket(마감 임박 카드)는 이미 자체적으로 --gold 기반 회전 그라데이션
+   테두리(spin-border-angle)를 쓰고 있어서 제외 — 그 특수 카드는 그대로 두고,
+   나머지 일반 카드에만 인스타그램류 정적 그라데이션 테두리를 입힌다. */
+html.theme-sns-feed .ticket:not(.hero-ticket){
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7) border-box;
+}
 html.theme-sns-feed .ticket:not(.hero-ticket):hover{
+  /* 기본 스타일의 hover가 border-color를 단색으로 바꿔서 그라데이션 테두리를
+     덮어버리므로, transparent로 다시 고정해 border-box 배경이 계속 보이게 한다 */
+  border-color: transparent;
   box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 html.theme-sns-feed .boot-card{ position: relative; }
@@ -1070,6 +1085,10 @@ html.theme-sns-feed .report-modal,
 html.theme-sns-feed .boot-card{
   border-radius: 16px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    linear-gradient(135deg, #f9ce34, #ee2a7b, #6228d7) border-box;
 }
 html.theme-sns-feed .ticket:not(.hero-ticket)::before,
 html.theme-sns-feed .verify-modal::before,
