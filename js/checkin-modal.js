@@ -1,10 +1,16 @@
 // 16번 — 출석 체크 보상 선택 모달(관리자 시범). 기존 출석 체크(js/wallet.js,
 // claimAttendance)는 그대로 두고, 관리자에 한해 클릭 시 이 모달을 띄워
-// "오늘 그대로 받기" / "광고보고 2배 받기" 중 고르게 한다. 광고는 Google IMA
-// SDK로 재생하고, 구글이 공개한 보상형(rewarded) 테스트 태그를 쓰기 때문에
-// Google Ad Manager 계정 승인 없이 지금 바로 동작을 확인할 수 있다(실제 태그가
-// 생기면 SAMPLE_REWARDED_AD_TAG만 바꿔치기하면 됨). 실제 브라우저 재생 여부는
-// 이 환경에서 직접 확인할 수 없으므로 배포 후 육안 확인이 필요하다.
+// "오늘 그대로 받기" / "광고보고 2배 받기" 중 고르게 한다.
+//
+// 주의: IMA SDK for HTML5(웹)에는 애초에 "보상형(rewarded) 광고" 포맷이나
+// REWARD 이벤트가 존재하지 않는다(구글 공식 AdEvent.Type 전체 목록 확인 완료 —
+// REWARD는 모바일(Android/iOS) SDK에만 있는 개념). 웹에서 "광고 보고 보상"은
+// SDK가 지원하는 기능이 아니라 그냥 "평범한 선형(linear) 영상 광고를 재생하고,
+// 다 보면(ALL_ADS_COMPLETED) 우리 쪽에서 보상을 주기로 정한 것"일 뿐이다.
+// 처음에 cust_params=sample_ct=rewardedvideo라는(실제로는 존재하지 않는)
+// 파라미터를 썼던 게 모든 환경에서 광고가 안 뜨던 진짜 원인이었다 — 구글 공식
+// 샘플 태그 목록(단순 선형 광고, sample_ct=linear)으로 교체한다. 실제 Google
+// Ad Manager 계정에서 발급받은 태그가 생기면 이 상수만 바꿔치기하면 된다.
 (function () {
   var backdrop = document.getElementById('checkin-backdrop');
   var closeBtn = document.getElementById('checkin-modal-close');
@@ -18,10 +24,10 @@
   var statusEl = document.getElementById('checkin-modal-status');
   if (!backdrop || !plainBtn || !adBtn) return;
 
-  var SAMPLE_REWARDED_AD_TAG =
+  var SAMPLE_AD_TAG =
     'https://pubads.g.doubleclick.net/gampad/ads?iu=/21775744923/external/single_ad_samples' +
-    '&sz=640x480&cust_params=sample_ct%3Drewardedvideo&ciu_szs=300x250&gdfp_req=1&output=vast' +
-    '&unviewed_position_start=1&env=vp&impl=s&correlator=';
+    '&sz=640x480&cust_params=sample_ct%3Dlinear&ciu_szs=300x250%2C728x90&gdfp_req=1&output=vast' +
+    '&unviewed_position_start=1&env=vp&correlator=';
 
   var imaLoadPromise = null;
   function loadImaSdk() {
@@ -150,10 +156,9 @@
         adsLoader.addEventListener(google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED, function (event) {
           adsManager = event.getAdsManager(adVideo);
           adsManager.addEventListener(google.ima.AdErrorEvent.Type.AD_ERROR, onAdError);
-          // 보상형 광고 시청 완료 시점 — REWARD 이벤트를 우선 쓰고, 이 데모 태그가
-          // REWARD를 안 쏘는 경우를 대비해 ALL_ADS_COMPLETED에서도 한 번 더 잡는다
-          // (adRequestSettled 플래그로 중복 지급은 막는다).
-          adsManager.addEventListener(google.ima.AdEvent.Type.REWARD, onAdRewardEarned);
+          // 웹 IMA SDK엔 REWARD 이벤트 자체가 없으므로(모바일 전용 개념), 광고를
+          // 끝까지 재생 완료했다는 신호(ALL_ADS_COMPLETED)를 곧 "보상 지급 시점"으로
+          // 취급한다.
           adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, onAdRewardEarned);
           try {
             adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
@@ -164,7 +169,7 @@
         }, false);
 
         var adsRequest = new google.ima.AdsRequest();
-        adsRequest.adTagUrl = SAMPLE_REWARDED_AD_TAG + Date.now();
+        adsRequest.adTagUrl = SAMPLE_AD_TAG + Date.now();
         adsRequest.linearAdSlotWidth = 640;
         adsRequest.linearAdSlotHeight = 360;
         adsRequest.nonLinearAdSlotWidth = 640;
