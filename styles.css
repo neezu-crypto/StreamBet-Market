@@ -1097,9 +1097,21 @@ html.theme-sns-feed .boot-card::before{
   box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 /* 인증 스트리머 배너 — 아바타 테두리를 인스타그램류 "스토리" 그라데이션
-   링으로 바꿔서 SNS 스토리 바 느낌을 낸다(기존 conic-gradient 링 재활용). */
+   링으로 바꿔서 SNS 스토리 바 느낌을 낸다(기존 conic-gradient 링 재활용).
+   실제 아바타는 안쪽 사진(.verified-avatar)이 중앙을 덮어서 2px 패딩만큼만
+   "링"으로 보이지만, "인증하기" 버튼(.cta-ring)은 안쪽에 사진이 아니라 그냥
+   "+" 텍스트뿐이라 그라데이션이 배경 전체를 채운 것처럼 보였다 — 그래서
+   cta-ring은 border+padding-box/border-box 이중 배경 기법으로 따로 처리해서
+   테두리에만 그라데이션이, 안쪽엔 카드 배경색이 오도록 한다. */
 html.theme-sns-feed .verified-avatar-ring{
   background: conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
+}
+html.theme-sns-feed .verified-avatar-ring.cta-ring{
+  padding: 0;
+  border: 2px solid transparent;
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34) border-box;
 }
 
 *{ box-sizing: border-box; }
