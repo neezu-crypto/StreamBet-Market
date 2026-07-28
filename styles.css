@@ -1026,6 +1026,82 @@ html.theme-pastel-dream .boot-card::before{
   position: fixed; inset: 0; z-index: -1; pointer-events: none;
 }
 
+/* 16번 — 스킨: 피드 타임라인 테마. 배경 애니메이션 없는 가벼운 UI 크롬
+   리스킨(엑셀·윈도우11·맥OS·레트로PC와 동일 계열) — 마켓 카드를 실제 SNS
+   피드 게시물처럼, 인증 스트리머 배너를 "스토리" 링처럼 보이게 한다. */
+html.theme-sns-feed{
+  color-scheme: light;
+  --ink: #fafafa;
+  --panel: #ffffff;
+  --panel-raised: #fafafa;
+  --hairline: #dbdbdb;
+  --gold: #d6249f;
+  --gold-dim: rgba(214,36,159,0.12);
+  --gold-line: rgba(214,36,159,0.35);
+  --gold-text: #b7295a;
+  --mint: #2e9e5b;
+  --mint-dim: rgba(46,158,91,0.14);
+  --coral: #ed4956;
+  --coral-dim: rgba(237,73,86,0.14);
+  --text: #262626;
+  --muted: #737373;
+  --muted-2: #8e8e8e;
+}
+html.theme-sns-feed .devbar{ background: #ffffff; }
+html.theme-sns-feed .ticker{ background: linear-gradient(180deg, #ffffff, transparent); border-bottom: 1px solid var(--hairline); }
+/* 마켓 카드 — 실제 SNS 피드 게시물처럼 그림자 없이 얇은 테두리만, 모서리는
+   더 둥글게. 좌상단 배지는 이모지 대신 SNS 인증 마크(파란 체크) 느낌으로. */
+html.theme-sns-feed .ticket{
+  border-radius: 16px;
+  box-shadow: none;
+}
+html.theme-sns-feed .ticket:not(.hero-ticket):hover{
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+html.theme-sns-feed .boot-card{ position: relative; }
+html.theme-sns-feed .verify-modal,
+html.theme-sns-feed .propose-modal,
+html.theme-sns-feed .exchange-modal,
+html.theme-sns-feed .bet-modal,
+html.theme-sns-feed .review-modal,
+html.theme-sns-feed .manage-modal,
+html.theme-sns-feed .profile-modal,
+html.theme-sns-feed .report-modal,
+html.theme-sns-feed .boot-card{
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.12);
+}
+html.theme-sns-feed .ticket:not(.hero-ticket)::before,
+html.theme-sns-feed .verify-modal::before,
+html.theme-sns-feed .propose-modal::before,
+html.theme-sns-feed .exchange-modal::before,
+html.theme-sns-feed .bet-modal::before,
+html.theme-sns-feed .review-modal::before,
+html.theme-sns-feed .manage-modal::before,
+html.theme-sns-feed .profile-modal::before,
+html.theme-sns-feed .report-modal::before,
+html.theme-sns-feed .boot-card::before{ content:"✓"; }
+html.theme-sns-feed .ticket:not(.hero-ticket)::before,
+html.theme-sns-feed .verify-modal::before,
+html.theme-sns-feed .propose-modal::before,
+html.theme-sns-feed .exchange-modal::before,
+html.theme-sns-feed .bet-modal::before,
+html.theme-sns-feed .review-modal::before,
+html.theme-sns-feed .manage-modal::before,
+html.theme-sns-feed .profile-modal::before,
+html.theme-sns-feed .report-modal::before,
+html.theme-sns-feed .boot-card::before{
+  position:absolute; top:-10px; left:16px; width:22px; height:22px;
+  background: #3897f0; color:#fff; border:2px solid var(--panel); border-radius:50%;
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; line-height:1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+/* 인증 스트리머 배너 — 아바타 테두리를 인스타그램류 "스토리" 그라데이션
+   링으로 바꿔서 SNS 스토리 바 느낌을 낸다(기존 conic-gradient 링 재활용). */
+html.theme-sns-feed .verified-avatar-ring{
+  background: conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
+}
+
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1516,6 +1592,12 @@ button{ font-family: inherit; cursor: pointer; }
 .skin-thumb-theme-winter{ background: linear-gradient(160deg, #dcedf8, #f4f9fd); }
 .skin-thumb-theme-billiard{ background: linear-gradient(160deg, #164a30, #0b3d24); }
 .skin-thumb-theme-pastel{ background: linear-gradient(160deg, #ffd9ec, #e0d4fb 55%, #d4f5e6); }
+.skin-thumb-theme-sns{ background: #ffffff; border: 1px solid #dbdbdb; align-items:center; justify-content:center; }
+.skin-thumb-theme-sns-ring{
+  width:36px; height:36px; border-radius:50%; padding:2px;
+  background: conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
+}
+.skin-thumb-theme-sns-ring-inner{ width:100%; height:100%; border-radius:50%; background:#eee; border:2px solid #fff; }
 
 /* 테마 스킨 — 불꽃놀이 야시장 테마: 짙은 밤하늘 + 색색 폭죽 점 미리보기 */
 .skin-thumb-theme-firework{

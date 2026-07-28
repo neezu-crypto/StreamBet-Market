@@ -81,6 +81,7 @@ const SKIN_CATALOG = {
   'billiard-table': { name: '당구대 테마', category: 'theme', price: 200000 },
   'firework-market': { name: '불꽃놀이 야시장 테마', category: 'theme', price: 200000 },
   'pastel-dream': { name: '파스텔 드림 테마', category: 'theme', price: 200000 },
+  'sns-feed': { name: '피드 타임라인 테마', category: 'theme', price: 150000 },
 };
 const SKIN_PURCHASE_LOG_CAP = 200; // 관리 탭 "스킨 구매 내역" — 이 개수를 넘는 오래된 항목은 매 구매 시 삭제
 
