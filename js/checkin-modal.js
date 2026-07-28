@@ -46,10 +46,12 @@
   var adsLoader = null;
   var adsManager = null;
   var adDisplayContainer = null;
+  var adResizeHandler = null;
 
   function cleanupAd() {
     adRequestSettled = true;
     clearAdTimeout();
+    if (adResizeHandler) { window.removeEventListener('resize', adResizeHandler); adResizeHandler = null; }
     if (adsManager) { try { adsManager.destroy(); } catch (e) { /* noop */ } adsManager = null; }
     if (adsLoader) { try { adsLoader.destroy(); } catch (e) { /* noop */ } adsLoader = null; }
     adDisplayContainer = null;
@@ -157,6 +159,16 @@
     // 로드돼 있으면(모달 열릴 때 미리 로드 시도함) 여기서 바로 동기 실행되고,
     // 아직이면 부득이하게 비동기 로드 후 호출한다(그 경우 일부 브라우저에서
     // 자동재생이 막힐 수 있음).
+    // 640x360 같은 하드코딩 대신, 실제 화면에 렌더링된 컨테이너 크기를 그대로
+    // 쓴다 — 이게 실제 크기와 달랐던 게 "Preroll · 8 Seconds" 같은 IMA 오버레이
+    // 텍스트/로고가 잘려 보이던 원인이었다(실제 관찰된 버그).
+    function getAdContainerSize() {
+      return {
+        width: adContainer.clientWidth || 640,
+        height: adContainer.clientHeight || 360
+      };
+    }
+
     function proceed() {
       try {
         adDisplayContainer = new google.ima.AdDisplayContainer(adContainer, adVideo);
@@ -177,8 +189,15 @@
           // 끝까지 재생 완료했다는 신호(ALL_ADS_COMPLETED)를 곧 "보상 지급 시점"으로
           // 취급한다.
           adsManager.addEventListener(google.ima.AdEvent.Type.ALL_ADS_COMPLETED, onAdRewardEarned);
+          adResizeHandler = function () {
+            if (!adsManager) return;
+            var size = getAdContainerSize();
+            try { adsManager.resize(size.width, size.height, google.ima.ViewMode.NORMAL); } catch (e) { /* noop */ }
+          };
+          window.addEventListener('resize', adResizeHandler);
           try {
-            adsManager.init(640, 360, google.ima.ViewMode.NORMAL);
+            var initSize = getAdContainerSize();
+            adsManager.init(initSize.width, initSize.height, google.ima.ViewMode.NORMAL);
             adsManager.start();
           } catch (adErr) {
             onAdError(adErr);
@@ -187,10 +206,11 @@
 
         var adsRequest = new google.ima.AdsRequest();
         adsRequest.adTagUrl = SAMPLE_AD_TAG + Date.now();
-        adsRequest.linearAdSlotWidth = 640;
-        adsRequest.linearAdSlotHeight = 360;
-        adsRequest.nonLinearAdSlotWidth = 640;
-        adsRequest.nonLinearAdSlotHeight = 150;
+        var slotSize = getAdContainerSize();
+        adsRequest.linearAdSlotWidth = slotSize.width;
+        adsRequest.linearAdSlotHeight = slotSize.height;
+        adsRequest.nonLinearAdSlotWidth = slotSize.width;
+        adsRequest.nonLinearAdSlotHeight = Math.round(slotSize.height * 0.4);
         adsLoader.requestAds(adsRequest);
       } catch (e) {
         onAdError(e);
