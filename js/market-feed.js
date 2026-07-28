@@ -170,12 +170,12 @@ function sbmRenderClosedCard(marketId, market, batch) {
     resultSmall = '';
     payout = '-';
   }
-  return '<article class="ticket settled">' +
+  return '<article class="ticket settled js-open-result" data-market-id="' + marketId + '" role="button" tabindex="0" style="cursor:pointer;">' +
     '<div class="ticket-main"><div class="badges">' +
     '<span class="badge badge-settled">정산 완료' + (isVoid ? ' · 무효' : '') + '</span>' +
     '<span class="badge badge-type">' + sbmTypeLabel(market.type) + '</span></div>' +
     '<h2 class="ticket-title">' + sbmStreamerBadgeHtml(market) + sbmEscapeHtml(market.title) + '</h2>' +
-    '<div class="ticket-meta"><span>' + dateStr + ' 정산 완료</span></div></div>' +
+    '<div class="ticket-meta"><span>' + dateStr + ' 정산 완료</span><span class="sep">·</span><span>카드 클릭 시 결과 확인</span></div></div>' +
     '<div class="ticket-stub"><div class="result-row">' +
     '<div class="result-outcome ' + (isVoid ? 'void' : 'win') + '">' + resultLabel + '<small>' + resultSmall + '</small></div>' +
     '<div class="result-payout">' + payout + '</div></div></div></article>';
