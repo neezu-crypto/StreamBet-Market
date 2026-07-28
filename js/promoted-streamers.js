@@ -35,12 +35,12 @@ function sbmRenderPromotedStreamers(list) {
   el.innerHTML = keys.map(function (key) {
     var p = list[key];
     var dateText = p.addedAt ? new Date(p.addedAt).toLocaleDateString('ko-KR') : '-';
-    return '<li class="verify-req-item">' +
-      '<div class="verify-req-info"><b>' + sbmEscapeHtml(p.nickname) + '</b><span>' + dateText + ' 추가</span></div>' +
-      '<div class="verify-req-actions"><button class="verify-req-reject" data-id="' + sbmEscapeHtml(key) + '" type="button">삭제</button></div></li>';
+    return '<li class="promoted-streamer-chip">' +
+      '<b>' + sbmEscapeHtml(p.nickname) + '</b><span>' + dateText + '</span>' +
+      '<button class="promoted-streamer-chip-remove" data-id="' + sbmEscapeHtml(key) + '" type="button">삭제</button></li>';
   }).join('');
 
-  el.querySelectorAll('.verify-req-reject').forEach(function (btn) {
+  el.querySelectorAll('.promoted-streamer-chip-remove').forEach(function (btn) {
     btn.addEventListener('click', function () {
       var id = btn.getAttribute('data-id');
       btn.disabled = true;

@@ -1349,6 +1349,23 @@ button{ font-family: inherit; cursor: pointer; }
   border:1px solid rgba(226,85,79,0.35); padding:2px 7px; border-radius:20px; vertical-align:middle;
 }
 .verify-req-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
+
+/* 게시글 홍보 현황 — 한 줄에 5명씩 보이는 그리드. 다른 audit-log 목록은 세로
+   1줄1건이지만 여기는 이름+날짜만 담는 작은 칩이라 그리드가 더 알아보기 쉽다. */
+#promoted-streamers-list{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; }
+#promoted-streamers-list li.audit-empty{ grid-column: 1 / -1; }
+@media (max-width: 720px){ #promoted-streamers-list{ grid-template-columns: repeat(2, 1fr); } }
+.promoted-streamer-chip{
+  display:flex; flex-direction:column; gap:4px; padding:9px 10px;
+  background: var(--panel-raised); border:1px solid var(--hairline); border-radius:8px;
+  min-width:0;
+}
+.promoted-streamer-chip b{ font-size:12.5px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.promoted-streamer-chip span{ font-size:10.5px; color: var(--muted-2); }
+.promoted-streamer-chip-remove{
+  align-self:flex-end; font-size:10.5px; color: var(--coral); background:none; border:none;
+  font-family:inherit; padding:0; margin-top:2px;
+}
 .verify-req-info{ display:flex; flex-direction:column; gap:2px; }
 .verify-req-info b{ font-size:13px; }
 .verify-req-info span{ font-size:11px; color: var(--muted-2); }
