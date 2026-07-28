@@ -1,7 +1,7 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, assertNotBanned, isAdminEmail } = require('./lib/auth');
-const { adjustBalance } = require('./lib/wallet');
+const { ensureWallet, adjustBalance } = require('./lib/wallet');
 const { trimToLast } = require('./lib/capped-log');
 const { SKIN_CATALOG, SKIN_PURCHASE_LOG_CAP } = require('./constants');
 
@@ -11,6 +11,12 @@ const { SKIN_CATALOG, SKIN_PURCHASE_LOG_CAP } = require('./constants');
 const purchaseSkin = onCall(async (request) => {
   const uid = requireAuth(request);
   await assertNotBanned(uid);
+  // 다른 잔액 차감 함수(배팅·환전·보물상자 등)는 전부 adjustBalance 전에
+  // ensureWallet을 먼저 호출하는데 여기만 빠져 있었다 — 지갑이 아직 한 번도
+  // 생성된 적 없는 신규 계정이 첫 액션으로 스킨을 구매하면, balance 경로 자체가
+  // 없어서 ServerValue.increment가 0에서 시작해 곧바로 음수가 되고 "잔액
+  // 부족"으로 잘못 튕기는 버그가 있었다(실제 서버 로그로 확인).
+  await ensureWallet(uid);
   const { skinId } = request.data || {};
   const skin = SKIN_CATALOG[skinId];
   if (!skin) throw new HttpsError('invalid-argument', '존재하지 않는 스킨입니다.');
