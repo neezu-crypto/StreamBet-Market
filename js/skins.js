@@ -5,6 +5,7 @@ var SBM_SKIN_CATALOG = {
   'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 150000 },
   'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 150000 },
   'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 150000 },
+  'sns-feed': { name: '피드 타임라인 테마', category: 'theme', price: 150000 },
   'spring-bloom': { name: '벚꽃 테마', category: 'theme', price: 200000 },
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
   'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },
@@ -13,7 +14,6 @@ var SBM_SKIN_CATALOG = {
   'billiard-table': { name: '당구대 테마', category: 'theme', price: 200000 },
   'firework-market': { name: '불꽃놀이 야시장 테마', category: 'theme', price: 200000 },
   'pastel-dream': { name: '파스텔 드림 테마', category: 'theme', price: 200000 },
-  'sns-feed': { name: '피드 타임라인 테마', category: 'theme', price: 150000 },
 };
 
 // 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
