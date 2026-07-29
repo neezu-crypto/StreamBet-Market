@@ -91,6 +91,16 @@ function buildScene() {
     return f;
   });
 
+  // 임시 진단용 — 카메라 바로 앞에 화면을 거의 채우는 초대형 자홍색 평면.
+  // PlaneGeometry가 이 환경에서 애초에 렌더링되는지부터 확인하기 위한 실험.
+  // 이게 보이면 깃발 위치·크기 계산 쪽 문제, 안 보이면 더 근본적인 문제.
+  var testGeo = new THREE.PlaneGeometry(2000, 2000);
+  var testMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide });
+  var testMesh = new THREE.Mesh(testGeo, testMat);
+  testMesh.position.set(0, 20, 400);
+  scene.add(testMesh);
+  console.log('[TK] 진단용 테스트 평면 추가함 — 화면에 자홍색이 안 보이면 PlaneGeometry 자체 문제');
+
   // 진단 로그 — 이전 로그는 배열/객체를 그대로 찍어서 콘솔 텍스트로 복사하면
   // "Array(3)"처럼 요약돼 실제 숫자가 안 보였다. 이번엔 전부 명시적으로
   // 문자열로 풀어서 찍고, 카메라 절두체(frustum) 안에 실제로 들어있는지도
