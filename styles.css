@@ -608,7 +608,8 @@ html.theme-command-console .review-modal,
 html.theme-command-console .manage-modal,
 html.theme-command-console .profile-modal,
 html.theme-command-console .report-modal,
-html.theme-command-console .boot-card{
+html.theme-command-console .boot-card,
+html.theme-command-console .skin-card{
   border: 2px solid transparent;
   clip-path: polygon(
     var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
@@ -631,6 +632,24 @@ html.theme-command-console .ticket:not(.hero-ticket):hover{
   box-shadow: 0 20px 46px rgba(0,0,0,0.65);
 }
 html.theme-command-console .ticket-stub{ border-top: 1px dashed var(--hairline); }
+/* 스킨 카드 — 기본 CSS가 hover·owned·equipped 상태에서 border-color를 다시
+   단색으로 덮어써서 위 팔각형 테두리 트릭을 깨뜨리길래, 여기서 다시
+   transparent로 되돌린다(장착 중인 스킨은 안쪽 채움만 살짝 금색으로 물들여
+   구분한다). */
+html.theme-command-console .skin-card:hover,
+html.theme-command-console .skin-card.owned{
+  border-color: transparent;
+}
+html.theme-command-console .skin-card.equipped{
+  border-color: transparent;
+  background:
+    radial-gradient(circle 5px at var(--chamfer) var(--chamfer), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at calc(100% - var(--chamfer)) var(--chamfer), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at var(--chamfer) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at calc(100% - var(--chamfer)) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
+    linear-gradient(180deg, #241c0d, #140f08) padding-box,
+    linear-gradient(160deg, #8a3030, #5c1f1f) border-box;
+}
 html.theme-command-console .hero-ticket{
   border: 3px solid transparent;
   clip-path: polygon(
