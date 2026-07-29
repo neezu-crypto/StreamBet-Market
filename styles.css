@@ -661,6 +661,21 @@ html.theme-command-console .hero-ticket{
     linear-gradient(180deg, #080d18, #05080f) padding-box,
     conic-gradient(from var(--border-angle), var(--gold) 0deg, #8a3030 110deg, var(--gold) 200deg, #8a3030 300deg, var(--gold) 360deg) border-box;
 }
+/* 인증 스트리머 홍보 배너 — 아바타 링·"인증하기" 버튼도 원형 대신 모서리를
+   깎은 팔각형 프레임으로, 링 색도 적갈색으로 통일한다(리벳은 68px 크기엔
+   과해서 생략). */
+html.theme-command-console .verified-avatar-ring{
+  background: linear-gradient(160deg, #8a3030, #5c1f1f);
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+}
+html.theme-command-console .cta-ring{
+  border: 2px solid #8a3030;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
+}
+html.theme-command-console .verified-cta:hover .cta-ring{
+  border-color: var(--gold);
+  background: rgba(232,193,90,0.12);
+}
 /* 모달 닫기 버튼 — 기존 위치·크기(원형 배지)는 그대로 두고, 모서리만 살짝
    깎아 적갈색 테두리를 두른다. */
 html.theme-command-console .verify-modal-close,
