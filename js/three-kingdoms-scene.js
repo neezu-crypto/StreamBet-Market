@@ -91,15 +91,16 @@ function buildScene() {
     return f;
   });
 
-  // 임시 진단용 — 카메라 바로 앞에 화면을 거의 채우는 초대형 자홍색 평면.
-  // PlaneGeometry가 이 환경에서 애초에 렌더링되는지부터 확인하기 위한 실험.
-  // 이게 보이면 깃발 위치·크기 계산 쪽 문제, 안 보이면 더 근본적인 문제.
-  var testGeo = new THREE.PlaneGeometry(2000, 2000);
+  // 진단용 2단계 — 1단계(초대형 자홍 평면)는 보였지만, 카메라에 더 가까워서
+  // 깃발·깃대를 가렸을 수도 있다. 이번엔 실제 깃발과 정확히 같은 크기·거리
+  // (230x340, z=-80)에 애니메이션 없는 정적 평면을 "깃발들과 안 겹치는"
+  // x=-650 자리에 둬서, 크기/거리 자체가 문제인지 정확히 가른다.
+  var testGeo = new THREE.PlaneGeometry(FLAG_WIDTH, FLAG_HEIGHT);
   var testMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide });
   var testMesh = new THREE.Mesh(testGeo, testMat);
-  testMesh.position.set(0, 20, 400);
+  testMesh.position.set(-480, FLAG_HEIGHT * 0.32, -80);
   scene.add(testMesh);
-  console.log('[TK] 진단용 테스트 평면 추가함 — 화면에 자홍색이 안 보이면 PlaneGeometry 자체 문제');
+  console.log('[TK] 2단계 테스트 평면 추가함(깃발과 동일 크기/거리, x=-480, 정적) — 화면 왼쪽에 자홍색 사각형이 보이는지 확인');
 
   // 진단 로그 — 이전 로그는 배열/객체를 그대로 찍어서 콘솔 텍스트로 복사하면
   // "Array(3)"처럼 요약돼 실제 숫자가 안 보였다. 이번엔 전부 명시적으로
