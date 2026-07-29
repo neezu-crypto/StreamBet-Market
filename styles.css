@@ -548,7 +548,10 @@ html.theme-command-console .boot-card{
     radial-gradient(circle 5px at calc(100% - var(--chamfer)) var(--chamfer), #aab4bd 92%, transparent 94%) border-box,
     radial-gradient(circle 5px at var(--chamfer) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
     radial-gradient(circle 5px at calc(100% - var(--chamfer)) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
-    linear-gradient(180deg, rgba(8,13,24,0.82), rgba(5,8,16,0.9)) padding-box,
+    /* padding-box 채움은 반드시 완전 불투명이어야 한다 — 반투명이면 뒤에 깔린
+       border-box 테두리 그라디언트가 카드 안쪽까지 비쳐 보인다(특히 hero-ticket의
+       회전 conic-gradient가 안쪽에서도 돌아 보이는 버그로 나타났었다). */
+    linear-gradient(180deg, #080d18, #05080f) padding-box,
     linear-gradient(160deg, #8a3030, #5c1f1f) border-box;
   box-shadow: 0 14px 34px rgba(0,0,0,0.55);
 }
@@ -564,7 +567,7 @@ html.theme-command-console .hero-ticket{
     var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer)
   );
   background:
-    linear-gradient(180deg, rgba(8,13,24,0.82), rgba(5,8,16,0.9)) padding-box,
+    linear-gradient(180deg, #080d18, #05080f) padding-box,
     conic-gradient(from var(--border-angle), var(--gold) 0deg, #8a3030 110deg, var(--gold) 200deg, #8a3030 300deg, var(--gold) 360deg) border-box;
 }
 /* 모달 닫기 버튼 — 기존 위치·크기(원형 배지)는 그대로 두고, 모서리만 살짝
