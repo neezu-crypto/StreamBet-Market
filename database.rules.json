@@ -199,6 +199,13 @@
       ".write": false
     },
 
+    "stockSimSessions": {
+      ".read": false,
+      "$sessionId": {
+        ".write": false
+      }
+    },
+
     "lottery": {
       "pool": {
         ".read": true,
