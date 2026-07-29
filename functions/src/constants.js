@@ -74,6 +74,7 @@ const SKIN_CATALOG = {
   'macos-finder': { name: '트래픽라이트 테마', category: 'theme', price: 150000 },
   'retro-pc': { name: '레트로 PC 테마', category: 'theme', price: 150000 },
   'sns-feed': { name: '피드 타임라인 테마', category: 'theme', price: 150000 },
+  'command-console': { name: '커맨드 콘솔 테마', category: 'theme', price: 150000 },
   'spring-bloom': { name: '벚꽃 테마', category: 'theme', price: 200000 },
   'summer-ocean': { name: '오션 테마', category: 'theme', price: 200000 },
   'autumn-maple': { name: '단풍 테마', category: 'theme', price: 200000 },

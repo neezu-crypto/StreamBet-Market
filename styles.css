@@ -412,6 +412,169 @@ html.theme-retro-pc .report-modal-close:active{
   border-style: inset;
 }
 
+/* 16번 — 스킨: 커맨드 콘솔 테마. 특정 게임이 아니라 1990년대 실시간 전략 게임
+   특유의 어두운 금속 패널 + 시안 HUD 라인 + 베벨 버튼 UI 자체를 오마주한다
+   (레트로 PC 테마와 동일한 베벨 기법을 시안/네이비 배색으로 재현). 마우스 커서도
+   손그림으로 그린 픽셀풍 화살표로 통째로 바꾼다. */
+html.theme-command-console{
+  color-scheme: dark;
+  --ink: #0a1420;
+  --panel: #14212c;
+  --panel-raised: #1a2f3d;
+  --hairline: #2c4c5c;
+  --gold: #ffc85c;
+  --gold-dim: rgba(255,200,92,0.14);
+  --gold-line: rgba(255,200,92,0.4);
+  --gold-text: #ffc85c;
+  --mint: #35e0c4;
+  --mint-dim: rgba(53,224,196,0.14);
+  --coral: #ff4d4f;
+  --coral-dim: rgba(255,77,79,0.14);
+  --text: #d8f0ec;
+  --muted: #7ea3ab;
+  --muted-2: #46626b;
+  --font-display: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
+  --font-body: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
+  --font-serif: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
+}
+/* 각지고 두꺼운 베벨 패널이 이 테마의 핵심이라, 라운딩은 레트로 PC 테마와 동일하게
+   전부 없앤다. */
+html.theme-command-console *{ border-radius:0 !important; }
+/* 마우스 커서 — 손그림 픽셀풍 화살표(시안 채움 + 짙은 네이비 윤곽선)로 전체 교체.
+   입력창(텍스트 커서)과 비활성 버튼(금지 커서)은 그대로 두는 게 실사용성에
+   맞아서, 아래에서 더 구체적인 선택자로 따로 복원한다. */
+html.theme-command-console *{
+  cursor: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='28' viewBox='0 0 22 28'%3E%3Cpath d='M1,1 L1,20 L6,16 L9,23 L13,21.5 L10,15 L17,15 Z' fill='%23dff5f0' stroke='%2304211f' stroke-width='2' stroke-linejoin='miter'/%3E%3C/svg%3E") 1 1, auto !important;
+}
+html.theme-command-console input,
+html.theme-command-console textarea{
+  cursor: text !important;
+}
+html.theme-command-console *:disabled{
+  cursor: not-allowed !important;
+}
+/* 클릭 가능한 모든 버튼에 볼록한(outset) 베벨 + 눌림(inset) 효과 — 레트로 PC
+   테마와 동일한 기법을 시안 하이라이트로 재현한다. */
+html.theme-command-console button,
+html.theme-command-console .btn-exchange{
+  border-width: 2px;
+  border-style: solid;
+  border-top-color: rgba(148,224,255,0.55);
+  border-left-color: rgba(148,224,255,0.55);
+  border-right-color: rgba(0,0,0,0.6);
+  border-bottom-color: rgba(0,0,0,0.6);
+}
+html.theme-command-console button:active,
+html.theme-command-console .btn-exchange:active{
+  border-top-color: rgba(0,0,0,0.6);
+  border-left-color: rgba(0,0,0,0.6);
+  border-right-color: rgba(148,224,255,0.55);
+  border-bottom-color: rgba(148,224,255,0.55);
+  transform: translate(1px, 1px);
+}
+html.theme-command-console .devbar{ background: #0a1420; }
+html.theme-command-console .ticker{ background: linear-gradient(180deg, rgba(53,224,196,0.08), transparent); }
+/* 마켓 카드(.ticket) — 그림자 대신 베벨(outset) 테두리 + 상단에 시안 HUD
+   상태 표시줄("// ACTIVE")을 얹는다. */
+html.theme-command-console .ticket{
+  border: 2px outset #1a2f3d;
+  box-shadow: none;
+}
+html.theme-command-console .ticket:not(.hero-ticket)::before{
+  content:""; position:absolute; top:0; left:0; right:0; height:20px;
+  background: var(--mint); opacity:1;
+}
+html.theme-command-console .ticket:not(.hero-ticket)::after{
+  content:"// ACTIVE"; position:absolute; top:0; right:8px; height:20px;
+  display:flex; align-items:center; color:#04211f; font-family: var(--font-mono);
+  font-size:10px; letter-spacing:1px;
+}
+html.theme-command-console .ticket:not(.hero-ticket):hover{
+  border-color: #2c4c5c;
+  box-shadow: none;
+}
+html.theme-command-console .ticket-main{ padding-top: 28px; }
+html.theme-command-console .ticket-stub{ border-top: 1px dashed var(--hairline); }
+html.theme-command-console .hero-ticket{
+  background:
+    linear-gradient(var(--panel), var(--panel)) padding-box,
+    conic-gradient(from var(--border-angle), var(--mint) 0deg, rgba(53,224,196,0.15) 110deg, var(--mint) 200deg, rgba(53,224,196,0.15) 300deg, var(--mint) 360deg) border-box;
+}
+/* 모달창 — 각지고 두꺼운 베벨 테두리 + 하드섀도우 + 동일한 HUD 상태 표시줄. */
+html.theme-command-console .verify-modal,
+html.theme-command-console .propose-modal,
+html.theme-command-console .exchange-modal,
+html.theme-command-console .bet-modal,
+html.theme-command-console .review-modal,
+html.theme-command-console .manage-modal,
+html.theme-command-console .profile-modal,
+html.theme-command-console .report-modal,
+html.theme-command-console .boot-card{
+  position: relative;
+  background: var(--panel);
+  border: 2px outset #1a2f3d;
+  box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+  padding-top: 38px;
+}
+html.theme-command-console .verify-modal::before,
+html.theme-command-console .propose-modal::before,
+html.theme-command-console .exchange-modal::before,
+html.theme-command-console .bet-modal::before,
+html.theme-command-console .review-modal::before,
+html.theme-command-console .manage-modal::before,
+html.theme-command-console .profile-modal::before,
+html.theme-command-console .report-modal::before,
+html.theme-command-console .boot-card::before{
+  content:""; position:absolute; left:0; right:0; top:0; height:24px;
+  background: var(--mint);
+}
+html.theme-command-console .verify-modal::after,
+html.theme-command-console .propose-modal::after,
+html.theme-command-console .exchange-modal::after,
+html.theme-command-console .bet-modal::after,
+html.theme-command-console .review-modal::after,
+html.theme-command-console .manage-modal::after,
+html.theme-command-console .profile-modal::after{
+  content:"// ACTIVE"; position:absolute; top:0; right:34px; height:24px;
+  display:flex; align-items:center; color:#04211f; font-family: var(--font-mono);
+  font-size:10.5px; letter-spacing:1px;
+}
+/* 실제 닫기 버튼 — 모서리에 딱 붙는 각진 베벨 버튼. :active 시 outset→inset. */
+html.theme-command-console .verify-modal-close,
+html.theme-command-console .propose-modal-close,
+html.theme-command-console .exchange-modal-close,
+html.theme-command-console .bet-modal-close,
+html.theme-command-console .review-modal-close,
+html.theme-command-console .manage-modal-close,
+html.theme-command-console .profile-modal-close,
+html.theme-command-console .report-modal-close{
+  position:absolute; top:0; right:0; width:24px; height:24px;
+  background:#1a2f3d; border:2px outset #1a2f3d;
+  color:var(--text); font-size:12px; font-weight:700;
+  display:flex; align-items:center; justify-content:center;
+  z-index:1;
+}
+html.theme-command-console .verify-modal-close:hover,
+html.theme-command-console .propose-modal-close:hover,
+html.theme-command-console .exchange-modal-close:hover,
+html.theme-command-console .bet-modal-close:hover,
+html.theme-command-console .review-modal-close:hover,
+html.theme-command-console .manage-modal-close:hover,
+html.theme-command-console .profile-modal-close:hover,
+html.theme-command-console .report-modal-close:hover{
+  color: var(--mint); border-color:#1a2f3d;
+}
+html.theme-command-console .verify-modal-close:active,
+html.theme-command-console .propose-modal-close:active,
+html.theme-command-console .exchange-modal-close:active,
+html.theme-command-console .bet-modal-close:active,
+html.theme-command-console .review-modal-close:active,
+html.theme-command-console .manage-modal-close:active,
+html.theme-command-console .profile-modal-close:active,
+html.theme-command-console .report-modal-close:active{
+  border-style: inset;
+}
+
 /* 16번 — 스킨: 계절 테마 4종. OS 오마주 테마들과 달리 카드 · 모달의 형태(모서리 ·
    그림자)는 기본 디자인을 그대로 두고, 색상 팔레트 + 좌상단 이모지 배지 장식만으로
    계절 무드를 입힌다. 네 테마 모두 같은 구조(변수 → devbar/ticker → 배지)라 아래
@@ -1705,6 +1868,20 @@ button{ font-family: inherit; cursor: pointer; }
   color:#000; font-size:8px; line-height:9px; text-align:center;
 }
 .skin-thumb-theme-retro-body{ flex:1; background:#c0c0c0; margin:4px; border:1px inset #c0c0c0; }
+
+/* 테마 스킨 — 커맨드 콘솔 테마: 어두운 네이비 + 시안 상태등 타이틀바 + 미니 HUD 그래프 미리보기 */
+.skin-thumb-theme-console{
+  display:flex; flex-direction:column; background:#0a1420;
+  color-scheme: dark; forced-color-adjust: none; border:1px solid #2c4c5c;
+}
+.skin-thumb-theme-console-titlebar{
+  height:18px; background:#14212c; border-bottom:1px solid #2c4c5c; flex-shrink:0;
+  display:flex; align-items:center; gap:5px; padding:0 6px;
+}
+.skin-thumb-theme-console-dot{ width:6px; height:6px; background:#35e0c4; box-shadow:0 0 4px 1px #35e0c4; flex-shrink:0; }
+.skin-thumb-theme-console-label{ color:#ffc85c; font-size:8px; letter-spacing:1px; font-family: ui-monospace, "SF Mono", "Roboto Mono", monospace; }
+.skin-thumb-theme-console-body{ flex:1; display:flex; align-items:flex-end; justify-content:center; gap:4px; padding-bottom:8px; }
+.skin-thumb-theme-console-bar{ width:5px; background:#35e0c4; }
 
 /* 테마 스킨 — 계절 테마 4종: 그라데이션 배경 + 중앙 이모지만으로 간단히 미리보기 */
 .skin-thumb-theme-season{ align-items:center; justify-content:center; }
