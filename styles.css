@@ -412,39 +412,68 @@ html.theme-retro-pc .report-modal-close:active{
   border-style: inset;
 }
 
-/* 16번 — 스킨: 커맨드 콘솔 테마. 특정 게임이 아니라 1990년대 실시간 전략 게임
-   특유의 어두운 금속 패널 + 시안 HUD 라인 + 베벨 버튼 UI 자체를 오마주한다
-   (레트로 PC 테마와 동일한 베벨 기법을 시안/네이비 배색으로 재현). 마우스 커서도
-   손그림으로 그린 픽셀풍 화살표로 통째로 바꾼다. */
+/* 16번 — 스킨: 커맨드 콘솔 테마. 1990년대 실시간 전략 게임의 "접속 방식 선택"류
+   다이얼로그를 오마주 — 별이 흩뿌려진 우주 배경 위에, 모서리를 깎아낸(각진
+   팔각형) 어두운 반투명 패널을 적갈색 테두리 + 모서리 리벳으로 두르고, 초록
+   네온 텍스트 + 금색 버튼 글자로 채운다. 마우스 커서도 초록 삼각 화살표로
+   바꾼다. 특정 게임 명칭 대신 시각적 특징만 가져온다. */
 html.theme-command-console{
   color-scheme: dark;
-  --ink: #0a1420;
-  --panel: #14212c;
-  --panel-raised: #1a2f3d;
-  --hairline: #2c4c5c;
-  --gold: #ffc85c;
-  --gold-dim: rgba(255,200,92,0.14);
-  --gold-line: rgba(255,200,92,0.4);
-  --gold-text: #ffc85c;
-  --mint: #35e0c4;
-  --mint-dim: rgba(53,224,196,0.14);
+  --chamfer: 16px;
+  --ink: #05070d;
+  --panel: #0d1420;
+  --panel-raised: #111a26;
+  --hairline: #8a3030;
+  --gold: #e8c15a;
+  --gold-dim: rgba(232,193,90,0.14);
+  --gold-line: rgba(232,193,90,0.45);
+  --gold-text: #e8c15a;
+  --mint: #39ff6a;
+  --mint-dim: rgba(57,255,106,0.14);
   --coral: #ff4d4f;
   --coral-dim: rgba(255,77,79,0.14);
-  --text: #d8f0ec;
-  --muted: #7ea3ab;
-  --muted-2: #46626b;
-  --font-display: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
-  --font-body: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
-  --font-serif: ui-monospace, "SF Mono", "Roboto Mono", "Consolas", "Apple SD Gothic Neo", sans-serif;
+  --text: #c9d9ee;
+  --muted: #8aa0b8;
+  --muted-2: #54687e;
 }
-/* 각지고 두꺼운 베벨 패널이 이 테마의 핵심이라, 라운딩은 레트로 PC 테마와 동일하게
-   전부 없앤다. */
+/* 팔각형 각진 패널이 이 테마의 핵심이라, 라운딩은 전부 없앤다(대신 각 패널·
+   버튼에 clip-path로 모서리를 깎는다). */
 html.theme-command-console *{ border-radius:0 !important; }
-/* 마우스 커서 — 손그림 픽셀풍 화살표(시안 채움 + 짙은 네이비 윤곽선)로 전체 교체.
-   입력창(텍스트 커서)과 비활성 버튼(금지 커서)은 그대로 두는 게 실사용성에
-   맞아서, 아래에서 더 구체적인 선택자로 따로 복원한다. */
+/* 배경 — 우주 공간(별 + 달빛 글로우) 그라디언트. 하단엔 어두운 바위 지형
+   실루엣을 clip-path로 그려 얹는다(z-index:-1, 다른 테마의 고정 배경
+   레이어와 동일한 패턴). */
+html.theme-command-console body{
+  background:
+    radial-gradient(ellipse 340px 340px at 84% 8%, rgba(255,255,255,0.95), rgba(214,214,214,0.5) 35%, rgba(120,120,120,0.16) 55%, transparent 72%),
+    radial-gradient(1.6px 1.6px at 6% 15%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 18% 8%, #fff, transparent),
+    radial-gradient(1px 1px at 32% 22%, #cfe4ff, transparent),
+    radial-gradient(1.4px 1.4px at 47% 6%, #fff, transparent),
+    radial-gradient(1px 1px at 61% 18%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 73% 30%, #cfe4ff, transparent),
+    radial-gradient(1px 1px at 12% 40%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 27% 52%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 35%, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 55% 48%, #cfe4ff, transparent),
+    radial-gradient(1px 1px at 92% 45%, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 8% 65%, #fff, transparent),
+    radial-gradient(1px 1px at 21% 75%, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 88% 62%, #fff, transparent),
+    linear-gradient(180deg, #05070d 0%, #0a0f1c 55%, #05070d 100%);
+  background-attachment: fixed;
+}
+html.theme-command-console body::before{
+  content:"";
+  position: fixed; left:0; right:0; bottom:0; height:30vh;
+  background: #03050a;
+  clip-path: polygon(0% 100%, 0% 55%, 7% 38%, 14% 58%, 22% 28%, 31% 50%, 40% 18%, 52% 46%, 62% 22%, 74% 52%, 84% 14%, 92% 40%, 100% 22%, 100% 100%);
+  pointer-events: none;
+  z-index: -1;
+}
+/* 마우스 커서 — 초록 삼각 화살표로 전체 교체. 입력창(텍스트 커서)과 비활성
+   버튼(금지 커서)은 그대로 두는 게 실사용성에 맞아서 아래에서 복원한다. */
 html.theme-command-console *{
-  cursor: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='28' viewBox='0 0 22 28'%3E%3Cpath d='M1,1 L1,20 L6,16 L9,23 L13,21.5 L10,15 L17,15 Z' fill='%23dff5f0' stroke='%2304211f' stroke-width='2' stroke-linejoin='miter'/%3E%3C/svg%3E") 1 1, auto !important;
+  cursor: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='24' viewBox='0 0 20 24'%3E%3Cpath d='M1,1 L1,17 L5,13.5 L8,20 L11,18.5 L8,12 L15,12 Z' fill='%2339ff6a' stroke='%230a2e12' stroke-width='1.5' stroke-linejoin='miter'/%3E%3C/svg%3E") 1 1, auto !important;
 }
 html.theme-command-console input,
 html.theme-command-console textarea{
@@ -453,54 +482,24 @@ html.theme-command-console textarea{
 html.theme-command-console *:disabled{
   cursor: not-allowed !important;
 }
-/* 클릭 가능한 모든 버튼에 볼록한(outset) 베벨 + 눌림(inset) 효과 — 레트로 PC
-   테마와 동일한 기법을 시안 하이라이트로 재현한다. */
+html.theme-command-console .devbar{ background: #05070d; }
+html.theme-command-console .ticker{ background: linear-gradient(180deg, rgba(138,48,48,0.18), transparent); }
+/* 버튼 — 모서리만 살짝 깎고(clip-path) 적갈색 테두리를 둘러서 패널과 같은
+   각진 정체성을 주되, 버튼마다 다른 배경·글자색은 그대로 둔다(대비 유지). */
 html.theme-command-console button,
 html.theme-command-console .btn-exchange{
-  border-width: 2px;
-  border-style: solid;
-  border-top-color: rgba(148,224,255,0.55);
-  border-left-color: rgba(148,224,255,0.55);
-  border-right-color: rgba(0,0,0,0.6);
-  border-bottom-color: rgba(0,0,0,0.6);
+  border: 2px solid #8a3030;
+  clip-path: polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px);
 }
 html.theme-command-console button:active,
 html.theme-command-console .btn-exchange:active{
-  border-top-color: rgba(0,0,0,0.6);
-  border-left-color: rgba(0,0,0,0.6);
-  border-right-color: rgba(148,224,255,0.55);
-  border-bottom-color: rgba(148,224,255,0.55);
   transform: translate(1px, 1px);
 }
-html.theme-command-console .devbar{ background: #0a1420; }
-html.theme-command-console .ticker{ background: linear-gradient(180deg, rgba(53,224,196,0.08), transparent); }
-/* 마켓 카드(.ticket) — 그림자 대신 베벨(outset) 테두리 + 상단에 시안 HUD
-   상태 표시줄("// ACTIVE")을 얹는다. */
-html.theme-command-console .ticket{
-  border: 2px outset #1a2f3d;
-  box-shadow: none;
-}
-html.theme-command-console .ticket:not(.hero-ticket)::before{
-  content:""; position:absolute; top:0; left:0; right:0; height:20px;
-  background: var(--mint); opacity:1;
-}
-html.theme-command-console .ticket:not(.hero-ticket)::after{
-  content:"// ACTIVE"; position:absolute; top:0; right:8px; height:20px;
-  display:flex; align-items:center; color:#04211f; font-family: var(--font-mono);
-  font-size:10px; letter-spacing:1px;
-}
-html.theme-command-console .ticket:not(.hero-ticket):hover{
-  border-color: #2c4c5c;
-  box-shadow: none;
-}
-html.theme-command-console .ticket-main{ padding-top: 28px; }
-html.theme-command-console .ticket-stub{ border-top: 1px dashed var(--hairline); }
-html.theme-command-console .hero-ticket{
-  background:
-    linear-gradient(var(--panel), var(--panel)) padding-box,
-    conic-gradient(from var(--border-angle), var(--mint) 0deg, rgba(53,224,196,0.15) 110deg, var(--mint) 200deg, rgba(53,224,196,0.15) 300deg, var(--mint) 360deg) border-box;
-}
-/* 모달창 — 각지고 두꺼운 베벨 테두리 + 하드섀도우 + 동일한 HUD 상태 표시줄. */
+/* 마켓 카드(.ticket)·모달창 — 모서리를 깎은 팔각형 패널. 배경은 두 겹의
+   그라디언트로 만든다: 안쪽은 반투명 어두운 남색 채움(padding-box라 border
+   두께 안쪽에만 칠해짐), 바깥쪽은 적갈색 테두리 그라디언트(border-box).
+   네 모서리 절단면엔 작은 금속 리벳을 radial-gradient로 얹는다. */
+html.theme-command-console .ticket:not(.hero-ticket),
 html.theme-command-console .verify-modal,
 html.theme-command-console .propose-modal,
 html.theme-command-console .exchange-modal,
@@ -510,36 +509,38 @@ html.theme-command-console .manage-modal,
 html.theme-command-console .profile-modal,
 html.theme-command-console .report-modal,
 html.theme-command-console .boot-card{
-  position: relative;
-  background: var(--panel);
-  border: 2px outset #1a2f3d;
-  box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
-  padding-top: 38px;
+  border: 2px solid transparent;
+  clip-path: polygon(
+    var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer)
+  );
+  background:
+    radial-gradient(circle 5px at var(--chamfer) var(--chamfer), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at calc(100% - var(--chamfer)) var(--chamfer), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at var(--chamfer) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
+    radial-gradient(circle 5px at calc(100% - var(--chamfer)) calc(100% - var(--chamfer)), #aab4bd 92%, transparent 94%) border-box,
+    linear-gradient(180deg, rgba(8,13,24,0.82), rgba(5,8,16,0.9)) padding-box,
+    linear-gradient(160deg, #8a3030, #5c1f1f) border-box;
+  box-shadow: 0 14px 34px rgba(0,0,0,0.55);
 }
-html.theme-command-console .verify-modal::before,
-html.theme-command-console .propose-modal::before,
-html.theme-command-console .exchange-modal::before,
-html.theme-command-console .bet-modal::before,
-html.theme-command-console .review-modal::before,
-html.theme-command-console .manage-modal::before,
-html.theme-command-console .profile-modal::before,
-html.theme-command-console .report-modal::before,
-html.theme-command-console .boot-card::before{
-  content:""; position:absolute; left:0; right:0; top:0; height:24px;
-  background: var(--mint);
+html.theme-command-console .ticket:not(.hero-ticket):hover{
+  box-shadow: 0 20px 46px rgba(0,0,0,0.65);
 }
-html.theme-command-console .verify-modal::after,
-html.theme-command-console .propose-modal::after,
-html.theme-command-console .exchange-modal::after,
-html.theme-command-console .bet-modal::after,
-html.theme-command-console .review-modal::after,
-html.theme-command-console .manage-modal::after,
-html.theme-command-console .profile-modal::after{
-  content:"// ACTIVE"; position:absolute; top:0; right:34px; height:24px;
-  display:flex; align-items:center; color:#04211f; font-family: var(--font-mono);
-  font-size:10.5px; letter-spacing:1px;
+html.theme-command-console .ticket-stub{ border-top: 1px dashed var(--hairline); }
+html.theme-command-console .hero-ticket{
+  border: 3px solid transparent;
+  clip-path: polygon(
+    var(--chamfer) 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer),
+    100% calc(100% - var(--chamfer)), calc(100% - var(--chamfer)) 100%,
+    var(--chamfer) 100%, 0 calc(100% - var(--chamfer)), 0 var(--chamfer)
+  );
+  background:
+    linear-gradient(180deg, rgba(8,13,24,0.82), rgba(5,8,16,0.9)) padding-box,
+    conic-gradient(from var(--border-angle), var(--gold) 0deg, #8a3030 110deg, var(--gold) 200deg, #8a3030 300deg, var(--gold) 360deg) border-box;
 }
-/* 실제 닫기 버튼 — 모서리에 딱 붙는 각진 베벨 버튼. :active 시 outset→inset. */
+/* 모달 닫기 버튼 — 기존 위치·크기(원형 배지)는 그대로 두고, 모서리만 살짝
+   깎아 적갈색 테두리를 두른다. */
 html.theme-command-console .verify-modal-close,
 html.theme-command-console .propose-modal-close,
 html.theme-command-console .exchange-modal-close,
@@ -548,11 +549,10 @@ html.theme-command-console .review-modal-close,
 html.theme-command-console .manage-modal-close,
 html.theme-command-console .profile-modal-close,
 html.theme-command-console .report-modal-close{
-  position:absolute; top:0; right:0; width:24px; height:24px;
-  background:#1a2f3d; border:2px outset #1a2f3d;
-  color:var(--text); font-size:12px; font-weight:700;
-  display:flex; align-items:center; justify-content:center;
-  z-index:1;
+  background: rgba(5,8,16,0.9);
+  border: 2px solid #8a3030;
+  clip-path: polygon(6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px), 0 6px);
+  color: var(--gold-text);
 }
 html.theme-command-console .verify-modal-close:hover,
 html.theme-command-console .propose-modal-close:hover,
@@ -562,17 +562,7 @@ html.theme-command-console .review-modal-close:hover,
 html.theme-command-console .manage-modal-close:hover,
 html.theme-command-console .profile-modal-close:hover,
 html.theme-command-console .report-modal-close:hover{
-  color: var(--mint); border-color:#1a2f3d;
-}
-html.theme-command-console .verify-modal-close:active,
-html.theme-command-console .propose-modal-close:active,
-html.theme-command-console .exchange-modal-close:active,
-html.theme-command-console .bet-modal-close:active,
-html.theme-command-console .review-modal-close:active,
-html.theme-command-console .manage-modal-close:active,
-html.theme-command-console .profile-modal-close:active,
-html.theme-command-console .report-modal-close:active{
-  border-style: inset;
+  color: var(--mint); border-color:#b04444;
 }
 
 /* 16번 — 스킨: 계절 테마 4종. OS 오마주 테마들과 달리 카드 · 모달의 형태(모서리 ·
@@ -1869,19 +1859,26 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .skin-thumb-theme-retro-body{ flex:1; background:#c0c0c0; margin:4px; border:1px inset #c0c0c0; }
 
-/* 테마 스킨 — 커맨드 콘솔 테마: 어두운 네이비 + 시안 상태등 타이틀바 + 미니 HUD 그래프 미리보기 */
+/* 테마 스킨 — 커맨드 콘솔 테마: 별이 흩뿌려진 우주 배경 + 적갈색 테두리 타이틀바 +
+   초록 네온 미니 그래프 미리보기 */
 .skin-thumb-theme-console{
-  display:flex; flex-direction:column; background:#0a1420;
-  color-scheme: dark; forced-color-adjust: none; border:1px solid #2c4c5c;
+  display:flex; flex-direction:column;
+  background:
+    radial-gradient(circle 20px at 85% 15%, rgba(255,255,255,0.8), transparent 70%),
+    radial-gradient(1px 1px at 15% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 35% 55%, #fff, transparent),
+    radial-gradient(1px 1px at 60% 30%, #fff, transparent),
+    #05070d;
+  color-scheme: dark; forced-color-adjust: none; border:1px solid #8a3030;
 }
 .skin-thumb-theme-console-titlebar{
-  height:18px; background:#14212c; border-bottom:1px solid #2c4c5c; flex-shrink:0;
+  height:18px; background:rgba(5,8,16,0.7); border-bottom:1px solid #8a3030; flex-shrink:0;
   display:flex; align-items:center; gap:5px; padding:0 6px;
 }
-.skin-thumb-theme-console-dot{ width:6px; height:6px; background:#35e0c4; box-shadow:0 0 4px 1px #35e0c4; flex-shrink:0; }
-.skin-thumb-theme-console-label{ color:#ffc85c; font-size:8px; letter-spacing:1px; font-family: ui-monospace, "SF Mono", "Roboto Mono", monospace; }
+.skin-thumb-theme-console-dot{ width:0; height:0; border-left:4px solid transparent; border-right:4px solid transparent; border-bottom:6px solid #39ff6a; flex-shrink:0; }
+.skin-thumb-theme-console-label{ color:#39ff6a; font-size:8px; letter-spacing:1px; }
 .skin-thumb-theme-console-body{ flex:1; display:flex; align-items:flex-end; justify-content:center; gap:4px; padding-bottom:8px; }
-.skin-thumb-theme-console-bar{ width:5px; background:#35e0c4; }
+.skin-thumb-theme-console-bar{ width:5px; background:#39ff6a; }
 
 /* 테마 스킨 — 계절 테마 4종: 그라데이션 배경 + 중앙 이모지만으로 간단히 미리보기 */
 .skin-thumb-theme-season{ align-items:center; justify-content:center; }
