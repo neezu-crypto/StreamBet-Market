@@ -440,8 +440,9 @@ html.theme-command-console{
    버튼에 clip-path로 모서리를 깎는다). */
 html.theme-command-console *{ border-radius:0 !important; }
 /* 배경 — 우주 공간(별) 그라디언트. 달은 별도 레이어(body::after)에서 좀 더
-   사실적으로 그린다. 하단엔 어두운 바위 지형 실루엣을 clip-path로 그려
-   얹는다(z-index:-1, 다른 테마의 고정 배경 레이어와 동일한 패턴). */
+   사실적으로 그린다. 하단 지형(body::before)도 마찬가지로 각진 실루엣 대신
+   완만하게 굽이치는 지형으로 그린다(z-index:-1, 다른 테마의 고정 배경
+   레이어와 동일한 패턴). */
 html.theme-command-console body{
   background:
     radial-gradient(1.6px 1.6px at 6% 15%, #fff, transparent),
@@ -488,11 +489,31 @@ html.theme-command-console body::after{
   pointer-events: none;
   z-index: -1;
 }
+/* 지형 — 참고 프로젝트(night-drive, 눈밭 위를 야간 주행하는 three.js 씬)의
+   "완만하게 굽이치고 안개 속으로 흐려지는 지형" 느낌을 참고하되, 여기서도
+   3D 지형 메시 대신 순수 CSS/SVG로 재현한다(배경 장식 때문에 3D 렌더 파이프
+   라인을 새로 들이지 않는다는 원칙은 달과 동일). 각진 산맥 대신 sin 곡선
+   기반의 완만한 굴곡, 근경일수록 어둡고 원경(지평선)일수록 안개처럼 밝아지는
+   그라디언트, feTurbulence 그레인(눈 표면 질감)을 겹치고, 달이 떠 있는
+   쪽(우측)에 은은한 달빛 반사 하이라이트를 얹었다. */
 html.theme-command-console body::before{
   content:"";
   position: fixed; left:0; right:0; bottom:0; height:30vh;
-  background: #03050a;
-  clip-path: polygon(0% 100%, 0% 55%, 7% 38%, 14% 58%, 22% 28%, 31% 50%, 40% 18%, 52% 46%, 62% 22%, 74% 52%, 84% 14%, 92% 40%, 100% 22%, 100% 100%);
+  clip-path: polygon(
+    0% 100%,
+    0% 69%, 2.5% 72%, 5% 74%, 7.5% 73%, 10% 72%, 12.5% 70%, 15% 67%, 17.5% 65%,
+    20% 64%, 22.5% 65%, 25% 66%, 27.5% 67%, 30% 69%, 32.5% 70%, 35% 71%,
+    37.5% 70%, 40% 70%, 42.5% 69%, 45% 68%, 47.5% 68%, 50% 68%, 52.5% 67%,
+    55% 67%, 57.5% 65%, 60% 62%, 62.5% 59%, 65% 54%, 67.5% 50%, 70% 46%,
+    72.5% 44%, 75% 43%, 77.5% 45%, 80% 47%, 82.5% 51%, 85% 54%, 87.5% 57%,
+    90% 59%, 92.5% 60%, 95% 61%, 97.5% 62%, 100% 62%,
+    100% 100%
+  );
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='200'%3E%3Cfilter id='gn'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='2' seed='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.65 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23gn)'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 420px 160px at 78% 30%, rgba(210,225,255,0.28), transparent 75%),
+    linear-gradient(180deg, #333c4a 0%, #12182a 45%, #04060c 100%);
+  background-blend-mode: overlay, screen, normal;
   pointer-events: none;
   z-index: -1;
 }
