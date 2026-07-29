@@ -1161,6 +1161,19 @@
             <button class="skin-buy-btn" type="button">구매하기</button>
           </div>
         </div>
+        <div class="skin-card" data-category="theme" data-skin-id="sketch-border" data-admin-only="true">
+          <div class="skin-thumb skin-thumb-theme skin-thumb-theme-season skin-thumb-theme-sketch">
+            <span class="skin-thumb-theme-season-emoji">✏️</span>
+          </div>
+          <div class="skin-card-body">
+            <div class="skin-name">손그림 스케치 테마</div>
+            <div class="skin-price">200,000<small>원</small></div>
+          </div>
+          <div class="skin-card-actions">
+            <button class="skin-preview-btn" type="button">미리보기</button>
+            <button class="skin-buy-btn" type="button">구매하기</button>
+          </div>
+        </div>
       </div>
 
       <div class="skin-empty" id="skin-empty" style="display:none;">아직 등록된 스킨이 없습니다.</div>
@@ -1231,6 +1244,10 @@
 </script>
 <script type="module" src="js/winter-scene.js"></script>
 <script type="module" src="js/firework-scene.js"></script>
+<!-- 손그림 스케치 테마 — 카드·모달 테두리를 rough.js로 손그림처럼 그려서 주기적으로
+     다시 그리는(들끓는·boiling 효과) 방식. rough.js는 이 스크립트에서만 쓰므로
+     importmap 없이 CDN URL을 직접 import한다. -->
+<script type="module" src="js/sketch-border-scene.js"></script>
 <script defer src="js/streamer-verification.js"></script>
 <script defer src="js/promoted-streamers.js"></script>
 <script defer src="js/market-report.js"></script>
