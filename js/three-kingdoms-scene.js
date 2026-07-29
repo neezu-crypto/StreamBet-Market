@@ -60,7 +60,7 @@ var FlagShader = {
     'varying vec2 vUv;' +
     'void main() {' +
     '  float shade = 0.78 + 0.22 * clamp(vWave / 24.0, -1.0, 1.0);' +
-    '  float edge = smoothstep(0.0, 0.03, vUv.x) * smoothstep(1.0, 0.985, vUv.x);' + // 깃대·끝단 살짝 페이드
+    '  float edge = smoothstep(0.0, 0.03, vUv.x) * (1.0 - smoothstep(0.985, 1.0, vUv.x));' + // 깃대·끝단 살짝 페이드
     '  vec3 col = uColor * shade;' +
     '  gl_FragColor = vec4(col, edge);' +
     '}'
