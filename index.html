@@ -1235,9 +1235,10 @@
 <script defer src="js/nickname.js"></script>
 <script defer src="js/ranking.js"></script>
 <script defer src="js/skins.js"></script>
-<!-- 겨울 테마 3D 배경(js/winter-scene.js)과 불꽃놀이 야시장 테마 배경
-     (js/firework-scene.js)이 쓰는 three.js — 이 프로젝트에서 3D 라이브러리를
-     쓰는 두 스크립트에만 한정해 importmap으로 불러온다. -->
+<!-- 겨울 테마 3D 배경(js/winter-scene.js), 불꽃놀이 야시장 테마 배경
+     (js/firework-scene.js), 삼국지 전장 테마의 3D 깃발(js/three-kingdoms-scene.js)이
+     쓰는 three.js — 이 프로젝트에서 3D 라이브러리를 쓰는 스크립트에만 한정해
+     importmap으로 불러온다. -->
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
@@ -1272,9 +1273,7 @@
   <span class="sbm-tk-torch tr"></span>
   <span class="sbm-tk-torch bl"></span>
   <span class="sbm-tk-torch br"></span>
-  <span class="sbm-tk-flag wei"></span>
-  <span class="sbm-tk-flag shu"></span>
-  <span class="sbm-tk-flag wu"></span>
 </div>
+<script type="module" src="js/three-kingdoms-scene.js"></script>
 </body>
 </html>
