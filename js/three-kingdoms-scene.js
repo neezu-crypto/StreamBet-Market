@@ -90,6 +90,24 @@ function buildScene() {
     scene.add(f.pole);
     return f;
   });
+
+  // 진단 로그 — 계속 원인을 못 찾아서 다음 확인 때는 콘솔만 봐도 바로 알 수
+  // 있게 해둔다. 정상이라면 각 깃발의 vertexCount>0, visible:true, material
+  // 타입은 MeshBasicMaterial, boundingSphere가 null이 아니어야 한다.
+  console.log('[삼국지 깃발 진단] camera', camera.position.toArray(), 'aspect', camera.aspect);
+  flags.forEach(function (f, i) {
+    f.mesh.geometry.computeBoundingSphere();
+    console.log(
+      '[삼국지 깃발 진단] flag#' + i,
+      'meshPos', f.mesh.position.toArray(),
+      'visible', f.mesh.visible,
+      'vertexCount', f.mesh.geometry.attributes.position.count,
+      'boundingSphere', f.mesh.geometry.boundingSphere,
+      'materialType', f.mesh.material.type,
+      'materialColor', f.mesh.material.color,
+      'inScene', scene.children.indexOf(f.mesh) !== -1
+    );
+  });
 }
 
 function onResize() {
@@ -99,6 +117,7 @@ function onResize() {
   renderer.setSize(window.innerWidth, window.innerHeight);
 }
 
+var sbmTkLoggedFirstFrame = false;
 function animate() {
   rafId = requestAnimationFrame(animate);
   var t = clock.getElapsedTime();
@@ -106,6 +125,14 @@ function animate() {
   var gust = 0.85 + 0.3 * Math.sin(t * 0.35) + 0.15 * Math.sin(t * 0.9 + 1.3);
   var clampedGust = Math.max(0.4, gust);
   flags.forEach(function (f) { updateFlagWave(f, t, clampedGust); });
+  if (!sbmTkLoggedFirstFrame) {
+    sbmTkLoggedFirstFrame = true;
+    console.log('[삼국지 깃발 진단] 첫 렌더 프레임', 't', t, 'gust', clampedGust);
+    flags.forEach(function (f, i) {
+      var arr = f.geo.attributes.position.array;
+      console.log('[삼국지 깃발 진단] flag#' + i + ' 정점 샘플(x,y,z)', arr[0], arr[1], arr[2], '|', arr[30], arr[31], arr[32]);
+    });
+  }
   renderer.render(scene, camera);
 }
 
