@@ -91,16 +91,18 @@ function buildScene() {
     return f;
   });
 
-  // 진단용 2단계 — 1단계(초대형 자홍 평면)는 보였지만, 카메라에 더 가까워서
-  // 깃발·깃대를 가렸을 수도 있다. 이번엔 실제 깃발과 정확히 같은 크기·거리
-  // (230x340, z=-80)에 애니메이션 없는 정적 평면을 "깃발들과 안 겹치는"
-  // x=-650 자리에 둬서, 크기/거리 자체가 문제인지 정확히 가른다.
+  // 진단용 3단계 — 2단계(깃발과 동일 크기/거리, 정적)도 안 보였다. 애니메이션도
+  // 없는 평면이 안 보인다는 건 내 셰이더/정점 코드와는 무관한 문제라는 뜻이다.
+  // 이번엔 depthTest를 꺼서 다른 물체에 가려질 가능성 자체를 차단하고,
+  // renderOrder를 최대로 줘서 무조건 맨 마지막(맨 위)에 그리게 한다 — 이래도
+  // 안 보이면 깊이 테스트/가림 문제도 아니라는 뜻.
   var testGeo = new THREE.PlaneGeometry(FLAG_WIDTH, FLAG_HEIGHT);
-  var testMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide });
+  var testMat = new THREE.MeshBasicMaterial({ color: 0xff00ff, side: THREE.DoubleSide, depthTest: false });
   var testMesh = new THREE.Mesh(testGeo, testMat);
   testMesh.position.set(-480, FLAG_HEIGHT * 0.32, -80);
+  testMesh.renderOrder = 999;
   scene.add(testMesh);
-  console.log('[TK] 2단계 테스트 평면 추가함(깃발과 동일 크기/거리, x=-480, 정적) — 화면 왼쪽에 자홍색 사각형이 보이는지 확인');
+  console.log('[TK] 3단계 테스트 평면 추가함(깃발과 동일 크기/거리, depthTest 끔, renderOrder 최상단) — 화면 왼쪽에 자홍색 사각형이 보이는지 확인');
 
   // 진단 로그 — 이전 로그는 배열/객체를 그대로 찍어서 콘솔 텍스트로 복사하면
   // "Array(3)"처럼 요약돼 실제 숫자가 안 보였다. 이번엔 전부 명시적으로
@@ -131,6 +133,18 @@ function buildScene() {
     );
   });
   console.log('[TK] pole0 worldPos check', flags[0] && flags[0].pole.position.toArray().join(','));
+  testMesh.updateMatrixWorld(true);
+  testMesh.geometry.computeBoundingSphere();
+  var testWp = new THREE.Vector3();
+  testMesh.getWorldPosition(testWp);
+  console.log(
+    '[TK] testMesh worldPos=(' + testWp.x.toFixed(1) + ',' + testWp.y.toFixed(1) + ',' + testWp.z.toFixed(1) + ')' +
+    ' inFrustum=' + frustum.intersectsObject(testMesh) +
+    ' visible=' + testMesh.visible +
+    ' inScene=' + (scene.children.indexOf(testMesh) !== -1) +
+    ' geometryType=' + testMesh.geometry.type +
+    ' vertexCount=' + testMesh.geometry.attributes.position.count
+  );
 }
 
 function onResize() {
