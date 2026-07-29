@@ -1161,21 +1161,6 @@
             <button class="skin-buy-btn" type="button">구매하기</button>
           </div>
         </div>
-        <div class="skin-card" data-category="theme" data-skin-id="three-kingdoms" data-admin-only="true">
-          <div class="skin-thumb skin-thumb-theme skin-thumb-theme-three-kingdoms">
-            <span class="skin-thumb-tk-flag wei"></span>
-            <span class="skin-thumb-tk-flag shu"></span>
-            <span class="skin-thumb-tk-flag wu"></span>
-          </div>
-          <div class="skin-card-body">
-            <div class="skin-name">삼국지 전장 테마</div>
-            <div class="skin-price">200,000<small>원</small></div>
-          </div>
-          <div class="skin-card-actions">
-            <button class="skin-preview-btn" type="button">미리보기</button>
-            <button class="skin-buy-btn" type="button">구매하기</button>
-          </div>
-        </div>
       </div>
 
       <div class="skin-empty" id="skin-empty" style="display:none;">아직 등록된 스킨이 없습니다.</div>
@@ -1235,10 +1220,9 @@
 <script defer src="js/nickname.js"></script>
 <script defer src="js/ranking.js"></script>
 <script defer src="js/skins.js"></script>
-<!-- 겨울 테마 3D 배경(js/winter-scene.js), 불꽃놀이 야시장 테마 배경
-     (js/firework-scene.js), 삼국지 전장 테마의 3D 깃발(js/three-kingdoms-scene.js)이
-     쓰는 three.js — 이 프로젝트에서 3D 라이브러리를 쓰는 스크립트에만 한정해
-     importmap으로 불러온다. -->
+<!-- 겨울 테마 3D 배경(js/winter-scene.js)과 불꽃놀이 야시장 테마 배경
+     (js/firework-scene.js)이 쓰는 three.js — 이 프로젝트에서 3D 라이브러리를
+     쓰는 두 스크립트에만 한정해 importmap으로 불러온다. -->
 <script type="importmap">
 { "imports": {
   "three": "https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js",
@@ -1267,13 +1251,5 @@
 <script defer src="js/admin-dashboard.js"></script>
 <script defer src="js/admin-chat.js"></script>
 <script defer src="js/admin-alerts.js"></script>
-
-<div id="sbm-three-kingdoms-layer" aria-hidden="true">
-  <span class="sbm-tk-torch tl"></span>
-  <span class="sbm-tk-torch tr"></span>
-  <span class="sbm-tk-torch bl"></span>
-  <span class="sbm-tk-torch br"></span>
-</div>
-<script type="module" src="js/three-kingdoms-scene.js"></script>
 </body>
 </html>

@@ -1133,99 +1133,6 @@ html.theme-sns-feed .verified-avatar-ring.cta-ring{
     conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34) border-box;
 }
 
-/* 16번 — 스킨: 삼국지 전장 테마. 카드·모달 형태는 기본 디자인을 그대로 두고
-   (당구대·불꽃놀이와 동일한 가벼운 패턴), 짙은 고서·족자 팔레트 + 좌상단
-   인장 배지로 무드를 입힌다. 배경 애니메이션은 두 겹 — 횃불은 순수 CSS로
-   네 귀퉁이에서 흔들리고, 깃발은 js/three-kingdoms-scene.js(three.js WebGL)가
-   바람에 물결치는 3D 천 메시로 그린다(정점 셰이더로 깃대 쪽은 거의 안 움직이고
-   먼 쪽일수록 크게 출렁이는 실제 깃발 물리에 가까운 감쇠 사인파). */
-html.theme-three-kingdoms{
-  color-scheme: dark;
-  --ink: #170e09;
-  --panel: #241611;
-  --panel-raised: #2c1c14;
-  --hairline: #4a3020;
-  --gold: #c9a227;
-  --gold-dim: rgba(201,162,39,0.14);
-  --gold-line: rgba(201,162,39,0.4);
-  --gold-text: #e0b83a;
-  --mint: #4a9d5f;
-  --mint-dim: rgba(74,157,95,0.14);
-  --coral: #c0392b;
-  --coral-dim: rgba(192,57,43,0.14);
-  --text: #ecdcc0;
-  --muted: #a89073;
-  --muted-2: #7a6650;
-}
-/* body 높이가 콘텐츠 길이만큼만 생기는데(짧은 탭은 뷰포트보다 낮음) body에만
-   배경을 칠하면 그 아래는 color-scheme:dark의 브라우저 기본색이 비쳐서 이음매
-   (색 경계선)가 보였다 — html에도 동일한 배경을 칠해 항상 뷰포트 전체를
-   덮게 하고, background-attachment:fixed로 스크롤해도 안 끊기게 고정한다. */
-html.theme-three-kingdoms,
-html.theme-three-kingdoms body{
-  background: radial-gradient(ellipse at 50% -10%, #2c1c14, #170e09 70%);
-  background-attachment: fixed;
-}
-html.theme-three-kingdoms .devbar{ background: #1c110b; }
-html.theme-three-kingdoms .ticker{ background: linear-gradient(180deg, rgba(201,162,39,0.12), transparent); }
-html.theme-three-kingdoms .boot-card{ position: relative; }
-html.theme-three-kingdoms .ticket:not(.hero-ticket)::before,
-html.theme-three-kingdoms .verify-modal::before,
-html.theme-three-kingdoms .propose-modal::before,
-html.theme-three-kingdoms .exchange-modal::before,
-html.theme-three-kingdoms .bet-modal::before,
-html.theme-three-kingdoms .review-modal::before,
-html.theme-three-kingdoms .manage-modal::before,
-html.theme-three-kingdoms .profile-modal::before,
-html.theme-three-kingdoms .report-modal::before,
-html.theme-three-kingdoms .boot-card::before{ content:"⚔️"; }
-html.theme-three-kingdoms .ticket:not(.hero-ticket)::before,
-html.theme-three-kingdoms .verify-modal::before,
-html.theme-three-kingdoms .propose-modal::before,
-html.theme-three-kingdoms .exchange-modal::before,
-html.theme-three-kingdoms .bet-modal::before,
-html.theme-three-kingdoms .review-modal::before,
-html.theme-three-kingdoms .manage-modal::before,
-html.theme-three-kingdoms .profile-modal::before,
-html.theme-three-kingdoms .report-modal::before,
-html.theme-three-kingdoms .boot-card::before{
-  position:absolute; top:-12px; left:16px; width:28px; height:28px;
-  background: var(--panel); border:1px solid var(--gold-line); border-radius:50%;
-  display:flex; align-items:center; justify-content:center; font-size:14px; line-height:1;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
-}
-
-/* 횃불 장식 레이어 — 기본은 숨김, 삼국지 테마일 때만 표시. 네 귀퉁이에서
-   뚜렷하게 보이도록 이전보다 훨씬 크고 밝게 키웠다. */
-#sbm-three-kingdoms-layer{ display:none; }
-html.theme-three-kingdoms #sbm-three-kingdoms-layer{
-  display:block; position:fixed; inset:0; z-index:-1; pointer-events:none;
-}
-.sbm-tk-torch{
-  position:absolute; width:120px; height:170px; border-radius:50%;
-  background: radial-gradient(circle at 50% 35%, #ffe9a8, #ff9d2e 40%, #c9481a 68%, transparent 76%);
-  filter: blur(4px); opacity:.6;
-  animation: sbm-tk-flicker 2.4s ease-in-out infinite;
-}
-.sbm-tk-torch.tl{ top:-30px; left:-20px; }
-.sbm-tk-torch.tr{ top:-30px; right:-20px; animation-duration:2.7s; animation-delay:.3s; }
-.sbm-tk-torch.bl{ bottom:-30px; left:-20px; animation-duration:2.2s; animation-delay:.6s; }
-.sbm-tk-torch.br{ bottom:-30px; right:-20px; animation-duration:2.6s; animation-delay:.9s; }
-@keyframes sbm-tk-flicker{
-  0%, 100%{ opacity:.5; transform: scale(1); }
-  35%{ opacity:.75; transform: scale(1.1); }
-  60%{ opacity:.55; transform: scale(0.94); }
-  85%{ opacity:.68; transform: scale(1.05); }
-}
-@media (prefers-reduced-motion: reduce){
-  .sbm-tk-torch{ animation: none; }
-}
-/* 3D 깃발(js/three-kingdoms-scene.js)이 그려지는 WebGL 캔버스 — 배경(-2)보다
-   앞, 마켓 카드(z-index:auto)보다는 뒤(-1)에 오도록 겹친다. */
-#sbm-three-kingdoms-scene-layer{
-  position: fixed; inset: 0; z-index: -1; pointer-events: none;
-}
-
 *{ box-sizing: border-box; }
 html, body{ margin:0; padding:0; overflow-x:hidden; }
 body{
@@ -1739,19 +1646,6 @@ button{ font-family: inherit; cursor: pointer; }
   background: conic-gradient(from 0deg, #f9ce34, #ee2a7b, #6228d7, #f9ce34);
 }
 .skin-thumb-theme-sns-ring-inner{ width:100%; height:100%; border-radius:50%; background:#eee; border:2px solid #fff; }
-
-/* 테마 스킨 — 삼국지 전장 테마: 짙은 고서 배경 + 위·촉·오 삼색 소형 깃발 미리보기 */
-.skin-thumb-theme-three-kingdoms{
-  position:relative; align-items:flex-end; justify-content:center; gap:8px; padding-bottom:10px;
-  background: radial-gradient(ellipse at 50% -20%, #2c1c14, #170e09 70%);
-}
-.skin-thumb-tk-flag{
-  display:inline-block; width:14px; height:22px;
-  clip-path: polygon(0 0, 100% 12%, 82% 50%, 100% 88%, 0 100%);
-}
-.skin-thumb-tk-flag.wei{ background: linear-gradient(180deg, #2f6fb0, #143a5f); }
-.skin-thumb-tk-flag.shu{ background: linear-gradient(180deg, #3e8f52, #1d4526); }
-.skin-thumb-tk-flag.wu{ background: linear-gradient(180deg, #b23a2e, #5e1913); }
 
 /* 테마 스킨 — 불꽃놀이 야시장 테마: 짙은 밤하늘 + 색색 폭죽 점 미리보기 */
 .skin-thumb-theme-firework{
