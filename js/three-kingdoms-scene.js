@@ -91,23 +91,35 @@ function buildScene() {
     return f;
   });
 
-  // 진단 로그 — 계속 원인을 못 찾아서 다음 확인 때는 콘솔만 봐도 바로 알 수
-  // 있게 해둔다. 정상이라면 각 깃발의 vertexCount>0, visible:true, material
-  // 타입은 MeshBasicMaterial, boundingSphere가 null이 아니어야 한다.
-  console.log('[삼국지 깃발 진단] camera', camera.position.toArray(), 'aspect', camera.aspect);
+  // 진단 로그 — 이전 로그는 배열/객체를 그대로 찍어서 콘솔 텍스트로 복사하면
+  // "Array(3)"처럼 요약돼 실제 숫자가 안 보였다. 이번엔 전부 명시적으로
+  // 문자열로 풀어서 찍고, 카메라 절두체(frustum) 안에 실제로 들어있는지도
+  // 직접 계산해서 확인한다.
+  var camPos = camera.position;
+  console.log('[TK] camera pos=(' + camPos.x + ',' + camPos.y + ',' + camPos.z + ') aspect=' + camera.aspect + ' fov=' + camera.fov);
+  camera.updateMatrixWorld();
+  var projScreenMatrix = new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+  var frustum = new THREE.Frustum().setFromProjectionMatrix(projScreenMatrix);
   flags.forEach(function (f, i) {
+    f.mesh.updateMatrixWorld(true);
     f.mesh.geometry.computeBoundingSphere();
+    var wp = new THREE.Vector3();
+    f.mesh.getWorldPosition(wp);
+    var bs = f.mesh.geometry.boundingSphere;
+    var inFrustum = frustum.intersectsObject(f.mesh);
+    var m = f.mesh.material;
     console.log(
-      '[삼국지 깃발 진단] flag#' + i,
-      'meshPos', f.mesh.position.toArray(),
-      'visible', f.mesh.visible,
-      'vertexCount', f.mesh.geometry.attributes.position.count,
-      'boundingSphere', f.mesh.geometry.boundingSphere,
-      'materialType', f.mesh.material.type,
-      'materialColor', f.mesh.material.color,
-      'inScene', scene.children.indexOf(f.mesh) !== -1
+      '[TK] flag#' + i +
+      ' worldPos=(' + wp.x.toFixed(1) + ',' + wp.y.toFixed(1) + ',' + wp.z.toFixed(1) + ')' +
+      ' boundingSphere.center=(' + bs.center.x.toFixed(1) + ',' + bs.center.y.toFixed(1) + ',' + bs.center.z.toFixed(1) + ') radius=' + bs.radius.toFixed(1) +
+      ' inFrustum=' + inFrustum +
+      ' visible=' + f.mesh.visible + ' frustumCulled=' + f.mesh.frustumCulled +
+      ' color=#' + m.color.getHexString() +
+      ' opacity=' + m.opacity + ' transparent=' + m.transparent + ' side=' + m.side +
+      ' renderOrder=' + f.mesh.renderOrder
     );
   });
+  console.log('[TK] pole0 worldPos check', flags[0] && flags[0].pole.position.toArray().join(','));
 }
 
 function onResize() {
@@ -125,15 +137,12 @@ function animate() {
   var gust = 0.85 + 0.3 * Math.sin(t * 0.35) + 0.15 * Math.sin(t * 0.9 + 1.3);
   var clampedGust = Math.max(0.4, gust);
   flags.forEach(function (f) { updateFlagWave(f, t, clampedGust); });
+  renderer.render(scene, camera);
   if (!sbmTkLoggedFirstFrame) {
     sbmTkLoggedFirstFrame = true;
-    console.log('[삼국지 깃발 진단] 첫 렌더 프레임', 't', t, 'gust', clampedGust);
-    flags.forEach(function (f, i) {
-      var arr = f.geo.attributes.position.array;
-      console.log('[삼국지 깃발 진단] flag#' + i + ' 정점 샘플(x,y,z)', arr[0], arr[1], arr[2], '|', arr[30], arr[31], arr[32]);
-    });
+    console.log('[TK] 첫 렌더 완료 t=' + t + ' gust=' + clampedGust +
+      ' drawCalls=' + renderer.info.render.calls + ' triangles=' + renderer.info.render.triangles);
   }
-  renderer.render(scene, camera);
 }
 
 function show() {
