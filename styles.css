@@ -544,6 +544,57 @@ html.theme-command-console button:active,
 html.theme-command-console .btn-exchange:active{
   transform: translate(1px, 1px);
 }
+/* 금색으로 꽉 채워진 주요 CTA 버튼들(출석체크 받기, 주제 제안하기, 각 모달
+   제출 버튼 등) — 이 테마에서는 다른 버튼들과 똑같이 배경을 투명하게 비우고
+   글자만 금색으로, 마우스 올렸을 때만 은은하게 배경이 채워지는 리액션으로
+   바꾼다. */
+html.theme-command-console .verify-req-approve,
+html.theme-command-console .lookup-btn-gold,
+html.theme-command-console .skin-buy-btn,
+html.theme-command-console .btn-claim,
+html.theme-command-console .btn-bet,
+html.theme-command-console .fab,
+html.theme-command-console .verify-submit-btn,
+html.theme-command-console .propose-submit-btn,
+html.theme-command-console .exchange-submit-btn,
+html.theme-command-console .bet-submit-btn,
+html.theme-command-console .review-approve-btn,
+html.theme-command-console .manage-confirm-btn,
+html.theme-command-console .manage-reason-confirm,
+html.theme-command-console .profile-save-btn,
+html.theme-command-console .nickname-reset-banner button,
+html.theme-command-console .skin-preview-bar button{
+  background: transparent;
+  color: var(--gold-text);
+}
+html.theme-command-console .verify-req-approve:hover,
+html.theme-command-console .lookup-btn-gold:hover,
+html.theme-command-console .skin-buy-btn:hover,
+html.theme-command-console .btn-claim:hover,
+html.theme-command-console .btn-bet:hover,
+html.theme-command-console .fab:hover,
+html.theme-command-console .verify-submit-btn:hover,
+html.theme-command-console .propose-submit-btn:hover,
+html.theme-command-console .exchange-submit-btn:hover,
+html.theme-command-console .bet-submit-btn:hover,
+html.theme-command-console .review-approve-btn:hover,
+html.theme-command-console .manage-confirm-btn:hover,
+html.theme-command-console .manage-reason-confirm:hover,
+html.theme-command-console .profile-save-btn:hover,
+html.theme-command-console .nickname-reset-banner button:hover,
+html.theme-command-console .skin-preview-bar button:hover{
+  background: rgba(232,193,90,0.14);
+  border-color: var(--gold);
+}
+html.theme-command-console .btn-claim:disabled,
+html.theme-command-console .verify-submit-btn:disabled,
+html.theme-command-console .propose-submit-btn:disabled,
+html.theme-command-console .exchange-submit-btn:disabled,
+html.theme-command-console .bet-submit-btn:disabled{
+  background: transparent;
+  color: var(--muted-2);
+  border-color: #4a2424;
+}
 /* 마켓 카드(.ticket)·모달창 — 모서리를 깎은 팔각형 패널. 배경은 두 겹의
    그라디언트로 만든다: 안쪽은 반투명 어두운 남색 채움(padding-box라 border
    두께 안쪽에만 칠해짐), 바깥쪽은 적갈색 테두리 그라디언트(border-box).
