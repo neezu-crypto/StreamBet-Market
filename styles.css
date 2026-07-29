@@ -439,12 +439,11 @@ html.theme-command-console{
 /* 팔각형 각진 패널이 이 테마의 핵심이라, 라운딩은 전부 없앤다(대신 각 패널·
    버튼에 clip-path로 모서리를 깎는다). */
 html.theme-command-console *{ border-radius:0 !important; }
-/* 배경 — 우주 공간(별 + 달빛 글로우) 그라디언트. 하단엔 어두운 바위 지형
-   실루엣을 clip-path로 그려 얹는다(z-index:-1, 다른 테마의 고정 배경
-   레이어와 동일한 패턴). */
+/* 배경 — 우주 공간(별) 그라디언트. 달은 별도 레이어(body::after)에서 좀 더
+   사실적으로 그린다. 하단엔 어두운 바위 지형 실루엣을 clip-path로 그려
+   얹는다(z-index:-1, 다른 테마의 고정 배경 레이어와 동일한 패턴). */
 html.theme-command-console body{
   background:
-    radial-gradient(ellipse 340px 340px at 84% 8%, rgba(255,255,255,0.95), rgba(214,214,214,0.5) 35%, rgba(120,120,120,0.16) 55%, transparent 72%),
     radial-gradient(1.6px 1.6px at 6% 15%, #fff, transparent),
     radial-gradient(1.2px 1.2px at 18% 8%, #fff, transparent),
     radial-gradient(1px 1px at 32% 22%, #cfe4ff, transparent),
@@ -461,6 +460,33 @@ html.theme-command-console body{
     radial-gradient(1.6px 1.6px at 88% 62%, #fff, transparent),
     linear-gradient(180deg, #05070d 0%, #0a0f1c 55%, #05070d 100%);
   background-attachment: fixed;
+}
+/* 달 — 참고 프로젝트(moon-lamps, NASA 달 텍스처를 입힌 3D 구체)의 "실제
+   달 사진처럼 표면이 울퉁불퉁한" 느낌을 참고하되, three.js 3D 텍스처 대신
+   순수 CSS/SVG로 구현한다(배경 장식 하나 때문에 3D 렌더 파이프라인을 새로
+   들이는 건 과함 — 이전 삼국지 테마에서 겪은 three.js 렌더링 디버깅 리스크를
+   반복하지 않는다). feTurbulence로 뿌린 미세한 요철 노이즈(overlay 블렌드)를
+   여러 크레이터 반점 위에 겹치고, 중심을 한쪽으로 치우친 방사형 그라디언트로
+   입체적으로 빛나는 구체처럼 보이게 한다. */
+html.theme-command-console body::after{
+  content:"";
+  position: fixed; top:3%; right:6%; width:240px; height:240px;
+  border-radius:50%;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(circle 14px at 30% 35%, rgba(90,90,90,0.55), transparent 70%),
+    radial-gradient(circle 22px at 60% 25%, rgba(80,80,80,0.5), transparent 72%),
+    radial-gradient(circle 10px at 45% 55%, rgba(70,70,70,0.55), transparent 70%),
+    radial-gradient(circle 30px at 70% 60%, rgba(60,60,60,0.4), transparent 75%),
+    radial-gradient(circle 8px at 20% 65%, rgba(100,100,100,0.5), transparent 70%),
+    radial-gradient(circle 16px at 80% 40%, rgba(85,85,85,0.5), transparent 70%),
+    radial-gradient(circle 45px at 55% 70%, rgba(50,50,50,0.35), transparent 78%),
+    radial-gradient(circle at 32% 28%, #fdfdfa 0%, #d8d8d2 30%, #a8a8a4 55%, #64646a 78%, #2c2c34 100%);
+  background-blend-mode: overlay, normal, normal, normal, normal, normal, normal, normal, normal;
+  background-size: cover;
+  box-shadow: 0 0 60px 10px rgba(255,255,255,0.25), 0 0 120px 30px rgba(200,210,255,0.12);
+  pointer-events: none;
+  z-index: -1;
 }
 html.theme-command-console body::before{
   content:"";
