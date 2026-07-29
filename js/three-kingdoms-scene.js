@@ -31,56 +31,52 @@ var FLAG_DEFS = [
 var FLAG_WIDTH = 230;
 var FLAG_HEIGHT = 340;
 
-var FlagShader = {
-  vertexShader:
-    'precision mediump float;' +
-    'uniform float uTime;' +
-    'uniform float uSeed;' +
-    'uniform float uWidth;' +
-    'uniform float uGust;' +
-    'varying float vWave;' +
-    'varying vec2 vUv;' +
-    'void main() {' +
-    '  vUv = uv;' +
-    '  float t = clamp(position.x / uWidth, 0.0, 1.0);' + // geo.translate로 로컬 x가 [0, uWidth] 범위라 0=깃대, 1=깃발 끝
-    '  float damp = t * t;' +
-    '  float wave = sin(position.y * 0.05 + uTime * 2.6 + uSeed) * 26.0 * damp * uGust;' +
-    '  wave += sin(position.y * 0.13 - uTime * 4.1 + uSeed * 1.7) * 10.0 * damp * uGust;' +
-    '  float xShift = sin(position.y * 0.08 + uTime * 2.0 + uSeed) * 6.0 * damp * uGust;' +
-    '  vWave = wave;' +
-    '  vec3 pos = position;' +
-    '  pos.z += wave;' +
-    '  pos.x += xShift;' +
-    '  gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);' +
-    '}',
-  fragmentShader:
-    'precision mediump float;' +
-    'uniform vec3 uColor;' +
-    'varying float vWave;' +
-    'varying vec2 vUv;' +
-    'void main() {' +
-    '  float shade = 0.78 + 0.22 * clamp(vWave / 24.0, -1.0, 1.0);' +
-    '  float edge = smoothstep(0.0, 0.03, vUv.x) * (1.0 - smoothstep(0.985, 1.0, vUv.x));' + // 깃대·끝단 살짝 페이드
-    '  vec3 col = uColor * shade;' +
-    '  gl_FragColor = vec4(col, edge);' +
-    '}'
-};
+// 처음엔 THREE.ShaderMaterial을 처음부터 새로 짜서 썼는데(정점+프래그먼트
+// 셰이더 직접 작성), 프래그먼트 쪽 smoothstep 인자 순서 버그로 전체가 투명
+// 렌더링되는 문제가 있었다. 그걸 고친 뒤에도 검증이 어려워서(이 환경에서 직접
+// 브라우저로 셰이더를 못 띄워봄), 이미 검증된 더 안전한 방식으로 바꿨다 —
+// 검증된 THREE.MeshBasicMaterial(색상·투명도·렌더링 전부 기본 파이프라인이
+// 알아서 처리) 위에 onBeforeCompile로 정점 변위(바람 물결)만 주입한다. 겨울
+// 테마 나무 림 라이트(js/winter-scene.js applyRimLight)에서 이미 검증한 것과
+// 동일한 기법 — three.js 공식 소스(meshbasic.glsl.js)로 청크 순서를 확인한 뒤
+// #include <begin_vertex>(transformed = position 초기화) 직후에 끼워 넣는다.
+function applyWindWave(material, uniforms) {
+  material.onBeforeCompile = function (shader) {
+    shader.uniforms.uTime = uniforms.uTime;
+    shader.uniforms.uSeed = uniforms.uSeed;
+    shader.uniforms.uWidth = uniforms.uWidth;
+    shader.uniforms.uGust = uniforms.uGust;
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <common>',
+      'uniform float uTime;\nuniform float uSeed;\nuniform float uWidth;\nuniform float uGust;\n#include <common>'
+    );
+    shader.vertexShader = shader.vertexShader.replace(
+      '#include <begin_vertex>',
+      '#include <begin_vertex>\n' +
+      '{\n' +
+      '  float tkT = clamp(transformed.x / uWidth, 0.0, 1.0);\n' + // geo.translate로 로컬 x가 [0, uWidth] 범위라 0=깃대, 1=깃발 끝
+      '  float tkDamp = tkT * tkT;\n' +
+      '  float tkWave = sin(transformed.y * 0.05 + uTime * 2.6 + uSeed) * 26.0 * tkDamp * uGust;\n' +
+      '  tkWave += sin(transformed.y * 0.13 - uTime * 4.1 + uSeed * 1.7) * 10.0 * tkDamp * uGust;\n' +
+      '  transformed.z += tkWave;\n' +
+      '  transformed.x += sin(transformed.y * 0.08 + uTime * 2.0 + uSeed) * 6.0 * tkDamp * uGust;\n' +
+      '}\n'
+    );
+  };
+  material.customProgramCacheKey = function () { return 'tkFlagWind'; };
+}
 
 function makeFlag(def) {
   var geo = new THREE.PlaneGeometry(FLAG_WIDTH, FLAG_HEIGHT, 28, 16);
-  var mat = new THREE.ShaderMaterial({
-    vertexShader: FlagShader.vertexShader,
-    fragmentShader: FlagShader.fragmentShader,
-    uniforms: {
-      uTime: { value: 0 },
-      uSeed: { value: def.seed },
-      uWidth: { value: FLAG_WIDTH },
-      uGust: { value: 1 },
-      uColor: { value: def.color }
-    },
-    side: THREE.DoubleSide,
-    transparent: true
-  });
+  var mat = new THREE.MeshBasicMaterial({ color: def.color, side: THREE.DoubleSide });
+  var uniforms = {
+    uTime: { value: 0 },
+    uSeed: { value: def.seed },
+    uWidth: { value: FLAG_WIDTH },
+    uGust: { value: 1 }
+  };
+  applyWindWave(mat, uniforms);
+
   var mesh = new THREE.Mesh(geo, mat);
   // 평면의 왼쪽 끝(x=-FLAG_WIDTH/2)이 깃대에 붙는 지점이 되도록, 오브젝트
   // 자체를 오른쪽으로 절반만큼 옮겨서 origin(깃대 위치)이 곧 mesh.position이 되게 한다.
@@ -92,7 +88,7 @@ function makeFlag(def) {
   var pole = new THREE.Mesh(poleGeo, poleMat);
   pole.position.set(def.x, 0, -80);
 
-  return { mesh: mesh, pole: pole, mat: mat };
+  return { mesh: mesh, pole: pole, mat: mat, uniforms: uniforms };
 }
 
 function buildScene() {
@@ -128,8 +124,8 @@ function animate() {
   // 느린 주기의 "돌풍" 포락선(0.6~1.15배) — 바람 세기가 계속 바뀌는 느낌
   var gust = 0.85 + 0.3 * Math.sin(t * 0.35) + 0.15 * Math.sin(t * 0.9 + 1.3);
   flags.forEach(function (f) {
-    f.mat.uniforms.uTime.value = t;
-    f.mat.uniforms.uGust.value = Math.max(0.4, gust);
+    f.uniforms.uTime.value = t;
+    f.uniforms.uGust.value = Math.max(0.4, gust);
   });
   renderer.render(scene, camera);
 }
@@ -150,7 +146,7 @@ function show() {
   window.addEventListener('resize', onResize);
 
   if (reducedMotion) {
-    flags.forEach(function (f) { f.mat.uniforms.uGust.value = 0; });
+    flags.forEach(function (f) { f.uniforms.uGust.value = 0; });
     renderer.render(scene, camera);
     return;
   }
