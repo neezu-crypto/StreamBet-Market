@@ -70,8 +70,22 @@ const submitVerificationRequest = onCall(async (request) => {
   return { status: 'submitted' };
 });
 
+// streamerVerifications는 주식시장과 공유하는 노드인데, 그쪽 앱은 SOOP 아이디
+// 필드 없이 닉네임만으로 기존 레코드를 찾는다 — 그래서 배팅시장이 SOOP 아이디로만
+// 기존 레코드를 찾으면, 주식시장 쪽에서 먼저 만들어진(SOOP 아이디 없는) 레코드를
+// 못 찾고 같은 사람인데 uid가 다른 중복 레코드를 새로 만들어버리는 문제가 실제로
+// 있었다. SOOP 아이디로 먼저 찾고, 없으면 닉네임으로도 찾아서 두 앱 어느 쪽에서
+// 먼저 인증됐어도 같은 레코드로 합쳐지게 한다.
+async function findExistingStreamerRecord(db, nickname, soopId) {
+  if (soopId) {
+    const bySoopId = await db.ref('streamerVerifications').orderByChild('soopId').equalTo(soopId).limitToFirst(1).get();
+    if (bySoopId.exists()) return bySoopId;
+  }
+  return db.ref('streamerVerifications').orderByChild('nickname').equalTo(nickname).limitToFirst(1).get();
+}
+
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
-// 동일 SOOP 아이디로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
+// 동일 SOOP 아이디 또는 동일 닉네임으로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
 const approveVerification = onCall(async (request) => {
   const adminUid = requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
@@ -84,17 +98,14 @@ const approveVerification = onCall(async (request) => {
   if (!reqSnap.exists()) throw new HttpsError('not-found', '인증 신청을 찾을 수 없습니다.');
   const { nickname, soopId, uid } = reqSnap.val();
 
-  const existingSnap = await db
-    .ref('streamerVerifications')
-    .orderByChild('soopId')
-    .equalTo(soopId)
-    .limitToFirst(1)
-    .get();
+  const existingSnap = await findExistingStreamerRecord(db, nickname, soopId);
 
   if (existingSnap.exists()) {
     const existingKey = Object.keys(existingSnap.val())[0];
     const oldUid = existingSnap.val()[existingKey].uid;
-    await db.ref('streamerVerifications/' + existingKey).update({ uid });
+    // soopId도 같이 채워 넣는다 — 기존 레코드가 주식시장 쪽에서 만들어져 SOOP
+    // 아이디가 비어있던 경우, 이번 승인으로 같이 보완된다.
+    await db.ref('streamerVerifications/' + existingKey).update({ uid, soopId });
     // 11번 — 규칙(rules)이 "인증 스트리머인지"를 O(1)로 확인할 수 있도록 uid 기준 미러 노드를 유지한다.
     if (oldUid && oldUid !== uid) await db.ref('bettingMarket/verifiedStreamerUids/' + oldUid).remove();
     await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
