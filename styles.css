@@ -1718,6 +1718,13 @@ button{ font-family: inherit; cursor: pointer; }
 }
 .verify-req-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; }
 
+/* 인증된 스트리머 — 한 줄에 5명씩 보이는 그리드(게시글 홍보 현황과 동일한 패턴) */
+#verified-streamers-list{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; }
+#verified-streamers-list li.audit-empty{ grid-column: 1 / -1; }
+#verified-streamers-list .verify-req-item{ flex-direction:column; align-items:flex-start; }
+#verified-streamers-list .verify-req-actions{ margin-top:4px; }
+@media (max-width: 720px){ #verified-streamers-list{ grid-template-columns: repeat(2, 1fr); } }
+
 /* 게시글 홍보 현황 — 한 줄에 5명씩 보이는 그리드. 다른 audit-log 목록은 세로
    1줄1건이지만 여기는 이름+날짜만 담는 작은 칩이라 그리드가 더 알아보기 쉽다. */
 #promoted-streamers-list{ display:grid; grid-template-columns: repeat(5, 1fr); gap:8px; }
