@@ -1627,6 +1627,9 @@ button{ font-family: inherit; cursor: pointer; }
 
 /* 최근 처리 내역 — 계속 쌓이는 목록이라 패널 안에서만 스크롤되게 높이를 고정한다 */
 #audit-log{ max-height:320px; overflow-y:auto; padding-right:2px; }
+/* 환전 내역(최근 100건) — 목록 5개 높이(항목 62px + 간격 8px 기준)로 고정하고
+   그 안에서만 스크롤되게 한다 */
+#exchange-log-list{ max-height:344px; overflow-y:auto; padding-right:2px; }
 
 .admin-chat-box{
   display:flex; flex-direction:column; gap:10px;
