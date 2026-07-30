@@ -433,6 +433,28 @@
         ".read": "auth != null && (auth.token.email === 'skftodwocks2@gmail.com' || root.child('bettingMarket/verifiedStreamerUids').child(auth.uid).exists())",
         "$entryId": { ".write": false }
       }
+    },
+
+    "presetGallery": {
+      ".read": true,
+      ".indexOn": ["ownerUid"],
+      "$presetId": {
+        ".write": false
+      }
+    },
+
+    "presetMergeTickets": {
+      ".read": false,
+      "$ticketId": {
+        ".write": false
+      }
+    },
+
+    "presetMergeFailures": {
+      ".read": "auth != null && auth.token.email === 'skftodwocks2@gmail.com'",
+      "$failureId": {
+        ".write": false
+      }
     }
   }
 }
