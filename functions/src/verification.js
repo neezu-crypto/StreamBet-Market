@@ -84,6 +84,26 @@ async function findExistingStreamerRecord(db, nickname, soopId) {
   return db.ref('streamerVerifications').orderByChild('nickname').equalTo(nickname).limitToFirst(1).get();
 }
 
+// 주식시장은 streamerVerifications가 아니라 users/{uid}/streamerVerified라는
+// 자체 플래그로 "인증 스트리머"를 판단한다. 그래서 배팅시장에서만 승인/해제해도
+// 그쪽 플래그가 안 바뀌면 로그인은 공유되는데 인증 상태만 안 따라오는 문제가
+// 있었다 — 여기서 그 플래그도 같이 맞춰준다.
+// uid가 아직 users/{uid}가 없는(주식시장에 한 번도 접속 안 한) 신규 uid일 수도
+// 있는데, 그냥 set()으로 새 노드를 만들면 나중에 실제로 접속했을 때 주식시장의
+// initializeUser()가 "이미 있는 계정"으로 오판해 시작 자금(1,000,000원)을 못
+// 받는 사고가 난다 — 그래서 트랜잭션으로, 없으면 주식시장의 신규 유저 기본값과
+// 동일한 모양(cash/stocks)까지 같이 채워 넣는다. (1000000은 주식시장
+// functions/common.js의 INITIAL_CASH와 같은 값 — 별개 저장소라 상수 공유가
+// 안 되므로 그쪽이 바뀌면 여기도 맞춰야 한다.)
+async function setStockMarketVerifiedFlag(db, uid, verified) {
+  if (!uid) return;
+  await db.ref('users/' + uid).transaction((current) => {
+    if (current) return Object.assign({}, current, { streamerVerified: verified });
+    if (!verified) return current; // 없는 계정을 굳이 false로 새로 만들 필요는 없다
+    return { cash: 1000000, stocks: {}, streamerVerified: true };
+  });
+}
+
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디 또는 동일 닉네임으로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
 const approveVerification = onCall(async (request) => {
@@ -107,8 +127,12 @@ const approveVerification = onCall(async (request) => {
     // 아이디가 비어있던 경우, 이번 승인으로 같이 보완된다.
     await db.ref('streamerVerifications/' + existingKey).update({ uid, soopId });
     // 11번 — 규칙(rules)이 "인증 스트리머인지"를 O(1)로 확인할 수 있도록 uid 기준 미러 노드를 유지한다.
-    if (oldUid && oldUid !== uid) await db.ref('bettingMarket/verifiedStreamerUids/' + oldUid).remove();
+    if (oldUid && oldUid !== uid) {
+      await db.ref('bettingMarket/verifiedStreamerUids/' + oldUid).remove();
+      await setStockMarketVerifiedFlag(db, oldUid, false);
+    }
     await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
+    await setStockMarketVerifiedFlag(db, uid, true);
     await reqRef.remove();
     await fillProfileIfEmpty(db, uid, nickname, soopId);
     await logAudit(adminUid, adminName, '스트리머 인증 재신청 승인 (uid 갱신)', nickname + ' (' + soopId + ')');
@@ -120,6 +144,7 @@ const approveVerification = onCall(async (request) => {
   const newRef = db.ref('streamerVerifications').push();
   await newRef.set({ nickname, soopId, uid, verifiedAt: Date.now() });
   await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
+  await setStockMarketVerifiedFlag(db, uid, true);
   await reqRef.remove();
   await fillProfileIfEmpty(db, uid, nickname, soopId);
   await logAudit(adminUid, adminName, '스트리머 인증 승인', nickname + ' (' + soopId + ')');
@@ -154,7 +179,10 @@ const revokeVerification = onCall(async (request) => {
   const key = Object.keys(snap.val())[0];
   const record = snap.val()[key];
   await db.ref('streamerVerifications/' + key).remove();
-  if (record.uid) await db.ref('bettingMarket/verifiedStreamerUids/' + record.uid).remove();
+  if (record.uid) {
+    await db.ref('bettingMarket/verifiedStreamerUids/' + record.uid).remove();
+    await setStockMarketVerifiedFlag(db, record.uid, false);
+  }
   await logAudit(adminUid, adminName, '스트리머 인증 해제', record.nickname + ' (' + soopId + ')');
   return { status: 'revoked' };
 });
