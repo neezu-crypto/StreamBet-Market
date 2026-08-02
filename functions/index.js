@@ -35,4 +35,5 @@ module.exports = {
   ...require('./src/promotion'),
   ...require('./src/chat'),
   ...require('./src/skins'),
+  ...require('./src/whoami'),
 };

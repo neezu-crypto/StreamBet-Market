@@ -53,6 +53,9 @@ window.sbmFirebase = {
   httpsCallable: (name) => httpsCallable(functions, name),
   GoogleAuthProvider,
 };
+// 09번/13번 — 관리자 UI 판별을 로컬 이메일 비교 대신 서버 확인(whoAmI)으로 옮긴다.
+// adminCenter/adminUids는 .read:false라 클라이언트가 직접 읽을 수 없다.
+const whoAmIFn = httpsCallable(functions, 'whoAmI');
 window.sbmAuth = auth;
 window.sbmDb = db;
 window.sbmUser = null;      // 익명 계정 포함, 현재 인증 세션 (마켓 등 공개 데이터 읽기 권한용)
@@ -95,7 +98,9 @@ function sbmUpdateTrusted() {
 onAuthStateChanged(auth, async (user) => {
   window.sbmUser = user;
   window.sbmRealUser = user && !user.isAnonymous ? user : null;
-  window.sbmIsAdmin = !!window.sbmRealUser && window.sbmRealUser.email === 'skftodwocks2@gmail.com';
+  // 서버 확인 전까지는 관리자 UI를 숨긴 채로 시작한다(안전한 기본값) - 실제 값은
+  // 아래 whoAmI 호출 결과로 확정된다. 익명 계정은 애초에 관리자가 될 수 없다.
+  window.sbmIsAdmin = false;
   window.sbmIsVerifiedStreamer = false;
   sbmUpdateTrusted();
   document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
@@ -111,6 +116,16 @@ onAuthStateChanged(auth, async (user) => {
     window.sbmIsVerifiedStreamer = snap.exists();
   } catch (e) {
     console.error('인증 스트리머 여부 확인 실패', e);
+  }
+  // adminCenter/adminUids는 .read:false라 클라이언트가 직접 못 읽으므로 서버 함수로 확인한다.
+  // 실계정이 아니면(익명) 애초에 관리자일 수 없어 호출 자체를 생략한다.
+  if (window.sbmRealUser) {
+    try {
+      const result = await whoAmIFn();
+      window.sbmIsAdmin = !!(result.data && result.data.isAdmin);
+    } catch (e) {
+      console.error('관리자 여부 확인 실패', e);
+    }
   }
   sbmUpdateTrusted();
   document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
