@@ -3,7 +3,7 @@ const { getDatabase, ServerValue } = require('firebase-admin/database');
 const {
   requireAuth,
   isRealAccount,
-  isAdminEmail,
+  isAdmin,
   requireAdminOrVerifiedStreamer,
   isVerifiedStreamerUid,
   assertNotBanned,
@@ -50,7 +50,7 @@ const submitMarketProposal = onCall(async (request) => {
   const uid = requireAuth(request);
   await assertNotBanned(uid);
   const email = request.auth.token && request.auth.token.email;
-  const isPrivileged = isAdminEmail(email) || (await isVerifiedStreamerUid(uid));
+  const isPrivileged = (await isAdmin(uid, email)) || (await isVerifiedStreamerUid(uid));
 
   // 매크로 방지 — 관리자·인증 스트리머는 이미 검증 단계를 생략하는 신뢰된 주체라 제외하고(04번과 동일 원칙),
   // 실계정으로 로그인한 유저도 대기·쿨다운에서 면제한다. 익명 계정에는 그대로 적용한다.

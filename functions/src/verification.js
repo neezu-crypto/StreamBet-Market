@@ -107,7 +107,7 @@ async function setStockMarketVerifiedFlag(db, uid, verified) {
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디 또는 동일 닉네임으로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
 const approveVerification = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { requestId } = request.data || {};
   if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
@@ -154,7 +154,7 @@ const approveVerification = onCall(async (request) => {
 });
 
 const rejectVerification = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { requestId } = request.data || {};
   if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
@@ -168,7 +168,7 @@ const rejectVerification = onCall(async (request) => {
 
 // 05번 — 이미 인증된 스트리머도 관리자가 인증 해제 가능 (공유 노드에서 제거)
 const revokeVerification = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { soopId } = request.data || {};
   if (!soopId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
@@ -191,7 +191,7 @@ const revokeVerification = onCall(async (request) => {
 // 스키마에 추가하기 전부터 있던 레거시 레코드는 soopId가 비어있다. 관리자가
 // 관리 탭에서 그런 레코드에 SOOP 아이디를 나중에 채워 넣을 수 있게 한다.
 const setVerifiedSoopId = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { recordId, soopId } = request.data || {};
   const id = (soopId || '').trim();

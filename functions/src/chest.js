@@ -55,7 +55,7 @@ const submitChestPurchase = onCall(async (request) => {
 // 관리자 전용 — 실제 별풍선 후원을 확인한 뒤에만 승인. 승인되면 해당 유저에게
 // 보물상자(qty + 보너스)가 지급된다.
 const approveChestPurchase = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { requestId } = request.data || {};
   if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
@@ -87,7 +87,7 @@ const approveChestPurchase = onCall(async (request) => {
 });
 
 const dismissChestPurchase = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { requestId } = request.data || {};
   if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');

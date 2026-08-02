@@ -10,7 +10,7 @@ const PROMOTED_STREAMER_NAME_MAX = 40;
 // 개인 체크리스트라, 인증 여부와 무관하게 모든 스트리머를 대상으로 추가할 수
 // 있어야 한다(인증된 스트리머로 제한하지 않음).
 const addPromotedStreamer = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const nickname = ((request.data && request.data.nickname) || '').trim();
   if (!nickname) throw new HttpsError('invalid-argument', '스트리머 이름을 입력해 주세요.');
@@ -31,7 +31,7 @@ const addPromotedStreamer = onCall(async (request) => {
 });
 
 const removePromotedStreamer = onCall(async (request) => {
-  const adminUid = requireAdmin(request);
+  const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
   const { id } = request.data || {};
   if (!id) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');

@@ -10,8 +10,28 @@ function requireAuth(request) {
   return request.auth.uid;
 }
 
+// 09번 마이그레이션 — 관리자 판별을 이메일 문자열 비교에서 공유
+// adminCenter/adminUids uid 조회로 옮긴다. 아직 uid가 등록 안 된 경우에만
+// 기존 이메일 비교로 폴백하고, 폴백이 쓰이면 로그를 남겨 이후 완전히
+// 제거해도 안전한 시점을 판단한다(admin-center와 동일한 전환 방식).
+async function isAdminUid(uid) {
+  const db = getDatabase();
+  const snap = await db.ref('adminCenter/adminUids/' + uid).get();
+  return snap.val() === true;
+}
+
 function isAdminEmail(email) {
   return !!email && email === ADMIN_EMAIL;
+}
+
+// uid 우선, 이메일 폴백. 새 코드는 가능하면 isAdminEmail 대신 이 함수를 쓸 것.
+async function isAdmin(uid, email) {
+  if (await isAdminUid(uid)) return true;
+  if (isAdminEmail(email)) {
+    console.warn('관리자 판별 이메일 폴백 사용됨(uid 미등록):', uid);
+    return true;
+  }
+  return false;
 }
 
 // 페이지 접속 시 자동으로 생성되는 익명 계정은 마켓 등 공개 데이터를 읽을 수 있게 하기 위한 것으로,
@@ -34,10 +54,10 @@ function isRealAccount(request) {
   return provider !== 'anonymous';
 }
 
-function requireAdmin(request) {
+async function requireAdmin(request) {
   const uid = requireAuth(request);
   const email = request.auth.token && request.auth.token.email;
-  if (!isAdminEmail(email)) {
+  if (!(await isAdmin(uid, email))) {
     throw new HttpsError('permission-denied', '관리자만 수행할 수 있습니다.');
   }
   return uid;
@@ -61,7 +81,7 @@ async function requireAdminOrVerifiedStreamer(request) {
   const uid = requireAuth(request);
   await assertNotBanned(uid);
   const email = request.auth.token && request.auth.token.email;
-  if (isAdminEmail(email)) return { uid, role: 'admin' };
+  if (await isAdmin(uid, email)) return { uid, role: 'admin' };
   if (await isVerifiedStreamerUid(uid)) return { uid, role: 'streamer' };
   throw new HttpsError('permission-denied', '관리자 또는 인증 스트리머만 수행할 수 있습니다.');
 }
@@ -73,7 +93,7 @@ async function requireAdminOrVerifiedStreamer(request) {
 async function isTrustedAccount(request) {
   if (isRealAccount(request)) return true;
   const email = request.auth.token && request.auth.token.email;
-  if (isAdminEmail(email)) return true;
+  if (await isAdmin(request.auth.uid, email)) return true;
   return isVerifiedStreamerUid(request.auth.uid);
 }
 
@@ -92,7 +112,9 @@ module.exports = {
   requireRealAccount,
   isRealAccount,
   isTrustedAccount,
+  isAdminUid,
   isAdminEmail,
+  isAdmin,
   requireAdmin,
   isVerifiedStreamerUid,
   requireAdminOrVerifiedStreamer,
