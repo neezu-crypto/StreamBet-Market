@@ -129,7 +129,25 @@ onAuthStateChanged(auth, async (user) => {
   }
   sbmUpdateTrusted();
   document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
+
+  startPresenceRefreshLoop();
 });
+
+// 10번 — 페이지별 접속자 분석. presence/bettingMarket/{uid}에 주기적으로 lastSeen을
+// 기록한다(soop-stock-market이 이미 검증한 5분 주기 패턴을 그대로 재사용, 경로만
+// 앱별로 네임스페이스). uid는 앱 간에 공유되므로(03번) 경로에 앱 이름을 반드시
+// 넣어야 한 사람이 여러 페이지를 동시에 열어도 페이지별로 따로 집계된다.
+const PRESENCE_REFRESH_INTERVAL_MS = 5 * 60 * 1000;
+let presenceIntervalId = null;
+function refreshMyPresence() {
+  if (!window.sbmUser) return;
+  set(ref(db, 'presence/bettingMarket/' + window.sbmUser.uid), { lastSeen: Date.now() }).catch(() => {});
+}
+function startPresenceRefreshLoop() {
+  if (presenceIntervalId) clearInterval(presenceIntervalId);
+  refreshMyPresence();
+  presenceIntervalId = setInterval(refreshMyPresence, PRESENCE_REFRESH_INTERVAL_MS);
+}
 
 // 07번 — Ctrl+Enter 단축키로 어디서든 Google 로그인 팝업 (게스트/익명 상태에서도 실계정 전환 가능)
 document.addEventListener('keydown', (e) => {
