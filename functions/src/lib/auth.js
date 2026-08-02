@@ -98,12 +98,22 @@ async function isTrustedAccount(request) {
 }
 
 // 관리 탭 — 계정 정지. 재화가 걸린 모든 액션 함수 진입부에서 호출해 정지된 uid를 차단한다.
+// 20번 2단계 — soop-stock-market과 공유하는 uid 기준 원장(bannedAccounts/{uid})을
+// 본다(예전엔 bettingMarket/bannedAccounts 전용이었지만, 04번에서 배운 대로
+// 저장소마다 따로 정지 노드를 두지 않고 하나로 합쳤다). 정지는 기본이 게임별이라
+// all이 없으면 games.bettingMarket만 확인한다 - 주식시장에서만 정지된 계정은
+// 여기서 막히지 않는다(관리자가 통합 관리 센터에서 "전체 게임 정지"를 선택했을
+// 때만 all:true로 걸림).
 async function assertNotBanned(uid) {
   const db = getDatabase();
-  const snap = await db.ref('bettingMarket/bannedAccounts/' + uid).get();
-  if (snap.exists()) {
-    const ban = snap.val();
-    throw new HttpsError('permission-denied', '정지된 계정입니다' + (ban.reason ? ' (사유: ' + ban.reason + ')' : '') + '.');
+  const snap = await db.ref('bannedAccounts/' + uid).get();
+  if (!snap.exists()) return;
+  const ban = snap.val();
+  if (ban.all) {
+    throw new HttpsError('permission-denied', '정지된 계정입니다' + (ban.allReason ? ' (사유: ' + ban.allReason + ')' : '') + '.');
+  }
+  if (ban.games && ban.games.bettingMarket) {
+    throw new HttpsError('permission-denied', '정지된 계정입니다' + (ban.games.bettingMarket.reason ? ' (사유: ' + ban.games.bettingMarket.reason + ')' : '') + '.');
   }
 }
 

@@ -119,19 +119,29 @@ function sbmRenderExchangeLog() {
   }).catch(function (e) { listEl.innerHTML = '<li class="audit-empty">오류: ' + sbmEscapeHtml(e.message) + '</li>'; });
 }
 
+// 20번 2단계 — 공유 bannedAccounts/{uid} 원장에서 이 저장소(bettingMarket) 관점의
+// 정지만 골라 보여준다. all:true(전체 게임 정지)는 통합 관리 센터에서만 해제할 수
+// 있으므로 여기선 안내만 하고 정지 해제 버튼을 주지 않는다(눌러도 games.bettingMarket만
+// 지워질 뿐 전체 정지는 그대로 남아 혼란만 줄 수 있음).
 function sbmRenderBannedAccounts() {
   var listEl = document.getElementById('banned-accounts-list');
   if (!listEl) return;
   var isAdmin = !!window.sbmIsAdmin;
-  var keys = Object.keys(sbmBannedAccountsCache);
-  if (!keys.length) {
+  var entries = Object.keys(sbmBannedAccountsCache).map(function (uid) {
+    var ban = sbmBannedAccountsCache[uid];
+    if (ban.all) return { uid: uid, reason: ban.allReason, bannedAt: ban.allBannedAt, all: true };
+    if (ban.games && ban.games.bettingMarket) return Object.assign({ uid: uid, all: false }, ban.games.bettingMarket);
+    return null;
+  }).filter(Boolean);
+  if (!entries.length) {
     listEl.innerHTML = '<li class="audit-empty">정지된 계정이 없습니다.</li>';
     return;
   }
-  listEl.innerHTML = keys.map(function (uid) {
-    var b = sbmBannedAccountsCache[uid];
-    var unbanBtn = isAdmin ? '<button class="verify-req-reject admin-unban-btn" data-uid="' + uid + '" type="button">정지 해제</button>' : '';
-    return '<li class="verify-req-item"><div class="verify-req-info"><b>' + sbmEscapeHtml(uid) + '</b>' +
+  listEl.innerHTML = entries.map(function (b) {
+    var unbanBtn = isAdmin && !b.all
+      ? '<button class="verify-req-reject admin-unban-btn" data-uid="' + b.uid + '" type="button">정지 해제</button>'
+      : (b.all ? '<span class="audit-empty" style="padding:0;">전체 게임 정지(통합 관리 센터에서 해제)</span>' : '');
+    return '<li class="verify-req-item"><div class="verify-req-info"><b>' + sbmEscapeHtml(b.uid) + '</b>' +
       '<span>' + sbmEscapeHtml(b.reason || '') + ' · ' + new Date(b.bannedAt).toLocaleString('ko-KR') + '</span></div>' +
       '<div class="verify-req-actions">' + unbanBtn + '</div></li>';
   }).join('');
@@ -151,7 +161,7 @@ function sbmSubscribeBannedAccounts() {
   if (sbmBannedListSubscribed || !window.sbmFirebase) return;
   sbmBannedListSubscribed = true;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/bannedAccounts'), function (snap) {
+  fb.onValue(fb.ref(window.sbmDb, 'bannedAccounts'), function (snap) {
     sbmBannedAccountsCache = snap.val() || {};
     sbmRenderBannedAccounts();
   });

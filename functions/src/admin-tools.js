@@ -297,7 +297,7 @@ const adminLookupUser = onCall(async (request) => {
     db.ref('bettingMarket/profiles/' + uid).get(),
     db.ref('bettingMarket/userBets/' + uid).get(),
     db.ref('bettingMarket/exchanges/' + uid).get(),
-    db.ref('bettingMarket/bannedAccounts/' + uid).get(),
+    db.ref('bannedAccounts/' + uid).get(),
   ]);
 
   if (!walletSnap.exists() && !profileSnap.exists()) {
@@ -315,13 +315,21 @@ const adminLookupUser = onCall(async (request) => {
 
   const exchanges = Object.values(exchangesSnap.val() || {}).sort((a, b) => (b.requestedAt || 0) - (a.requestedAt || 0)).slice(0, 20);
 
+  // 20번 2단계 — 공유 원장의 이 저장소(bettingMarket) 관점 정지 상태만 골라 반환한다.
+  const banData = banSnap.val();
+  let banned = null;
+  if (banData) {
+    if (banData.all) banned = { reason: banData.allReason || '', bannedAt: banData.allBannedAt || 0, all: true };
+    else if (banData.games && banData.games.bettingMarket) banned = { ...banData.games.bettingMarket, all: false };
+  }
+
   return {
     uid,
     profile: profileSnap.val() || null,
     wallet: walletSnap.val() || null,
     bets,
     exchanges,
-    banned: banSnap.exists() ? banSnap.val() : null,
+    banned,
   };
 });
 
@@ -355,7 +363,8 @@ const adminAdjustBalance = onCall(async (request) => {
   return { balance: wallet.balance };
 });
 
-// 관리 탭 계정 정지 (관리자 전용)
+// 관리 탭 계정 정지 (관리자 전용). 20번 2단계 — soop-stock-market과 공유하는
+// bannedAccounts/{uid}/games/bettingMarket에 쓴다(게임별 정지가 기본).
 const banAccount = onCall(async (request) => {
   const adminUid = await requireAdmin(request);
   const adminName = request.auth.token.name || request.auth.token.email;
@@ -363,7 +372,7 @@ const banAccount = onCall(async (request) => {
   if (!uid) throw new HttpsError('invalid-argument', '대상 uid를 입력해 주세요.');
   if (!reason || !reason.trim()) throw new HttpsError('invalid-argument', '정지 사유를 입력해 주세요.');
 
-  await getDatabase().ref('bettingMarket/bannedAccounts/' + uid).set({
+  await getDatabase().ref('bannedAccounts/' + uid + '/games/bettingMarket').set({
     reason: reason.trim(),
     bannedAt: Date.now(),
     bannedBy: adminUid,
@@ -380,7 +389,7 @@ const unbanAccount = onCall(async (request) => {
   const { uid } = request.data || {};
   if (!uid) throw new HttpsError('invalid-argument', '대상 uid를 입력해 주세요.');
 
-  await getDatabase().ref('bettingMarket/bannedAccounts/' + uid).remove();
+  await getDatabase().ref('bannedAccounts/' + uid + '/games/bettingMarket').remove();
   await logAudit(adminUid, adminName, '계정 정지 해제', uid);
   return { status: 'unbanned' };
 });
