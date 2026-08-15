@@ -56,6 +56,7 @@ window.sbmFirebase = {
 // 09번/13번 — 관리자 UI 판별을 로컬 이메일 비교 대신 서버 확인(whoAmI)으로 옮긴다.
 // adminCenter/adminUids는 .read:false라 클라이언트가 직접 읽을 수 없다.
 const whoAmIFn = httpsCallable(functions, 'whoAmI');
+const logBettingMarketVisitFn = httpsCallable(functions, 'logBettingMarketVisit');
 window.sbmAuth = auth;
 window.sbmDb = db;
 window.sbmUser = null;      // 익명 계정 포함, 현재 인증 세션 (마켓 등 공개 데이터 읽기 권한용)
@@ -114,6 +115,11 @@ onAuthStateChanged(auth, async (user) => {
     const q = query(ref(db, 'streamerVerifications'), orderByChild('uid'), equalTo(user.uid), limitToFirst(1));
     const snap = await get(q);
     window.sbmIsVerifiedStreamer = snap.exists();
+    // 인증 스트리머가 접속하면 관리자 디스코드로 알림 - 실제로 알림을 보낼지
+    // (하루 한 번 제한 등)는 서버(logBettingMarketVisit)가 판단한다.
+    if (window.sbmIsVerifiedStreamer) {
+      logBettingMarketVisitFn().catch((e) => console.error('접속 로그 실패', e));
+    }
   } catch (e) {
     console.error('인증 스트리머 여부 확인 실패', e);
   }

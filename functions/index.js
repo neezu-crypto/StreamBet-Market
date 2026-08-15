@@ -35,4 +35,5 @@ module.exports = {
   ...require('./src/chat'),
   ...require('./src/skins'),
   ...require('./src/whoami'),
+  ...require('./src/streamerVisitLog'),
 };
