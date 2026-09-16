@@ -48,16 +48,10 @@
     });
   }
 
-  // 부트 로딩이 끝난 뒤, 첫 방문 안내 모달이 닫힌 다음에 재생한다. 안내 모달을
-  // 오프닝이 가려버리지 않도록 open 상태를 짧게 감시한다.
+  // 부트 로딩이 끝나는 즉시 재생한다. 첫 방문 안내 모달은 같은 시점에 열리지만
+  // 오프닝(stage z-index 2000) 아래 레이어에 남아, 오프닝이 끝난 뒤 자연스럽게
+  // 안내를 이어서 확인할 수 있다.
   document.addEventListener('sbm-boot-done', function () {
-    var intro = document.getElementById('intro-backdrop');
-    if (!intro || !intro.classList.contains('open')) { setTimeout(maybeShow, 250); return; }
-    var wait = setInterval(function () {
-      if (!intro.classList.contains('open')) {
-        clearInterval(wait);
-        setTimeout(maybeShow, 250);
-      }
-    }, 100);
+    setTimeout(maybeShow, 50);
   });
 }());
