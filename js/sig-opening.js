@@ -31,14 +31,6 @@
 
   function maybeShow() {
     if (started) return;
-    var intro = document.getElementById('intro-backdrop');
-    // sbm-boot-done 이벤트의 리스너 실행 순서에 따라 intro-modal.js가
-    // open 클래스를 붙이기 전일 수 있으므로, 실제 시작 직전에 한 번 더
-    // 확인한다. 안내 모달이 열려 있으면 닫힌 뒤 다음 시도에서 진행한다.
-    if (intro && intro.classList.contains('open')) {
-      setTimeout(maybeShow, 100);
-      return;
-    }
     started = true;
     var seen = false;
     try { seen = localStorage.getItem(SEEN_KEY) === '1'; } catch (e) {}
