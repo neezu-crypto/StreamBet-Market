@@ -58,6 +58,10 @@
   </div>
 </div>
 
+<!-- 앱 부트 스크립트보다 먼저 시그니처 오프닝을 시작한다. 오프닝은 상위
+     레이어에 표시되고, 아래 페이지·데이터 로딩은 중단 없이 계속된다. -->
+<script src="js/sig-opening.js"></script>
+
 <div class="profile-backdrop" id="intro-backdrop">
   <div class="profile-modal intro-modal">
     <button class="profile-modal-close" id="intro-modal-close" type="button" aria-label="닫기">✕</button>
@@ -1315,7 +1319,6 @@
 <script defer src="js/streamer-verification.js"></script>
 <script defer src="js/promoted-streamers.js"></script>
 <script defer src="js/market-report.js"></script>
-<script defer src="js/sig-opening.js"></script>
 <script defer src="js/boot.js"></script>
 <script defer src="js/intro-modal.js"></script>
 <script defer src="js/nav.js"></script>
