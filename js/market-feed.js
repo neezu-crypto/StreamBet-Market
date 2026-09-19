@@ -1,4 +1,5 @@
-// 실데이터 기반 마켓 피드 렌더링 — /bettingMarket/markets 실시간 리스너로 카드를 그린다.
+// 실데이터 기반 마켓 피드 렌더링 — UID가 제거된 /bettingMarket/marketsPublic
+// 공개 미러를 실시간 구독해 카드를 그린다.
 var sbmMarketsCache = {};
 window.sbmMarketsCache = sbmMarketsCache;
 
@@ -6,7 +7,7 @@ window.sbmMarketsCache = sbmMarketsCache;
 var sbmStockNames = {};
 if (window.sbmFirebase && window.sbmDb) {
   var sbmFbInit = window.sbmFirebase;
-  sbmFbInit.get(sbmFbInit.ref(window.sbmDb, 'stocks')).then(function (snap) {
+  sbmFbInit.get(sbmFbInit.ref(window.sbmDb, 'stocksPublic')).then(function (snap) {
     var val = snap.val() || {};
     Object.keys(val).forEach(function (id) { sbmStockNames[id] = val[id].name; });
   });
@@ -409,7 +410,7 @@ var SBM_CLOSED_MARKET_LIMIT = 30; // 상태별 최근 N개만 — 지난 마켓 
   // 화면이 자연스럽게 다음 섹션으로 넘어가게 한다 — 판정 유예시간이 끝나 settled로
   // 확정되는 순간을 실시간으로 반영하면서도, settled/void 전체를 실시간 구독하지는 않는다.
   function fetchLatestOnce(id) {
-    fb.get(fb.ref(window.sbmDb, 'bettingMarket/markets/' + id)).then(function (snap) {
+    fb.get(fb.ref(window.sbmDb, 'bettingMarket/marketsPublic/' + id)).then(function (snap) {
       if (snap.exists()) sbmMarketsCache[id] = snap.val();
       else delete sbmMarketsCache[id];
       refresh();
@@ -417,7 +418,7 @@ var SBM_CLOSED_MARKET_LIMIT = 30; // 상태별 최근 N개만 — 지난 마켓 
   }
 
   SBM_LIVE_MARKET_STATUSES.forEach(function (status) {
-    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/markets'), fb.orderByChild('status'), fb.equalTo(status));
+    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/marketsPublic'), fb.orderByChild('status'), fb.equalTo(status));
     var first = true;
     fb.onValue(q, function (snap) {
       var val = snap.val() || {};
@@ -434,7 +435,7 @@ var SBM_CLOSED_MARKET_LIMIT = 30; // 상태별 최근 N개만 — 지난 마켓 
 
   // settled·void는 확정 후 절대 안 바뀌므로 1회성으로만, 그것도 최근 N개로 제한해서 받는다
   SBM_CLOSED_MARKET_STATUSES.forEach(function (status) {
-    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/markets'), fb.orderByChild('status'), fb.equalTo(status), fb.limitToLast(SBM_CLOSED_MARKET_LIMIT));
+    var q = fb.query(fb.ref(window.sbmDb, 'bettingMarket/marketsPublic'), fb.orderByChild('status'), fb.equalTo(status), fb.limitToLast(SBM_CLOSED_MARKET_LIMIT));
     fb.get(q).then(function (snap) {
       Object.assign(sbmMarketsCache, snap.val() || {});
       refresh();

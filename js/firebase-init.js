@@ -112,9 +112,10 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   try {
-    const q = query(ref(db, 'streamerVerifications'), orderByChild('uid'), equalTo(user.uid), limitToFirst(1));
-    const snap = await get(q);
-    window.sbmIsVerifiedStreamer = snap.exists();
+    // UID가 포함된 공유 인증 원장은 서버 전용이다. 본인 인증 여부는 본인만
+    // 읽을 수 있는 users/{uid} 플래그로 확인한다.
+    const snap = await get(ref(db, 'users/' + user.uid + '/streamerVerified'));
+    window.sbmIsVerifiedStreamer = snap.val() === true;
     // 인증 스트리머가 접속하면 관리자 디스코드로 알림 - 실제로 알림을 보낼지
     // (하루 한 번 제한 등)는 서버(logBettingMarketVisit)가 판단한다.
     if (window.sbmIsVerifiedStreamer) {

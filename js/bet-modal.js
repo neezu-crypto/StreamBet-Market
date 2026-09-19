@@ -106,8 +106,8 @@
     plusBtn.disabled = false;
     backdrop.classList.add('open');
 
-    if (market.proposerUid) {
-      fb.get(fb.ref(window.sbmDb, 'bettingMarket/profiles/' + market.proposerUid + '/nickname')).then(function (snap) {
+    if (market.proposerPublicId) {
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/publicProfiles/' + market.proposerPublicId + '/nickname')).then(function (snap) {
         if (myToken !== openToken) return;
         var nickname = snap.val();
         proposerEl.innerHTML = '제안자: <b>' + sbmEscapeHtml(nickname || '알 수 없음') + '</b>';

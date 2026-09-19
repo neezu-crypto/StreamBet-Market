@@ -1,5 +1,6 @@
 const { getDatabase } = require('firebase-admin/database');
 const { RANKING_DISPLAY_CAP } = require('./constants');
+const { publicIdFor } = require('./lib/public-identity');
 
 // 13번 — 자산 · 승률 · 누적수익 랭킹. 클라이언트는 다른 유저의 wallets/bets를
 // 직접 읽을 수 없으므로(본인 uid만 허용), 서버가 주기적으로 집계해 공개 노드에 기록한다.
@@ -33,7 +34,7 @@ async function computeRankings() {
 
   function displayName(uid) {
     const p = profiles[uid];
-    return (p && p.nickname) || '유저' + uid.slice(0, 6);
+    return (p && p.nickname) || '유저' + publicIdFor('bet', uid).slice(-6);
   }
   function avatarUrl(uid) {
     const p = profiles[uid];
@@ -83,11 +84,29 @@ async function computeRankings() {
     return out;
   }
 
-  await db.ref('bettingMarket/rankings').set({
+  function toPublicRanked(list) {
+    const out = {};
+    list.forEach((entry, i) => {
+      const publicId = publicIdFor('bet', entry.uid);
+      const sanitized = Object.assign({ rank: i + 1, publicId }, entry);
+      delete sanitized.uid;
+      out[publicId] = sanitized;
+    });
+    return out;
+  }
+
+  const privateRankings = {
     asset: toRanked(assetRanking),
     winrate: toRanked(winrateRanking),
     profit: toRanked(profitRanking),
     updatedAt: Date.now(),
+  };
+  await db.ref('bettingMarket/rankings').set(privateRankings);
+  await db.ref('bettingMarket/rankingsPublic').set({
+    asset: toPublicRanked(assetRanking),
+    winrate: toPublicRanked(winrateRanking),
+    profit: toPublicRanked(profitRanking),
+    updatedAt: privateRankings.updatedAt,
   });
 }
 

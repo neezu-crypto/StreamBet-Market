@@ -91,7 +91,7 @@
     if (trackedKeys[key]) return;
     trackedKeys[key] = true;
     if (!marketTitles[marketId]) {
-      fb.get(fb.ref(window.sbmDb, 'bettingMarket/markets/' + marketId + '/title')).then(function (snap) {
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/marketsPublic/' + marketId + '/title')).then(function (snap) {
         marketTitles[marketId] = snap.val() || '마켓';
         render();
       });

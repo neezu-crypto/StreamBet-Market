@@ -20,7 +20,7 @@ function sbmRefreshPromotedStreamerDatalist() {
   if (!datalist || sbmPromotedStreamerNamesLoaded || !window.sbmFirebase || !window.sbmDb) return;
   sbmPromotedStreamerNamesLoaded = true;
   var fb = window.sbmFirebase;
-  fb.get(fb.ref(window.sbmDb, 'stocks')).then(function (snap) {
+    fb.get(fb.ref(window.sbmDb, 'stocksPublic')).then(function (snap) {
     var val = snap.val() || {};
     var names = Object.keys(val).map(function (id) { return val[id].name; }).filter(Boolean);
     datalist.innerHTML = names.map(function (n) {

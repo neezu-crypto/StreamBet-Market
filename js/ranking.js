@@ -20,13 +20,14 @@ function sbmRankBadge(rank) {
   return '<span class="ranking-rank">' + rank + '</span>';
 }
 
-function sbmRenderRankingRow(entry, myUid, valueHtml, subHtml) {
-  var isMe = entry.uid === myUid;
+function sbmRenderRankingRow(entry, valueHtml, subHtml) {
+  // 공개 랭킹 항목에는 UID가 없고 앱 전용 publicId만 포함된다.
+  var isMe = false;
   var reportBtn = isMe ? '' :
-    '<button class="ranking-report-btn js-open-nick-report" data-id="' + entry.uid + '" data-nickname="' + sbmEscapeHtml(entry.nickname) + '" type="button" title="닉네임 신고">신고</button>';
-  return '<div class="ranking-row' + (isMe ? ' me' : '') + '" data-id="' + entry.uid + '">' +
+    '<button class="ranking-report-btn js-open-nick-report" data-id="' + sbmEscapeHtml(entry.publicId || '') + '" data-nickname="' + sbmEscapeHtml(entry.nickname) + '" type="button" title="닉네임 신고">신고</button>';
+  return '<div class="ranking-row' + (isMe ? ' me' : '') + '" data-id="' + sbmEscapeHtml(entry.publicId || '') + '">' +
     sbmRankBadge(entry.rank) +
-    '<span class="ranking-avatar" data-id="' + entry.uid + '">' + sbmRankAvatarHtml(entry) + '</span>' +
+    '<span class="ranking-avatar" data-id="' + sbmEscapeHtml(entry.publicId || '') + '">' + sbmRankAvatarHtml(entry) + '</span>' +
     '<span class="ranking-name">' + sbmEscapeHtml(entry.nickname) + (isMe ? '<span class="me-tag">나</span>' : '') + '</span>' +
     valueHtml +
     (subHtml || '') +
@@ -57,8 +58,6 @@ function sbmRenderRankingList(el, type, sorted, emptyMsg, rowFn) {
 
 function sbmRenderRankings() {
   if (!sbmRankingsCache) return;
-  var myUid = window.sbmUser ? window.sbmUser.uid : null;
-
   var assetEl = document.getElementById('ranking-list-asset');
   var winrateEl = document.getElementById('ranking-list-winrate');
   var profitEl = document.getElementById('ranking-list-profit');
@@ -68,18 +67,18 @@ function sbmRenderRankings() {
   }
 
   sbmRenderRankingList(assetEl, 'asset', toSortedArray(sbmRankingsCache.asset), '아직 랭킹 데이터가 없습니다.', function (e) {
-    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
+    return sbmRenderRankingRow(e, '<span class="ranking-value">' + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
   });
 
   sbmRenderRankingList(winrateEl, 'winrate', toSortedArray(sbmRankingsCache.winrate), '아직 정산된 배팅이 없습니다.', function (e) {
     var sub = '<div class="ranking-sub">' + e.totalCount + '전 ' + e.winCount + '승</div>';
-    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value">' + e.value + '%</span>', sub);
+    return sbmRenderRankingRow(e, '<span class="ranking-value">' + e.value + '%</span>', sub);
   });
 
   sbmRenderRankingList(profitEl, 'profit', toSortedArray(sbmRankingsCache.profit), '아직 정산된 배팅이 없습니다.', function (e) {
     var cls = e.value > 0 ? 'positive' : e.value < 0 ? 'negative' : '';
     var sign = e.value > 0 ? '+' : '';
-    return sbmRenderRankingRow(e, myUid, '<span class="ranking-value ' + cls + '">' + sign + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
+    return sbmRenderRankingRow(e, '<span class="ranking-value ' + cls + '">' + sign + Math.round(e.value).toLocaleString('ko-KR') + '원</span>');
   });
 
   if (typeof sbmReapplyNicknameBlocks === 'function') sbmReapplyNicknameBlocks();
@@ -88,7 +87,7 @@ function sbmRenderRankings() {
 (function () {
   if (!window.sbmFirebase) return;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/rankings'), function (snap) {
+  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/rankingsPublic'), function (snap) {
     sbmRankingsCache = snap.val() || {};
     sbmRenderRankings();
   });

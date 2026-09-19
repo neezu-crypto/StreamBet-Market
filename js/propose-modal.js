@@ -8,7 +8,7 @@
   function loadStreamerOptions() {
     if (!window.sbmFirebase || !window.sbmDb) return;
     var fb = window.sbmFirebase;
-    fb.get(fb.ref(window.sbmDb, 'stocks')).then(function (snap) {
+    fb.get(fb.ref(window.sbmDb, 'stocksPublic')).then(function (snap) {
       var val = snap.val() || {};
       streamerOptions = Object.keys(val).map(function (id) { return { id: id, name: val[id].name }; });
       streamerOptionsLoadFailed = false;

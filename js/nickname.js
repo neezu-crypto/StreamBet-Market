@@ -17,7 +17,7 @@ function sbmApplyNicknameBlocks() {
   if (sbmBlockSubscribed || !window.sbmFirebase) return;
   sbmBlockSubscribed = true;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknames'), function (snap) {
+  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknamesPublic'), function (snap) {
     sbmBlockedNicknamesCache = snap.val() || {};
     sbmReapplyNicknameBlocks();
   });
@@ -71,7 +71,7 @@ function sbmRenderBlockedNicknames() {
   if (!list || sbmBlockedListSubscribed || !window.sbmFirebase) return;
   sbmBlockedListSubscribed = true;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknames'), function (snap) {
+  fb.onValue(fb.ref(window.sbmDb, 'bettingMarket/blockedNicknamesPublic'), function (snap) {
     var val = snap.val() || {};
     var blocked = Object.keys(val).map(function (id) { return Object.assign({ id: id }, val[id]); });
     if (!blocked.length) {
@@ -89,7 +89,7 @@ function sbmRenderBlockedNicknames() {
     list.querySelectorAll('.nick-unblock-btn').forEach(function (btn) {
       btn.addEventListener('click', function () {
         btn.disabled = true;
-        fb.httpsCallable('unblockNickname')({ targetId: btn.getAttribute('data-id') })
+        fb.httpsCallable('unblockNickname')({ targetPublicId: btn.getAttribute('data-id') })
           .catch(function (e) { alert(e.message); btn.disabled = false; });
       });
     });
@@ -150,7 +150,7 @@ function sbmRenderBlockedNicknames() {
     submitBtn.disabled = true;
     submitBtn.textContent = '신고 처리중...';
     window.sbmFirebase.httpsCallable('reportNickname')({
-      targetId: currentId,
+      targetPublicId: currentId,
       nickname: currentName,
       reason: reasonSelect.value,
       detail: detailInput.value.trim(),

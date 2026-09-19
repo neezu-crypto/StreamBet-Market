@@ -1,7 +1,7 @@
 const { initializeApp } = require('firebase-admin/app');
 initializeApp();
 
-const { claimAttendance, claimJackpotDraw } = require('./src/rewards');
+const { claimAttendance, claimJackpotDraw, syncJackpotWinPublic } = require('./src/rewards');
 const {
   submitMarketProposal,
   reviewProposal,
@@ -10,6 +10,7 @@ const {
   setMinParticipantsOverride,
   judgeMarket,
   cancelPendingJudgment,
+  syncBettingMarketPublic,
 } = require('./src/markets');
 
 module.exports = {
@@ -20,6 +21,7 @@ module.exports = {
   setMinParticipantsOverride,
   judgeMarket,
   cancelPendingJudgment,
+  syncBettingMarketPublic,
   ...require('./src/bets'),
   ...require('./src/likes'),
   ...require('./src/scheduled'),
@@ -27,6 +29,7 @@ module.exports = {
   ...require('./src/verification'),
   claimAttendance,
   claimJackpotDraw,
+  syncJackpotWinPublic,
   ...require('./src/reports'),
   ...require('./src/profile'),
   ...require('./src/chest'),
@@ -36,4 +39,5 @@ module.exports = {
   ...require('./src/skins'),
   ...require('./src/whoami'),
   ...require('./src/streamerVisitLog'),
+  ...require('./src/privacy-migration'),
 };

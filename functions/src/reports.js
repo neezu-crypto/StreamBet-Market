@@ -3,6 +3,7 @@ const { getDatabase } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, requireAdminOrVerifiedStreamer, assertNotBanned } = require('./lib/auth');
 const { ensureWallet, accountAgeMs, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
+const { publicIdFor } = require('./lib/public-identity');
 const {
   NEW_ACCOUNT_REPORT_WAIT_MS,
   REPORT_COOLDOWN_MS,
@@ -14,6 +15,12 @@ const {
 } = require('./constants');
 
 const ALL_REASONS = PROHIBITED_TOPIC_REASONS.concat(['기타']);
+
+async function resolvePublicId(db, publicId) {
+  if (!publicId) return null;
+  const snap = await db.ref('privateUserIds/bet/byPublicId/' + publicId).get();
+  return snap.exists() ? snap.val() : null;
+}
 
 function assertValidDetail(detail) {
   if (detail && detail.length > REPORT_DETAIL_MAX_LENGTH) {
@@ -85,8 +92,9 @@ const dismissMarketReport = onCall(async (request) => {
 const reportNickname = onCall(async (request) => {
   const uid = requireAuth(request);
   await assertNotBanned(uid);
-  const { targetId, nickname, reason, detail } = request.data || {};
-  if (!targetId || targetId === uid || !nickname || !NICKNAME_REPORT_REASONS.includes(reason)) {
+  const { targetId, targetPublicId, nickname, reason, detail } = request.data || {};
+  const publicId = targetPublicId || targetId;
+  if (!publicId || !nickname || !NICKNAME_REPORT_REASONS.includes(reason)) {
     throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
   }
   if (nickname.length > NICKNAME_MAX_LENGTH || NICKNAME_FORBIDDEN_RE.test(nickname)) {
@@ -94,8 +102,10 @@ const reportNickname = onCall(async (request) => {
   }
   assertValidDetail(detail);
   const db = getDatabase();
+  const targetUid = targetPublicId ? await resolvePublicId(db, targetPublicId) : targetId;
+  if (!targetUid || targetUid === uid) throw new HttpsError('invalid-argument', '신고 대상이 올바르지 않습니다.');
   const reportRef = db.ref('bettingMarket/nicknameReports').push();
-  await reportRef.set({ targetId, nickname, reason, detail: detail || '', reporterUid: uid, reportedAt: Date.now() });
+  await reportRef.set({ targetPublicId: publicIdFor('bet', targetUid), nickname, reason, detail: detail || '', reporterUid: uid, reportedAt: Date.now() });
   return { reportId: reportRef.key };
 });
 
@@ -119,7 +129,7 @@ const dismissNicknameReport = onCall(async (request) => {
 // 차단된 유저가 계속 같은(또는 비슷한) 닉네임을 쓰는 걸 막기 위해, 차단 시 프로필의
 // 닉네임 자체를 식별 가능한 기본 템플릿으로 강제 변경한다. uid 뒷자리를 붙여 서로 겹치지 않게 한다.
 function defaultBlockedNickname(uid) {
-  return '차단유저' + uid.slice(-4).toUpperCase();
+  return '차단유저' + publicIdFor('bet', uid).slice(-4);
 }
 
 // 13번 — 닉네임 차단 (관리자·인증 스트리머), 차단 시 랭킹에서 즉시 숨김 + 닉네임 강제 초기화
@@ -133,8 +143,10 @@ const blockNickname = onCall(async (request) => {
   if (!snap.exists()) throw new HttpsError('not-found', '신고 내역을 찾을 수 없습니다.');
   const report = snap.val();
   const actorName = request.auth.token.name || request.auth.token.email || uid;
+  const targetUid = report.targetId || await resolvePublicId(db, report.targetPublicId);
+  if (!targetUid) throw new HttpsError('not-found', '대상 계정을 찾을 수 없습니다.');
 
-  await db.ref('bettingMarket/blockedNicknames/' + report.targetId).set({
+  await db.ref('bettingMarket/blockedNicknames/' + targetUid).set({
     nickname: report.nickname,
     blockedAt: Date.now(),
     blockedBy: uid,
@@ -143,11 +155,16 @@ const blockNickname = onCall(async (request) => {
 
   // 차단된 유저 본인에게 안내하고 곧바로 새 닉네임을 정할 수 있도록, 강제 변경은 닉네임 변경
   // 쿨다운(24시간)에 걸리지 않게 nicknameChangedAt은 지운다.
-  await db.ref('bettingMarket/profiles/' + report.targetId).update({
-    nickname: defaultBlockedNickname(report.targetId),
+  await db.ref('bettingMarket/profiles/' + targetUid).update({
+    nickname: defaultBlockedNickname(targetUid),
     nicknameChangedAt: null,
     nicknameResetReason: report.reason,
     nicknameResetAt: Date.now(),
+  });
+  await db.ref('bettingMarket/blockedNicknamesPublic/' + publicIdFor('bet', targetUid)).set({
+    nickname: report.nickname,
+    blockedAt: Date.now(),
+    blockedByName: actorName,
   });
 
   await reportRef.remove();
@@ -163,15 +180,17 @@ const blockNickname = onCall(async (request) => {
 // 13번 — 차단 해제는 닉네임 변경으로 자동 해제되지 않고, 검수자가 직접 확인 후 수동 해제
 const unblockNickname = onCall(async (request) => {
   const { uid, role } = await requireAdminOrVerifiedStreamer(request);
-  const { targetId } = request.data || {};
-  if (!targetId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
   const db = getDatabase();
-  const ref = db.ref('bettingMarket/blockedNicknames/' + targetId);
+  const { targetId, targetPublicId } = request.data || {};
+  const resolvedTargetId = targetId || await resolvePublicId(db, targetPublicId);
+  if (!resolvedTargetId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
+  const ref = db.ref('bettingMarket/blockedNicknames/' + resolvedTargetId);
   const snap = await ref.get();
   const entry = snap.val();
   await ref.remove();
+  await db.ref('bettingMarket/blockedNicknamesPublic/' + publicIdFor('bet', resolvedTargetId)).remove();
   const actorName = request.auth.token.name || request.auth.token.email || uid;
-  await logAudit(uid, actorName, '닉네임 차단 해제', entry ? entry.nickname : targetId);
+  await logAudit(uid, actorName, '닉네임 차단 해제', entry ? entry.nickname : resolvedTargetId);
 
   // 13번 — 차단 해제 시 다시 랭킹에 노출되어야 하므로 이 시점에만 랭킹 재계산
   const { recomputeRankingsAfter } = require('./rankings');

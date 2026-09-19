@@ -15,7 +15,7 @@ function sbmVerifiedAvatarSrc(soopId) {
 function sbmFetchVerifiedStreamersOnce() {
   if (!window.sbmFirebase) return;
   var fb = window.sbmFirebase;
-  fb.get(fb.ref(window.sbmDb, 'streamerVerifications')).then(function (snap) {
+  fb.get(fb.ref(window.sbmDb, 'streamerVerificationsPublic')).then(function (snap) {
     sbmVerifiedCache = snap.val() || {};
     sbmRenderVerifiedBanner();
     sbmRenderVerifiedStreamers();
@@ -28,7 +28,7 @@ function sbmSubscribeVerifiedStreamers() {
   if (sbmVerifiedSubscribed || !window.sbmFirebase) return;
   sbmVerifiedSubscribed = true;
   var fb = window.sbmFirebase;
-  fb.onValue(fb.ref(window.sbmDb, 'streamerVerifications'), function (snap) {
+  fb.onValue(fb.ref(window.sbmDb, 'streamerVerificationsPublic'), function (snap) {
     sbmVerifiedCache = snap.val() || {};
     sbmRenderVerifiedBanner();
     sbmRenderVerifiedStreamers();

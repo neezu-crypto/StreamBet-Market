@@ -1,4 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onValueWritten } = require('firebase-functions/v2/database');
 const { getDatabase, ServerValue } = require('firebase-admin/database');
 const {
   requireAuth,
@@ -21,6 +22,38 @@ const {
   JUDGE_GRACE_MS,
   JACKPOT_RAKE_SHARE,
 } = require('./constants');
+const { publicIdFor, ensurePublicId } = require('./lib/public-identity');
+
+function sanitizePublicMarket(source) {
+  const publicMarket = JSON.parse(JSON.stringify(source || {}));
+  if (source && source.proposerUid) {
+    publicMarket.proposerPublicId = publicIdFor('bet', source.proposerUid);
+    delete publicMarket.proposerUid;
+  }
+  const stripPrivateIdentity = (value) => {
+    if (!value || typeof value !== 'object') return;
+    Object.keys(value).forEach((key) => {
+      if (['uid', 'proposerUid', 'validatedBy', 'settledBy'].includes(key)) delete value[key];
+      else stripPrivateIdentity(value[key]);
+    });
+  };
+  stripPrivateIdentity(publicMarket);
+  return publicMarket;
+}
+
+// 마켓 목록은 공개 화면에서 사용하지만 원본에는 proposerUid가 포함된다.
+// 공개 미러에는 해시 식별자만 남기고, 정산·검수 함수는 기존 private 원본을 사용한다.
+const syncBettingMarketPublic = onValueWritten('bettingMarket/markets/{marketId}', async (event) => {
+  const db = getDatabase();
+  const publicRef = db.ref('bettingMarket/marketsPublic/' + event.params.marketId);
+  if (!event.data.after.exists()) {
+    await publicRef.remove();
+    return;
+  }
+  const source = event.data.after.val() || {};
+  if (source.proposerUid) await ensurePublicId(db, 'bet', source.proposerUid);
+  await publicRef.set(sanitizePublicMarket(source));
+});
 
 function marketRef(marketId) {
   return getDatabase().ref('bettingMarket/markets/' + marketId);
@@ -459,4 +492,6 @@ module.exports = {
   judgeMarket,
   cancelPendingJudgment,
   finalizeMarketSettlement,
+  syncBettingMarketPublic,
+  sanitizePublicMarket,
 };

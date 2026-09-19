@@ -3,6 +3,7 @@ const { getDatabase } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned } = require('./lib/auth');
 const { avatarUrlFor } = require('./lib/avatar');
 const { NICKNAME_CHANGE_COOLDOWN_MS, NICKNAME_MAX_LENGTH, NICKNAME_FORBIDDEN_RE, SOOP_ID_RE } = require('./constants');
+const { publicIdFor } = require('./lib/public-identity');
 
 // 13번 — 닉네임(1일 1회 제한) · SOOP 아이디 → 프로필 이미지 자동 설정
 const updateProfile = onCall(async (request) => {
@@ -56,6 +57,13 @@ const updateProfile = onCall(async (request) => {
     update.nicknameResetAt = null;
   }
   await ref.update(update);
+  const publicId = publicIdFor('bet', uid);
+  await db.ref('privateUserIds/bet/byUid/' + uid).set(publicId);
+  await db.ref('privateUserIds/bet/byPublicId/' + publicId).set(uid);
+  await db.ref('bettingMarket/publicProfiles/' + publicId).update({
+    nickname: name,
+    avatarUrl: update.avatarUrl,
+  });
 
   // 13번 — 랭킹에 표시되는 닉네임·아바타가 바뀌므로 이 시점에만 랭킹 재계산
   const { recomputeRankingsAfter } = require('./rankings');

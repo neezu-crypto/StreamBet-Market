@@ -1,8 +1,10 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
+const { onValueWritten } = require('firebase-functions/v2/database');
 const { getDatabase, ServerValue } = require('firebase-admin/database');
 const { requireAuth, isTrustedAccount, assertNotBanned, isAdmin: checkIsAdmin } = require('./lib/auth');
 const { ensureWallet, adjustBalance, accountAgeMs, kstDateKey, walletRef } = require('./lib/wallet');
 const { logAudit } = require('./lib/audit');
+const { ensurePublicId } = require('./lib/public-identity');
 const {
   ATTENDANCE_SCHEDULE,
   NEW_ACCOUNT_WAIT_MS,
@@ -14,6 +16,19 @@ const {
 } = require('./constants');
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+const syncJackpotWinPublic = onValueWritten('bettingMarket/jackpotWins/{winId}', async (event) => {
+  const db = getDatabase();
+  const publicRef = db.ref('bettingMarket/jackpotWinsPublic/' + event.params.winId);
+  if (!event.data.after.exists()) {
+    await publicRef.remove();
+    return;
+  }
+  const source = event.data.after.val() || {};
+  if (!source.uid) return;
+  const publicId = await ensurePublicId(db, 'bet', source.uid);
+  await publicRef.set({ publicId, amount: source.amount || 0, at: source.at || null });
+});
 
 // 12번 — 출석 보상 (7일 주기 스트릭, 결석 시 1일차로 초기화, KST 자정 리셋)
 const claimAttendance = onCall(async (request) => {
@@ -125,4 +140,4 @@ const claimJackpotDraw = onCall(async (request) => {
   return { won: true, amount: paidAmount };
 });
 
-module.exports = { claimAttendance, payoutProposalReward, claimJackpotDraw };
+module.exports = { claimAttendance, payoutProposalReward, claimJackpotDraw, syncJackpotWinPublic };

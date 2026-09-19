@@ -79,7 +79,7 @@ function sbmRenderJackpotEligibility(wallet) {
       return;
     }
     listEl.innerHTML = wins.map(function (w) {
-      var profile = profiles[w.uid] || {};
+      var profile = profiles[w.publicId] || {};
       var nickname = profile.nickname || '유저';
       var avatarHtml = profile.avatarUrl
         ? '<img class="jackpot-history-avatar" src="' + sbmEscapeHtml(profile.avatarUrl) + '" alt="">'
@@ -97,8 +97,8 @@ function sbmRenderJackpotEligibility(wallet) {
     if (!window.sbmFirebase) return;
     var fb = window.sbmFirebase;
     Promise.all([
-      fb.get(fb.ref(window.sbmDb, 'bettingMarket/jackpotWins')),
-      fb.get(fb.ref(window.sbmDb, 'bettingMarket/profiles')),
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/jackpotWinsPublic')),
+      fb.get(fb.ref(window.sbmDb, 'bettingMarket/publicProfiles')),
     ]).then(function (results) {
       var winsVal = results[0].val() || {};
       var profiles = results[1].val() || {};
