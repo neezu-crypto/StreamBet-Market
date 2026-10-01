@@ -45,28 +45,65 @@ const submitVerificationRequest = onCall(async (request) => {
   }
 
   const db = getDatabase();
-  const existingSnap = await db
-    .ref('streamerVerifications')
-    .orderByChild('nickname')
-    .equalTo(trimmedNickname)
-    .limitToFirst(1)
-    .get();
+  // 인생게임에서 다시보기를 직접 확인해 등록한 UID + SOOP 아이디 + 닉네임 쌍은
+  // 배팅시장에서도 별도 관리자 대기 없이 인증한다. 기존 인증 레코드가 있거나
+  // 계정 전환/식별정보 충돌이 있는 경우에는 자동 승인하지 않고 기존 수동 검수로 둔다.
+  const [reviewedSnap, existingSnap, soopIdMatchSnap] = await Promise.all([
+    db.ref(`lifeGame/playedStreamerAllowlist/${uid}/${trimmedSoopId}`).get(),
+    db.ref('streamerVerifications')
+      .orderByChild('nickname')
+      .equalTo(trimmedNickname)
+      .limitToFirst(1)
+      .get(),
+    db.ref('streamerVerifications')
+      .orderByChild('soopId')
+      .equalTo(trimmedSoopId)
+      .limitToFirst(1)
+      .get(),
+  ]);
+  const reviewed = reviewedSnap.val();
+  const reviewedMatch = reviewedSnap.exists() && reviewed &&
+    reviewed.uid === uid && reviewed.soopId === trimmedSoopId &&
+    reviewed.nickname === trimmedNickname;
+  const nicknameRecord = existingSnap.exists() ? Object.values(existingSnap.val())[0] : null;
+  const soopIdRecord = soopIdMatchSnap.exists() ? Object.values(soopIdMatchSnap.val())[0] : null;
+
+  if (soopIdRecord && soopIdRecord.uid === uid &&
+      soopIdRecord.soopId === trimmedSoopId && soopIdRecord.nickname === trimmedNickname) {
+    return { status: 'already-verified' };
+  }
+
+  if (reviewedMatch && !nicknameRecord && !soopIdRecord) {
+    const verifiedAt = Date.now();
+    const verifiedRef = db.ref('streamerVerifications').push();
+    const verification = {
+      nickname: trimmedNickname,
+      soopId: trimmedSoopId,
+      uid,
+      verifiedAt,
+      autoApproved: true,
+      autoApprovalSource: 'life-game-play-review',
+    };
+    await verifiedRef.set(verification);
+    await syncPublicVerification(db, verifiedRef.key, verification);
+    await db.ref('bettingMarket/verifiedStreamerUids/' + uid).set(true);
+    await setStockMarketVerifiedFlag(db, uid, true);
+    await setVerifiedProfile(db, uid, trimmedNickname, trimmedSoopId);
+    await fillProfileIfEmpty(db, uid, trimmedNickname, trimmedSoopId);
+    await logAudit(uid, request.auth.token.name || request.auth.token.email || uid,
+      '인생게임 검수 기록으로 스트리머 인증 자동 승인', trimmedNickname + ' (' + trimmedSoopId + ')');
+    const { recomputeRankingsAfter } = require('./rankings');
+    await recomputeRankingsAfter('approveVerification');
+    return { status: 'auto-approved' };
+  }
+
   const finalUid = existingSnap.exists() ? Object.values(existingSnap.val())[0].uid : uid;
 
   // 이미 다른 uid로 인증된 SOOP 아이디로 신청하는 경우(공개 정보라 누구나 입력 가능) —
   // 승인 시 기존 인증 스트리머의 판정 권한이 신청자에게 그대로 넘어가므로, 관리자가 검수
   // 화면에서 이 사실을 명확히 인지할 수 있도록 플래그를 남긴다.
-  const soopIdMatchSnap = await db
-    .ref('streamerVerifications')
-    .orderByChild('soopId')
-    .equalTo(trimmedSoopId)
-    .limitToFirst(1)
-    .get();
   let soopIdAlreadyVerifiedByOther = false;
-  if (soopIdMatchSnap.exists()) {
-    const existingRecord = Object.values(soopIdMatchSnap.val())[0];
-    soopIdAlreadyVerifiedByOther = existingRecord.uid !== finalUid;
-  }
+  if (soopIdRecord) soopIdAlreadyVerifiedByOther = soopIdRecord.uid !== finalUid;
 
   const newRef = db.ref('bettingMarket/verifyRequests').push();
   await newRef.set({

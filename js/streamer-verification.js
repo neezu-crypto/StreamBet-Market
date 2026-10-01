@@ -275,10 +275,25 @@ document.addEventListener('sbm-auth-changed', function () {
     window.sbmFirebase.httpsCallable('submitVerificationRequest')({
       nickname: nicknameInput.value.trim(),
       soopId: soopIdInput.value.trim(),
-    }).then(function () {
+    }).then(function (result) {
       submitBtn.textContent = '신청 완료';
       statusEl.style.color = 'var(--mint)';
-      statusEl.textContent = '신청이 접수됐습니다. 관리자 검수 후 승인되면 홍보 배너에 노출됩니다.';
+      var status = result && result.data && result.data.status;
+      if (status === 'auto-approved') {
+        statusEl.textContent = '✅ 인생게임 검수 기록이 확인되어 스트리머 인증이 즉시 완료됐습니다.';
+        window.sbmIsVerifiedStreamer = true;
+        window.sbmUpdateTrusted && window.sbmUpdateTrusted();
+        document.dispatchEvent(new CustomEvent('sbm-auth-changed'));
+        sbmFetchVerifiedStreamersOnce();
+      } else if (status === 'already-verified') {
+        statusEl.textContent = '✅ 이미 스트리머 인증이 완료된 계정입니다.';
+        window.sbmIsVerifiedStreamer = true;
+        window.sbmUpdateTrusted && window.sbmUpdateTrusted();
+        document.dispatchEvent(new CustomEvent('sbm-auth-changed'));
+        sbmFetchVerifiedStreamersOnce();
+      } else {
+        statusEl.textContent = '신청이 접수됐습니다. 관리자 검수 후 승인되면 홍보 배너에 노출됩니다.';
+      }
       statusEl.classList.add('show');
     }).catch(function (err) {
       nicknameInput.disabled = false;
