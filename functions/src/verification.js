@@ -90,6 +90,16 @@ const submitVerificationRequest = onCall(async (request) => {
     await setStockMarketVerifiedFlag(db, uid, true);
     await setVerifiedProfile(db, uid, trimmedNickname, trimmedSoopId);
     await fillProfileIfEmpty(db, uid, trimmedNickname, trimmedSoopId);
+    const pendingSnap = await db.ref('bettingMarket/verifyRequests').get();
+    const pendingRequests = pendingSnap.val() || {};
+    const pendingCleanup = {};
+    Object.keys(pendingRequests).forEach((requestId) => {
+      const pending = pendingRequests[requestId] || {};
+      if (pending.uid === uid && pending.nickname === trimmedNickname && pending.soopId === trimmedSoopId) {
+        pendingCleanup['bettingMarket/verifyRequests/' + requestId] = null;
+      }
+    });
+    if (Object.keys(pendingCleanup).length) await db.ref().update(pendingCleanup);
     await logAudit(uid, request.auth.token.name || request.auth.token.email || uid,
       '인생게임 검수 기록으로 스트리머 인증 자동 승인', trimmedNickname + ' (' + trimmedSoopId + ')');
     const { recomputeRankingsAfter } = require('./rankings');
