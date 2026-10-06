@@ -200,7 +200,26 @@ document.addEventListener('sbm-auth-changed', function () {
   var previewPlaceholder = document.getElementById('verify-preview-placeholder');
   var submitBtn = document.getElementById('verify-submit-btn');
   var statusEl = document.getElementById('verify-status');
+  var noteEl = document.getElementById('verify-note');
+  var noteCodeBtn = document.getElementById('verify-note-code');
+  var noteStatus = document.getElementById('verify-note-status');
+  var checkBtn = document.getElementById('verify-check-btn');
+  var renewBtn = document.getElementById('verify-note-renew');
   if (!backdrop) return;
+
+  function showNote(result, previousCode) {
+    noteEl.hidden = !result.noteEligible;
+    if (!result.noteEligible) return;
+    var code = Number(result.verificationCodeExpiresAt) > Date.now()
+      ? result.verificationCode || previousCode || '' : '';
+    noteCodeBtn.textContent = code || '코드 없음';
+    noteCodeBtn.disabled = !code;
+    noteStatus.textContent = code ? '' : '코드가 없거나 만료됐어요. 새 코드를 발급해주세요.';
+    noteCodeBtn.onclick = async function () {
+      try { await navigator.clipboard.writeText(code); noteStatus.textContent = '복사했어요. 쪽지 본문에 붙여넣어 보내주세요.'; }
+      catch (error) { noteStatus.textContent = '코드를 선택해 직접 복사해주세요.'; }
+    };
+  }
 
   function resetForm() {
     nicknameInput.value = '';
@@ -214,6 +233,7 @@ document.addEventListener('sbm-auth-changed', function () {
     submitBtn.textContent = '신청하기';
     statusEl.classList.remove('show');
     statusEl.textContent = '';
+    noteEl.hidden = true;
   }
 
   function openModal() {
@@ -292,7 +312,10 @@ document.addEventListener('sbm-auth-changed', function () {
         document.dispatchEvent(new CustomEvent('sbm-auth-changed'));
         sbmFetchVerifiedStreamersOnce();
       } else {
-        statusEl.textContent = '신청이 접수됐습니다. 관리자 검수 후 승인되면 홍보 배너에 노출됩니다.';
+        showNote(result.data || {}, '');
+        statusEl.textContent = result.data.noteEligible
+          ? '신청이 접수됐어요. SOOP 쪽지의 발신자 아이디와 코드를 대조해 자동 승인합니다.'
+          : '기존 계정 또는 식별정보 충돌 신청은 관리자 수동 검수가 필요합니다.';
       }
       statusEl.classList.add('show');
     }).catch(function (err) {
@@ -304,6 +327,30 @@ document.addEventListener('sbm-auth-changed', function () {
       statusEl.textContent = err.message || '신청 처리 중 오류가 발생했습니다.';
       statusEl.classList.add('show');
     });
+  });
+
+  checkBtn.addEventListener('click', function () {
+    var previousText = noteCodeBtn.textContent.trim();
+    var previousCode = /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(previousText) ? previousText : '';
+    window.sbmFirebase.httpsCallable('submitVerificationRequest')({ checkOnly: true }).then(function (response) {
+      var result = response.data || {};
+      if (result.status === 'already-verified') {
+        noteEl.hidden = true;
+        statusEl.textContent = '✅ 스트리머 인증이 완료됐어요. 페이지를 새로고침해주세요.';
+      } else if (result.status === 'submitted') {
+        showNote(result, previousCode);
+        statusEl.textContent = '아직 검토 중이에요. 쪽지를 보냈다면 잠시 후 다시 확인해주세요.';
+      } else statusEl.textContent = '대기 중인 신청이 없어요. 닉네임과 SOOP 아이디를 입력해 신청해주세요.';
+      statusEl.classList.add('show');
+    }).catch(function (error) { statusEl.textContent = error.message || '상태 확인에 실패했어요.'; statusEl.classList.add('show'); });
+  });
+  renewBtn.addEventListener('click', function () {
+    window.sbmFirebase.httpsCallable('submitVerificationRequest')({ renewOnly: true }).then(function (response) {
+      var result = response.data || {};
+      showNote(result, '');
+      statusEl.textContent = result.status === 'submitted' ? '새 코드를 발급했어요. 이전 코드는 무효입니다.' : '대기 중인 신청이 없어요.';
+      statusEl.classList.add('show');
+    }).catch(function (error) { noteStatus.textContent = error.message || '새 코드 발급에 실패했어요.'; });
   });
 })();
 

@@ -5,6 +5,22 @@ const { logAudit } = require('./lib/audit');
 const { avatarUrlFor } = require('./lib/avatar');
 const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
 const { syncPublicVerification, removePublicVerification, publicIdFor } = require('./lib/public-identity');
+const crypto = require('node:crypto');
+
+const NOTE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+const NOTE_CODE_TTL_MS = 15 * 60 * 1000;
+function newNoteCode() {
+  return Array.from(crypto.randomBytes(6), (byte) => NOTE_CODE_ALPHABET[byte % NOTE_CODE_ALPHABET.length]).join('');
+}
+function noteCodeHash(requestId, code) {
+  return crypto.createHash('sha256').update(requestId + ':' + code).digest('hex');
+}
+async function issueNoteCode(requestRef) {
+  const code = newNoteCode();
+  const expiresAt = Date.now() + NOTE_CODE_TTL_MS;
+  await requestRef.update({ noteVerificationCodeHash: noteCodeHash(requestRef.key, code), noteVerificationCodeExpiresAt: expiresAt });
+  return { code, expiresAt };
+}
 
 // 인증 스트리머가 이 배팅시장에서 인게임 닉네임을 한 번도 설정한 적이 없으면(프로필 없음),
 // 랭킹 등에 "유저XXXXXX" 폴백 대신 방송 닉네임이 바로 보이도록 초기값을 채워준다. 이미 본인이
@@ -33,6 +49,21 @@ async function fillProfileIfEmpty(db, uid, nickname, soopId) {
 const submitVerificationRequest = onCall(async (request) => {
   const uid = requireAuth(request);
   await assertNotBanned(uid);
+  const db = getDatabase();
+  const pendingSnap = await db.ref('bettingMarket/verifyRequests').get();
+  const pendingEntries = Object.entries(pendingSnap.val() || {});
+  const mine = pendingEntries.find(([, entry]) => entry.requesterUid === uid);
+  if (request.data?.checkOnly === true) {
+    if (mine) return { status: 'submitted', verificationCode: '', verificationCodeExpiresAt: Number(mine[1].noteVerificationCodeExpiresAt) || 0, noteEligible: !!mine[1].noteVerificationCodeHash };
+    const verified = await db.ref('streamerVerifications').orderByChild('uid').equalTo(uid).limitToFirst(1).get();
+    return { status: verified.exists() ? 'already-verified' : 'not-found' };
+  }
+  if (request.data?.renewOnly === true) {
+    if (!mine) return { status: 'not-found' };
+    const challenge = mine[1].noteEligible
+      ? await issueNoteCode(db.ref('bettingMarket/verifyRequests/' + mine[0])) : null;
+    return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible: !!challenge };
+  }
   const { nickname, soopId } = request.data || {};
   const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
   const trimmedSoopId = typeof soopId === 'string' ? soopId.trim() : '';
@@ -44,7 +75,6 @@ const submitVerificationRequest = onCall(async (request) => {
     throw new HttpsError('invalid-argument', 'SOOP 아이디는 영문 소문자/숫자 2~20자로 입력해 주세요.');
   }
 
-  const db = getDatabase();
   // 인생게임에서 다시보기를 직접 확인해 등록한 UID + SOOP 아이디 + 닉네임 쌍은
   // 배팅시장에서도 별도 관리자 대기 없이 인증한다. 기존 인증 레코드가 있거나
   // 계정 전환/식별정보 충돌이 있는 경우에는 자동 승인하지 않고 기존 수동 검수로 둔다.
@@ -115,15 +145,32 @@ const submitVerificationRequest = onCall(async (request) => {
   let soopIdAlreadyVerifiedByOther = false;
   if (soopIdRecord) soopIdAlreadyVerifiedByOther = soopIdRecord.uid !== finalUid;
 
+  // A note can prove control of the SOOP sender ID, but must not transfer an
+  // existing account or resolve identity collisions without human review.
+  const noteEligible = finalUid === uid && !nicknameRecord && !soopIdRecord;
+  const samePending = pendingEntries.find(([, entry]) => entry.requesterUid === uid &&
+    entry.nickname === trimmedNickname && entry.soopId === trimmedSoopId);
+  if (samePending) {
+    const challenge = samePending[1].noteEligible
+      ? await issueNoteCode(db.ref('bettingMarket/verifyRequests/' + samePending[0])) : null;
+    return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible: !!challenge };
+  }
+  const legacyPending = pendingEntries.find(([, entry]) => !entry.requesterUid && entry.uid === uid &&
+    entry.nickname === trimmedNickname && entry.soopId === trimmedSoopId);
+  if (legacyPending) return { status: 'submitted', verificationCode: '', verificationCodeExpiresAt: 0, noteEligible: false };
+  if (mine) throw new HttpsError('already-exists', '이미 다른 정보로 인증 신청이 접수됐습니다. 관리자 검수를 기다려주세요.');
   const newRef = db.ref('bettingMarket/verifyRequests').push();
   await newRef.set({
     nickname: trimmedNickname,
     soopId: trimmedSoopId,
     uid: finalUid,
+    requesterUid: uid,
     submittedAt: Date.now(),
     soopIdAlreadyVerifiedByOther,
+    noteEligible,
   });
-  return { status: 'submitted' };
+  const challenge = noteEligible ? await issueNoteCode(newRef) : null;
+  return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible };
 });
 
 // streamerVerifications는 주식시장과 공유하는 노드인데, 그쪽 앱은 SOOP 아이디
@@ -170,19 +217,20 @@ async function setVerifiedProfile(db, uid, nickname, soopId) {
 
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디 또는 동일 닉네임으로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
-const approveVerification = onCall(async (request) => {
-  const adminUid = await requireAdmin(request);
-  const adminName = request.auth.token.name || request.auth.token.email;
-  const { requestId } = request.data || {};
-  if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
-
-  const db = getDatabase();
+async function approveVerificationRequest(db, requestId, adminUid, adminName, noteOnly = false) {
   const reqRef = db.ref('bettingMarket/verifyRequests/' + requestId);
   const reqSnap = await reqRef.get();
   if (!reqSnap.exists()) throw new HttpsError('not-found', '인증 신청을 찾을 수 없습니다.');
   const { nickname, soopId, uid } = reqSnap.val();
+  if (noteOnly && (reqSnap.val().noteEligible !== true || reqSnap.val().requesterUid !== uid ||
+      reqSnap.val().soopIdAlreadyVerifiedByOther)) {
+    throw new HttpsError('failed-precondition', '자동 승인 대상이 변경됐습니다. 수동 검수가 필요합니다.');
+  }
 
   const existingSnap = await findExistingStreamerRecord(db, nickname, soopId);
+  if (noteOnly && existingSnap.exists()) {
+    throw new HttpsError('failed-precondition', '기존 인증 정보와 충돌합니다. 수동 검수가 필요합니다.');
+  }
 
   if (existingSnap.exists()) {
     const existingKey = Object.keys(existingSnap.val())[0];
@@ -220,6 +268,78 @@ const approveVerification = onCall(async (request) => {
   const { recomputeRankingsAfter } = require('./rankings');
   await recomputeRankingsAfter('approveVerification');
   return { status: 'approved', mode: 'created' };
+}
+
+const approveVerification = onCall(async (request) => {
+  const adminUid = await requireAdmin(request);
+  const { requestId } = request.data || {};
+  if (!requestId) throw new HttpsError('invalid-argument', '요청이 올바르지 않습니다.');
+  return approveVerificationRequest(getDatabase(), requestId, adminUid,
+    request.auth.token.name || request.auth.token.email);
+});
+
+const confirmBettingVerificationByNote = onCall(async (request) => {
+  const adminUid = await requireAdmin(request);
+  const adminName = request.auth.token.name || request.auth.token.email;
+  const senderId = String(request.data?.senderId || '').trim().toLowerCase();
+  const code = String(request.data?.code || '').trim().toUpperCase();
+  const noteNo = String(request.data?.noteNo || '').trim();
+  if (!SOOP_ID_RE.test(senderId) || !/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(code) || !/^\d{1,20}$/.test(noteNo)) {
+    throw new HttpsError('invalid-argument', '쪽지 확인 정보가 올바르지 않습니다.');
+  }
+  const db = getDatabase();
+  const claimRef = db.ref('streamerVerificationNoteClaims/' + noteNo);
+  const claimed = await claimRef.transaction((current) => current ? undefined : {
+    status: 'processing', senderId, claimedAt: Date.now(), source: 'betting-market',
+  }, undefined, false);
+  if (!claimed.committed) return { ok: false, reason: 'note-already-processed' };
+  let lockRef = null;
+  try {
+    const snapshot = await db.ref('bettingMarket/verifyRequests').get();
+    const match = Object.entries(snapshot.val() || {}).find(([id, entry]) => entry.noteEligible === true &&
+      entry.requesterUid === entry.uid && !entry.soopIdAlreadyVerifiedByOther &&
+      String(entry.soopId || '').toLowerCase() === senderId &&
+      Number(entry.noteVerificationCodeExpiresAt) > Date.now() &&
+      entry.noteVerificationCodeHash === noteCodeHash(id, code));
+    if (!match) {
+      await claimRef.remove();
+      return { ok: false, reason: 'no-matching-pending-request' };
+    }
+    const [requestId] = match;
+    const reqRef = db.ref('bettingMarket/verifyRequests/' + requestId);
+    lockRef = reqRef.child('noteVerificationClaim');
+    const locked = await lockRef.transaction((current) => {
+      if (current && Date.now() - Number(current.claimedAt || 0) < 2 * 60 * 1000) return;
+      return { noteNo, claimedAt: Date.now() };
+    }, undefined, false);
+    if (!locked.committed) {
+      await claimRef.remove();
+      return { ok: false, reason: 'verification-in-progress' };
+    }
+    const current = (await reqRef.get()).val();
+    if (!current || current.noteEligible !== true || current.requesterUid !== current.uid ||
+        current.soopIdAlreadyVerifiedByOther || String(current.soopId || '').toLowerCase() !== senderId ||
+        Number(current.noteVerificationCodeExpiresAt) <= Date.now() ||
+        current.noteVerificationCodeHash !== noteCodeHash(requestId, code)) {
+      await lockRef.remove();
+      await claimRef.remove();
+      return { ok: false, reason: 'request-changed-during-verification' };
+    }
+    // A conflicting identity may have been approved after this application.
+    const existing = await findExistingStreamerRecord(db, current.nickname, current.soopId);
+    if (existing.exists()) {
+      await lockRef.remove();
+      await claimRef.remove();
+      return { ok: false, reason: 'identity-conflict-needs-manual-review' };
+    }
+    const result = await approveVerificationRequest(db, requestId, adminUid, adminName, true);
+    await claimRef.update({ status: 'approved', requestId, approvedAt: Date.now() });
+    return { ok: true, nickname: current.nickname, status: result.status };
+  } catch (error) {
+    if (lockRef) await lockRef.remove().catch(() => {});
+    await claimRef.remove().catch(() => {});
+    throw error;
+  }
 });
 
 const rejectVerification = onCall(async (request) => {
@@ -286,4 +406,4 @@ const setVerifiedSoopId = onCall(async (request) => {
   return { status: 'updated' };
 });
 
-module.exports = { submitVerificationRequest, approveVerification, rejectVerification, revokeVerification, setVerifiedSoopId };
+module.exports = { submitVerificationRequest, approveVerification, confirmBettingVerificationByNote, rejectVerification, revokeVerification, setVerifiedSoopId };
