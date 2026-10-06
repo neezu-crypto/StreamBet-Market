@@ -207,6 +207,18 @@ document.addEventListener('sbm-auth-changed', function () {
   var renewBtn = document.getElementById('verify-note-renew');
   if (!backdrop) return;
 
+  document.addEventListener('sbm-streamer-verification-approved', function () {
+    if (!backdrop.classList.contains('open')) return;
+    noteEl.hidden = true;
+    nicknameInput.disabled = true;
+    soopIdInput.disabled = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '인증 완료';
+    statusEl.style.color = 'var(--mint)';
+    statusEl.textContent = '✅ 관리자가 승인했어요. 인증 권한이 새로고침 없이 적용됐습니다.';
+    statusEl.classList.add('show');
+  });
+
   function showNote(result, previousCode) {
     noteEl.hidden = !result.noteEligible;
     if (!result.noteEligible) return;

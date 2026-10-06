@@ -51,12 +51,14 @@ window.sbmFirebase = {
   ref, get, set, update, push, remove, onValue, runTransaction, serverTimestamp,
   query, orderByChild, equalTo, limitToFirst, limitToLast,
   httpsCallable: (name) => httpsCallable(functions, name),
+  requestStreamerVerification: (data) => requestStreamerVerificationFn(data || {}),
   GoogleAuthProvider,
 };
 // 09번/13번 — 관리자 UI 판별을 로컬 이메일 비교 대신 서버 확인(whoAmI)으로 옮긴다.
 // adminCenter/adminUids는 .read:false라 클라이언트가 직접 읽을 수 없다.
 const whoAmIFn = httpsCallable(functions, 'whoAmI');
 const logBettingMarketVisitFn = httpsCallable(functions, 'logBettingMarketVisit');
+const requestStreamerVerificationFn = httpsCallable(functions, 'requestStreamerVerification');
 window.sbmAuth = auth;
 window.sbmDb = db;
 window.sbmUser = null;      // 익명 계정 포함, 현재 인증 세션 (마켓 등 공개 데이터 읽기 권한용)
@@ -91,12 +93,37 @@ function sbmUpdateTrusted() {
   window.sbmTrusted = !!(window.sbmRealUser || window.sbmIsAdmin || window.sbmIsVerifiedStreamer);
 }
 
+let sbmVerifiedFlagUnsubscribe = null;
+let sbmSwitchApprovalUnsubscribe = null;
+const sbmVisitLoggedUids = new Set();
+
+function sbmHandleSwitchApproval(user, requestId) {
+  const key = 'soop.streamerVerificationSwitch.' + requestId;
+  try {
+    const lastAttemptAt = Number(localStorage.getItem(key) || 0);
+    if (lastAttemptAt && Date.now() - lastAttemptAt < 20000) return;
+    localStorage.setItem(key, String(Date.now()));
+  } catch (_) { /* Private browsing may disable localStorage. */ }
+  requestStreamerVerificationFn({ checkOnly: true, switchRequestId: requestId })
+    .then(async (response) => {
+      if (!response.data || response.data.action !== 'switch' || auth.currentUser?.uid !== user.uid) return;
+      await signInWithCustomToken(auth, response.data.customToken);
+      window.location.reload();
+    })
+    .catch((error) => {
+      try { localStorage.removeItem(key); } catch (_) { /* Storage may be blocked. */ }
+      console.error('승인된 스트리머 계정 자동 전환 실패:', error);
+    });
+}
+
 // 페이지 접속 시(로딩화면 동안) 자동으로 익명 로그인 — auth != null 규칙을 만족시켜
 // 로그인 전에도 마켓 목록 등 공개 데이터를 읽을 수 있게 한다. 배팅·제안·환전 등은 이제
 // 익명 세션도 대부분 쓸 수 있지만(어뷰징 위험이 큰 환전만 예외), 인증 스트리머 여부는
 // 익명 세션이어도 반드시 확인해야 한다 — 로그인을 꺼리는 스트리머가 인증만 받으면
 // 로그인 없이도 실계정과 동일하게 쓸 수 있어야 하기 때문.
 onAuthStateChanged(auth, async (user) => {
+  if (sbmVerifiedFlagUnsubscribe) { sbmVerifiedFlagUnsubscribe(); sbmVerifiedFlagUnsubscribe = null; }
+  if (sbmSwitchApprovalUnsubscribe) { sbmSwitchApprovalUnsubscribe(); sbmSwitchApprovalUnsubscribe = null; }
   window.sbmUser = user;
   window.sbmRealUser = user && !user.isAnonymous ? user : null;
   // 서버 확인 전까지는 관리자 UI를 숨긴 채로 시작한다(안전한 기본값) - 실제 값은
@@ -111,29 +138,44 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  try {
-    // UID가 포함된 공유 인증 원장은 서버 전용이다. 본인 인증 여부는 본인만
-    // 읽을 수 있는 users/{uid} 플래그로 확인한다.
-    const snap = await get(ref(db, 'users/' + user.uid + '/streamerVerified'));
-    window.sbmIsVerifiedStreamer = snap.val() === true;
-    // 인증 스트리머가 접속하면 관리자 디스코드로 알림 - 실제로 알림을 보낼지
-    // (하루 한 번 제한 등)는 서버(logBettingMarketVisit)가 판단한다.
-    if (window.sbmIsVerifiedStreamer) {
+  // 본인만 읽을 수 있는 인증 플래그를 구독한다. 관리자가 승인하면 새로고침 없이
+  // 권한·인증 신청 UI가 즉시 갱신된다.
+  let hasInitialVerifiedValue = false;
+  let previousVerifiedValue = false;
+  sbmVerifiedFlagUnsubscribe = onValue(ref(db, 'users/' + user.uid + '/streamerVerified'), (snap) => {
+    if (auth.currentUser?.uid !== user.uid) return;
+    const verified = snap.val() === true;
+    window.sbmIsVerifiedStreamer = verified;
+    sbmUpdateTrusted();
+    document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
+    if (verified && !sbmVisitLoggedUids.has(user.uid)) {
+      sbmVisitLoggedUids.add(user.uid);
       logBettingMarketVisitFn().catch((e) => console.error('접속 로그 실패', e));
     }
-  } catch (e) {
-    console.error('인증 스트리머 여부 확인 실패', e);
-  }
+    if (hasInitialVerifiedValue && !previousVerifiedValue && verified) {
+      document.dispatchEvent(new CustomEvent('sbm-streamer-verification-approved'));
+    }
+    previousVerifiedValue = verified;
+    hasInitialVerifiedValue = true;
+  }, (e) => console.error('인증 스트리머 상태 구독 실패', e));
+
+  sbmSwitchApprovalUnsubscribe = onValue(ref(db, 'users/' + user.uid + '/streamerVerificationSwitchApproval'), (snap) => {
+    if (auth.currentUser?.uid !== user.uid) return;
+    const requestId = snap.val() && snap.val().requestId;
+    if (requestId) sbmHandleSwitchApproval(user, String(requestId));
+  }, (e) => console.error('스트리머 계정 전환 승인 신호 구독 실패', e));
   // adminCenter/adminUids는 .read:false라 클라이언트가 직접 못 읽으므로 서버 함수로 확인한다.
   // 실계정이 아니면(익명) 애초에 관리자일 수 없어 호출 자체를 생략한다.
   if (window.sbmRealUser) {
     try {
       const result = await whoAmIFn();
+      if (auth.currentUser?.uid !== user.uid) return;
       window.sbmIsAdmin = !!(result.data && result.data.isAdmin);
     } catch (e) {
       console.error('관리자 여부 확인 실패', e);
     }
   }
+  if (auth.currentUser?.uid !== user.uid) return;
   sbmUpdateTrusted();
   document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
 
