@@ -220,8 +220,8 @@ document.addEventListener('sbm-auth-changed', function () {
   });
 
   function showNote(result, previousCode) {
-    noteEl.hidden = !result.noteEligible;
-    if (!result.noteEligible) return;
+    noteEl.hidden = result.noteEligible !== true;
+    if (result.noteEligible !== true) return;
     var code = Number(result.verificationCodeExpiresAt) > Date.now()
       ? result.verificationCode || previousCode || '' : '';
     noteCodeBtn.textContent = code || '코드 없음';
@@ -325,8 +325,10 @@ document.addEventListener('sbm-auth-changed', function () {
         sbmFetchVerifiedStreamersOnce();
       } else {
         showNote(result.data || {}, '');
-        statusEl.textContent = result.data.noteEligible
-          ? '신청이 접수됐어요. SOOP 쪽지의 발신자 아이디와 코드를 대조해 자동 승인합니다.'
+      statusEl.textContent = result.data.noteEligible
+          ? result.data.isSwitch
+            ? '계정 전환 신청이 접수됐어요. 기존 인증 스트리머의 SOOP 아이디로 코드를 보내면 확인 후 기존 계정으로 전환됩니다.'
+            : '신청이 접수됐어요. SOOP 쪽지의 발신자 아이디와 코드를 대조해 자동 승인합니다.'
           : '기존 계정 또는 식별정보 충돌 신청은 관리자 수동 검수가 필요합니다.';
       }
       statusEl.classList.add('show');
@@ -351,7 +353,9 @@ document.addEventListener('sbm-auth-changed', function () {
         statusEl.textContent = '✅ 스트리머 인증이 완료됐어요. 페이지를 새로고침해주세요.';
       } else if (result.status === 'submitted') {
         showNote(result, previousCode);
-        statusEl.textContent = '아직 검토 중이에요. 쪽지를 보냈다면 잠시 후 다시 확인해주세요.';
+        statusEl.textContent = result.isSwitch && result.noteEligible
+          ? '기존 인증 스트리머의 SOOP 아이디로 코드를 보냈다면 확인 후 기존 계정으로 자동 전환됩니다.'
+          : '아직 검토 중이에요. 쪽지를 보냈다면 잠시 후 다시 확인해주세요.';
       } else statusEl.textContent = '대기 중인 신청이 없어요. 닉네임과 SOOP 아이디를 입력해 신청해주세요.';
       statusEl.classList.add('show');
     }).catch(function (error) { statusEl.textContent = error.message || '상태 확인에 실패했어요.'; statusEl.classList.add('show'); });

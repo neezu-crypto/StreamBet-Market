@@ -22,6 +22,18 @@ async function issueNoteCode(requestRef) {
   return { code, expiresAt };
 }
 
+async function findUniqueVerifiedStreamerByUid(db, uid) {
+  if (!uid) return null;
+  const snap = await db.ref('streamerVerifications').orderByChild('uid').equalTo(uid).limitToFirst(2).get();
+  if (!snap.exists()) return null;
+  const entries = Object.entries(snap.val() || {});
+  if (entries.length !== 1) return null;
+  const [key, record] = entries[0];
+  const soopId = String(record && record.soopId || '').trim().toLowerCase();
+  if (!SOOP_ID_RE.test(soopId)) return null;
+  return { key, record, soopId };
+}
+
 // 인증 스트리머가 이 배팅시장에서 인게임 닉네임을 한 번도 설정한 적이 없으면(프로필 없음),
 // 랭킹 등에 "유저XXXXXX" 폴백 대신 방송 닉네임이 바로 보이도록 초기값을 채워준다. 이미 본인이
 // 직접 정한 닉네임이 있으면 절대 덮어쓰지 않는다 — 자동 채움은 "빈 프로필 채우기"로만 한정한다.
@@ -51,18 +63,28 @@ const submitVerificationRequest = onCall(async (request) => {
   await assertNotBanned(uid);
   const db = getDatabase();
   const pendingSnap = await db.ref('bettingMarket/verifyRequests').get();
-  const pendingEntries = Object.entries(pendingSnap.val() || {});
+  const pendingEntries = Object.entries(pendingSnap.val() || {}).filter(([, entry]) => !entry.status || entry.status === 'pending');
   const mine = pendingEntries.find(([, entry]) => entry.requesterUid === uid);
   if (request.data?.checkOnly === true) {
-    if (mine) return { status: 'submitted', verificationCode: '', verificationCodeExpiresAt: Number(mine[1].noteVerificationCodeExpiresAt) || 0, noteEligible: !!mine[1].noteVerificationCodeHash };
+    if (mine) {
+      const switchIdentity = mine[1].isSwitch ? await findUniqueVerifiedStreamerByUid(db, mine[1].existingUid) : null;
+      const noteEligible = mine[1].noteEligible === true && (!mine[1].isSwitch || !!switchIdentity);
+      return {
+        status: 'submitted', isSwitch: !!mine[1].isSwitch, verificationCode: '',
+        verificationCodeExpiresAt: Number(mine[1].noteVerificationCodeExpiresAt) || 0,
+        noteEligible,
+      };
+    }
     const verified = await db.ref('streamerVerifications').orderByChild('uid').equalTo(uid).limitToFirst(1).get();
     return { status: verified.exists() ? 'already-verified' : 'not-found' };
   }
   if (request.data?.renewOnly === true) {
     if (!mine) return { status: 'not-found' };
-    const challenge = mine[1].noteEligible
+    const switchIdentity = mine[1].isSwitch ? await findUniqueVerifiedStreamerByUid(db, mine[1].existingUid) : null;
+    const noteEligible = mine[1].noteEligible === true && (!mine[1].isSwitch || !!switchIdentity);
+    const challenge = noteEligible
       ? await issueNoteCode(db.ref('bettingMarket/verifyRequests/' + mine[0])) : null;
-    return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible: !!challenge };
+    return { status: 'submitted', isSwitch: !!mine[1].isSwitch, verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible };
   }
   const { nickname, soopId } = request.data || {};
   const trimmedNickname = typeof nickname === 'string' ? nickname.trim() : '';
@@ -76,8 +98,8 @@ const submitVerificationRequest = onCall(async (request) => {
   }
 
   // 인생게임에서 다시보기를 직접 확인해 등록한 UID + SOOP 아이디 + 닉네임 쌍은
-  // 배팅시장에서도 별도 관리자 대기 없이 인증한다. 기존 인증 레코드가 있거나
-  // 계정 전환/식별정보 충돌이 있는 경우에는 자동 승인하지 않고 기존 수동 검수로 둔다.
+  // 배팅시장에서도 별도 관리자 대기 없이 인증한다. 계정 전환은 쪽지 발신 ID가 기존
+  // 인증 레코드의 SOOP ID와 일치할 때만 자동 승인하고, 식별정보 충돌은 수동 검수한다.
   const [reviewedSnap, existingSnap, soopIdMatchSnap] = await Promise.all([
     db.ref(`lifeGame/playedStreamerAllowlist/${uid}/${trimmedSoopId}`).get(),
     db.ref('streamerVerifications')
@@ -137,7 +159,11 @@ const submitVerificationRequest = onCall(async (request) => {
     return { status: 'auto-approved' };
   }
 
-  const finalUid = existingSnap.exists() ? Object.values(existingSnap.val())[0].uid : uid;
+  const hasIdentityCollision = !!(nicknameRecord && soopIdRecord && nicknameRecord.uid !== soopIdRecord.uid);
+  const identityRecord = hasIdentityCollision ? null : (soopIdRecord || nicknameRecord);
+  const finalUid = identityRecord && identityRecord.uid ? identityRecord.uid : uid;
+  const isSwitch = !!(identityRecord && identityRecord.uid && identityRecord.uid !== uid);
+  const existingUid = isSwitch ? identityRecord.uid : null;
 
   // 이미 다른 uid로 인증된 SOOP 아이디로 신청하는 경우(공개 정보라 누구나 입력 가능) —
   // 승인 시 기존 인증 스트리머의 판정 권한이 신청자에게 그대로 넘어가므로, 관리자가 검수
@@ -145,15 +171,20 @@ const submitVerificationRequest = onCall(async (request) => {
   let soopIdAlreadyVerifiedByOther = false;
   if (soopIdRecord) soopIdAlreadyVerifiedByOther = soopIdRecord.uid !== finalUid;
 
-  // A note can prove control of the SOOP sender ID, but must not transfer an
-  // existing account or resolve identity collisions without human review.
-  const noteEligible = finalUid === uid && !nicknameRecord && !soopIdRecord;
+  // A note can prove ownership of the existing verified SOOP account. For an
+  // account switch, only a unique existing UID record with a registered SOOP ID
+  // is eligible; the note sender must match that canonical ID at approval time.
+  const switchIdentity = isSwitch ? await findUniqueVerifiedStreamerByUid(db, existingUid) : null;
+  const noteEligible = isSwitch
+    ? !!switchIdentity && !soopIdAlreadyVerifiedByOther
+    : finalUid === uid && !nicknameRecord && !soopIdRecord;
   const samePending = pendingEntries.find(([, entry]) => entry.requesterUid === uid &&
     entry.nickname === trimmedNickname && entry.soopId === trimmedSoopId);
   if (samePending) {
-    const challenge = samePending[1].noteEligible
-      ? await issueNoteCode(db.ref('bettingMarket/verifyRequests/' + samePending[0])) : null;
-    return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible: !!challenge };
+    const requestRef = db.ref('bettingMarket/verifyRequests/' + samePending[0]);
+    await requestRef.update({ uid: finalUid, isSwitch, existingUid, soopIdAlreadyVerifiedByOther, noteEligible });
+    const challenge = noteEligible ? await issueNoteCode(requestRef) : null;
+    return { status: 'submitted', isSwitch, verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible };
   }
   const legacyPending = pendingEntries.find(([, entry]) => !entry.requesterUid && entry.uid === uid &&
     entry.nickname === trimmedNickname && entry.soopId === trimmedSoopId);
@@ -165,12 +196,15 @@ const submitVerificationRequest = onCall(async (request) => {
     soopId: trimmedSoopId,
     uid: finalUid,
     requesterUid: uid,
+    isSwitch,
+    existingUid,
+    status: 'pending',
     submittedAt: Date.now(),
     soopIdAlreadyVerifiedByOther,
     noteEligible,
   });
   const challenge = noteEligible ? await issueNoteCode(newRef) : null;
-  return { status: 'submitted', verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible };
+  return { status: 'submitted', isSwitch, verificationCode: challenge?.code || '', verificationCodeExpiresAt: challenge?.expiresAt || 0, noteEligible };
 });
 
 // streamerVerifications는 주식시장과 공유하는 노드인데, 그쪽 앱은 SOOP 아이디
@@ -217,14 +251,38 @@ async function setVerifiedProfile(db, uid, nickname, soopId) {
 
 // 05번 — 스트리머 인증 승인. 공유 streamerVerifications 노드에 Cloud Functions가 직접 기록한다.
 // 동일 SOOP 아이디 또는 동일 닉네임으로 재신청 시 새 레코드를 만들지 않고 uid 필드만 갱신한다.
-async function approveVerificationRequest(db, requestId, adminUid, adminName, noteOnly = false) {
+async function approveVerificationRequest(db, requestId, adminUid, adminName, noteOnly = false, noteSenderId = '') {
   const reqRef = db.ref('bettingMarket/verifyRequests/' + requestId);
   const reqSnap = await reqRef.get();
   if (!reqSnap.exists()) throw new HttpsError('not-found', '인증 신청을 찾을 수 없습니다.');
-  const { nickname, soopId, uid } = reqSnap.val();
-  if (noteOnly && (reqSnap.val().noteEligible !== true || reqSnap.val().requesterUid !== uid ||
-      reqSnap.val().soopIdAlreadyVerifiedByOther)) {
+  const reqData = reqSnap.val();
+  const { nickname, soopId, uid } = reqData;
+  if (noteOnly && ((reqData.status && reqData.status !== 'pending') || reqData.noteEligible !== true || !reqData.requesterUid ||
+      (!reqData.isSwitch && reqData.requesterUid !== uid) || reqData.soopIdAlreadyVerifiedByOther)) {
     throw new HttpsError('failed-precondition', '자동 승인 대상이 변경됐습니다. 수동 검수가 필요합니다.');
+  }
+
+  if (reqData.isSwitch) {
+    let existing;
+    if (noteOnly) {
+      existing = await findUniqueVerifiedStreamerByUid(db, reqData.existingUid);
+    } else {
+      const existingSnap = await findExistingStreamerRecord(db, nickname, soopId);
+      if (existingSnap.exists()) {
+        const [key, record] = Object.entries(existingSnap.val())[0];
+        existing = { key, record, soopId: String(record && record.soopId || '').trim().toLowerCase() };
+      }
+    }
+    if (!existing || existing.record.uid !== uid || (noteOnly && existing.soopId !== String(noteSenderId || '').trim().toLowerCase())) {
+      throw new HttpsError('failed-precondition', '쪽지 발신자 ID가 기존 인증 계정과 일치하지 않습니다.');
+    }
+    const approvedAt = Date.now();
+    await reqRef.update({ status: 'approved', reviewedAt: approvedAt });
+    await db.ref('users/' + reqData.requesterUid + '/streamerVerificationSwitchApproval').set({ requestId, approvedAt });
+    await logAudit(adminUid, adminName,
+      noteOnly ? 'SOOP 쪽지 확인으로 계정 전환 자동 승인' : '스트리머 인증 재신청 승인 (계정 전환)',
+      nickname + ' (' + existing.soopId + ')');
+    return { status: 'approved', mode: 'switch-approved', isSwitch: true };
   }
 
   const existingSnap = await findExistingStreamerRecord(db, nickname, soopId);
@@ -296,11 +354,11 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
   let lockRef = null;
   try {
     const snapshot = await db.ref('bettingMarket/verifyRequests').get();
-    const match = Object.entries(snapshot.val() || {}).find(([id, entry]) => entry.noteEligible === true &&
-      entry.requesterUid === entry.uid && !entry.soopIdAlreadyVerifiedByOther &&
-      String(entry.soopId || '').toLowerCase() === senderId &&
-      Number(entry.noteVerificationCodeExpiresAt) > Date.now() &&
-      entry.noteVerificationCodeHash === noteCodeHash(id, code));
+    const match = Object.entries(snapshot.val() || {}).find(([id, entry]) => (!entry.status || entry.status === 'pending') && entry.noteEligible === true &&
+      entry.requesterUid && Number(entry.noteVerificationCodeExpiresAt) > Date.now() &&
+      entry.noteVerificationCodeHash === noteCodeHash(id, code) &&
+      (entry.isSwitch || (entry.requesterUid === entry.uid && !entry.soopIdAlreadyVerifiedByOther &&
+        String(entry.soopId || '').toLowerCase() === senderId)));
     if (!match) {
       await claimRef.remove();
       return { ok: false, reason: 'no-matching-pending-request' };
@@ -317,24 +375,39 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
       return { ok: false, reason: 'verification-in-progress' };
     }
     const current = (await reqRef.get()).val();
-    if (!current || current.noteEligible !== true || current.requesterUid !== current.uid ||
-        current.soopIdAlreadyVerifiedByOther || String(current.soopId || '').toLowerCase() !== senderId ||
+    if (!current || (current.status && current.status !== 'pending') || current.noteEligible !== true || !current.requesterUid ||
+        (!current.isSwitch && (current.requesterUid !== current.uid || current.soopIdAlreadyVerifiedByOther ||
+          String(current.soopId || '').toLowerCase() !== senderId)) ||
         Number(current.noteVerificationCodeExpiresAt) <= Date.now() ||
         current.noteVerificationCodeHash !== noteCodeHash(requestId, code)) {
       await lockRef.remove();
       await claimRef.remove();
       return { ok: false, reason: 'request-changed-during-verification' };
     }
-    // A conflicting identity may have been approved after this application.
-    const existing = await findExistingStreamerRecord(db, current.nickname, current.soopId);
-    if (existing.exists()) {
-      await lockRef.remove();
-      await claimRef.remove();
-      return { ok: false, reason: 'identity-conflict-needs-manual-review' };
+    if (current.isSwitch) {
+      const existing = await findUniqueVerifiedStreamerByUid(db, current.existingUid);
+      if (!existing || existing.record.uid !== current.uid || existing.soopId !== senderId) {
+        await lockRef.remove();
+        await claimRef.remove();
+        return { ok: false, reason: 'switch-sender-does-not-match-existing-account' };
+      }
+    } else {
+      // A conflicting identity may have been approved after this application.
+      const existing = await findExistingStreamerRecord(db, current.nickname, current.soopId);
+      if (existing.exists()) {
+        await lockRef.remove();
+        await claimRef.remove();
+        return { ok: false, reason: 'identity-conflict-needs-manual-review' };
+      }
     }
-    const result = await approveVerificationRequest(db, requestId, adminUid, adminName, true);
+    const result = await approveVerificationRequest(db, requestId, adminUid, adminName, true, senderId);
+    await reqRef.update({
+      noteVerificationCodeHash: null,
+      noteVerificationCodeExpiresAt: null,
+      noteVerificationClaim: null,
+    });
     await claimRef.update({ status: 'approved', requestId, approvedAt: Date.now() });
-    return { ok: true, nickname: current.nickname, status: result.status };
+    return { ok: true, nickname: current.nickname, status: result.status, isSwitch: !!result.isSwitch };
   } catch (error) {
     if (lockRef) await lockRef.remove().catch(() => {});
     await claimRef.remove().catch(() => {});
