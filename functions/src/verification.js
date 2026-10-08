@@ -406,7 +406,19 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
       noteVerificationCodeExpiresAt: null,
       noteVerificationClaim: null,
     });
-    await claimRef.update({ status: 'approved', requestId, approvedAt: Date.now() });
+    await claimRef.update({
+      status: 'approved',
+      requestId,
+      approvedAt: Date.now(),
+      discordNotification: {
+        type: 'streamer-verification-auto-approved',
+        service: 'betting-market',
+        source: 'betting-market',
+        nickname: String(current.nickname || ''),
+        soopId: senderId,
+        isSwitch: current.isSwitch === true,
+      },
+    });
     return { ok: true, nickname: current.nickname, status: result.status, isSwitch: !!result.isSwitch };
   } catch (error) {
     if (lockRef) await lockRef.remove().catch(() => {});
