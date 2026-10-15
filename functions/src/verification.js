@@ -5,6 +5,7 @@ const { logAudit } = require('./lib/audit');
 const { avatarUrlFor } = require('./lib/avatar');
 const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
 const { syncPublicVerification, removePublicVerification, publicIdFor } = require('./lib/public-identity');
+const { classifyBettingVerificationNoteNoMatch } = require('./verificationNoteDiagnostics');
 const crypto = require('node:crypto');
 
 const NOTE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -354,14 +355,17 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
   let lockRef = null;
   try {
     const snapshot = await db.ref('bettingMarket/verifyRequests').get();
-    const match = Object.entries(snapshot.val() || {}).find(([id, entry]) => (!entry.status || entry.status === 'pending') && entry.noteEligible === true &&
-      entry.requesterUid && Number(entry.noteVerificationCodeExpiresAt) > Date.now() &&
+    const requests = snapshot.val() || {};
+    const now = Date.now();
+    const match = Object.entries(requests).find(([id, entry]) => (!entry.status || entry.status === 'pending') && entry.noteEligible === true &&
+      entry.requesterUid && Number(entry.noteVerificationCodeExpiresAt) > now &&
       entry.noteVerificationCodeHash === noteCodeHash(id, code) &&
       (entry.isSwitch || (entry.requesterUid === entry.uid && !entry.soopIdAlreadyVerifiedByOther &&
         String(entry.soopId || '').toLowerCase() === senderId)));
     if (!match) {
       await claimRef.remove();
-      return { ok: false, reason: 'no-matching-pending-request' };
+      const diagnosticReason = classifyBettingVerificationNoteNoMatch(requests, senderId, now);
+      return { ok: false, reason: 'no-matching-pending-request', diagnosticReason };
     }
     const [requestId] = match;
     const reqRef = db.ref('bettingMarket/verifyRequests/' + requestId);
