@@ -6,6 +6,7 @@ const { avatarUrlFor } = require('./lib/avatar');
 const { SOOP_ID_RE, NICKNAME_FORBIDDEN_RE } = require('./constants');
 const { syncPublicVerification, removePublicVerification, publicIdFor } = require('./lib/public-identity');
 const { classifyBettingVerificationNoteNoMatch } = require('./verificationNoteDiagnostics');
+const { isStreamerStockListed } = require('./streamerStockListing');
 const crypto = require('node:crypto');
 
 const NOTE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -403,6 +404,12 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
         await claimRef.remove();
         return { ok: false, reason: 'identity-conflict-needs-manual-review' };
       }
+    }
+    const stocksSnapshot = await db.ref('stocks').get();
+    if (!isStreamerStockListed(stocksSnapshot.val(), current.nickname)) {
+      await lockRef.remove();
+      await claimRef.remove();
+      return { ok: false, reason: 'streamer-not-stock-listed' };
     }
     const result = await approveVerificationRequest(db, requestId, adminUid, adminName, true, senderId);
     await reqRef.update({
