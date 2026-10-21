@@ -3,6 +3,43 @@
 var sbmBannedAccountsCache = {};
 var sbmBannedListSubscribed = false;
 
+function sbmRenderBettingMarketUsage() {
+  var card = document.getElementById('betting-market-usage-card');
+  var downloadEl = document.getElementById('usage-rtdb-download');
+  var storageEl = document.getElementById('usage-rtdb-storage');
+  var costEl = document.getElementById('usage-rtdb-cost');
+  var functionsEl = document.getElementById('usage-functions');
+  var functionsCostEl = document.getElementById('usage-functions-cost');
+  var schedulerCostEl = document.getElementById('usage-scheduler-cost');
+  var noteEl = document.getElementById('usage-rtdb-note');
+  if (!card || !window.sbmFirebase || !window.sbmIsAdmin) return;
+  card.hidden = false;
+  function formatBytes(bytes) {
+    var gb = bytes / 1000000000;
+    return gb >= 1 ? gb.toFixed(2) + ' GB' : (bytes / 1000000).toFixed(1) + ' MB';
+  }
+  window.sbmFirebase.httpsCallable('getBettingMarketUsage')({}).then(function (res) {
+    var d = res.data;
+    downloadEl.textContent = formatBytes(d.downloadBytes30d);
+    storageEl.textContent = formatBytes(d.storedBytes);
+    costEl.textContent = '~$' + Number(d.estimatedRtdbUsdMonthly || 0).toFixed(2) + ' /월';
+    functionsEl.textContent = sbmFmtNum(d.streamBetFunctionExecutions30d) + '회 · ' + sbmFmtNum(d.streamBetFunctionRuntimeSeconds30d) + '초';
+    functionsCostEl.textContent = '~$' + Number(d.estimatedFunctionUsdNoFreeQuota || 0).toFixed(3) + ' /월';
+    var schedulerRange = d.estimatedSchedulerUsdMonthlyRange || [0, 0.1];
+    schedulerCostEl.textContent = '$' + Number(schedulerRange[0]).toFixed(2) + '–$' + Number(schedulerRange[1]).toFixed(2) + ' /월';
+    var sampleTime = d.sampledAt ? new Date(d.sampledAt).toLocaleString('ko-KR') : '확인 불가';
+    noteEl.textContent = '확인 ' + sampleTime + '. RTDB 금액은 공유 DB 기준이며 무료 구간(월 다운로드 10GB · 저장 1GB) 초과분 추정입니다. 함수 금액은 Cloud Run의 청구 인스턴스 시간·호출 수와 1 vCPU·256MiB를 사용한 무료 구간 미적용 근사치이며, 청구 계정의 무료 할당량 적용 후 더 낮거나 0원일 수 있습니다. Scheduler 금액은 작업별 월 과금이며 청구 계정의 3개 무료 작업 상황에 따라 달라집니다. 실제 청구액은 Cloud Billing에서 확인하세요.';
+  }).catch(function (e) {
+    downloadEl.textContent = '조회 실패';
+    storageEl.textContent = '조회 실패';
+    costEl.textContent = '조회 실패';
+    functionsEl.textContent = '조회 실패';
+    functionsCostEl.textContent = '조회 실패';
+    schedulerCostEl.textContent = '조회 실패';
+    noteEl.textContent = 'Cloud Monitoring 조회 실패: ' + (e && e.message ? e.message : '오류');
+  });
+}
+
 function sbmRenderAdminDashboard() {
   var circEl = document.getElementById('stat-circulation');
   if (!circEl || !window.sbmFirebase) return;

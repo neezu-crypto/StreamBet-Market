@@ -799,6 +799,19 @@
       </div>
 
       <div class="section-label">대시보드 요약 · 오늘</div>
+      <section id="betting-market-usage-card" class="admin-usage-card" hidden>
+        <div class="section-label">Firebase RTDB 사용량 · 최근 30일</div>
+        <p class="admin-item-sub">공유 Firebase 프로젝트 전체 수치입니다. 인생게임·주식시장 등 자매 서비스 사용량이 포함되어 배팅시장 단독 비용으로 볼 수 없습니다.</p>
+        <div class="admin-stats-grid">
+          <div class="admin-stat-box"><span class="label">RTDB 다운로드</span><span class="value" id="usage-rtdb-download">불러오는 중...</span></div>
+          <div class="admin-stat-box"><span class="label">RTDB 저장 용량</span><span class="value" id="usage-rtdb-storage">불러오는 중...</span></div>
+          <div class="admin-stat-box"><span class="label">초과분 기준 월 예상</span><span class="value" id="usage-rtdb-cost">불러오는 중...</span></div>
+          <div class="admin-stat-box"><span class="label">배팅시장 함수 호출 · 실행시간</span><span class="value" id="usage-functions">불러오는 중...</span></div>
+          <div class="admin-stat-box"><span class="label">함수 월 비용 추정 · 무료 구간 전</span><span class="value" id="usage-functions-cost">불러오는 중...</span></div>
+          <div class="admin-stat-box"><span class="label">스케줄러 1개 월 추정</span><span class="value" id="usage-scheduler-cost">$0–$0.10</span></div>
+        </div>
+        <p class="admin-item-sub" id="usage-rtdb-note">Cloud Monitoring 지표 기준 근사치입니다. RTDB는 공유 프로젝트 전체이며, Cloud Run 무료 구간과 Cloud Scheduler 무료 작업 수도 다른 프로젝트와 청구 계정 단위로 공유됩니다.</p>
+      </section>
       <div class="admin-stats-grid">
         <div class="admin-stat-box"><span class="label">오늘 신규 지갑</span><span class="value" id="stat-new-wallets">-</span></div>
         <div class="admin-stat-box"><span class="label">활성 마켓</span><span class="value" id="stat-active-markets">-</span></div>

@@ -83,8 +83,16 @@ const exchangeCurrency = onCall(async (request) => {
   }
 
   const now = Date.now();
-  const logRef = getDatabase().ref('bettingMarket/exchanges/' + uid).push();
-  await logRef.set({ direction, amount: amt, fee, resultAmount: net, requestedAt: now });
+  const db = getDatabase();
+  const logRef = db.ref('bettingMarket/exchanges/' + uid).push();
+  const logEntry = { uid, direction, amount: amt, fee, resultAmount: net, requestedAt: now };
+  const exchangeId = logRef.key;
+  await db.ref().update({
+    ['bettingMarket/exchanges/' + uid + '/' + exchangeId]: {
+      direction, amount: amt, fee, resultAmount: net, requestedAt: now,
+    },
+    ['bettingMarket/exchangeLog/' + exchangeId]: logEntry,
+  });
 
   // 13번 — 자산 랭킹에 영향을 주는 잔액 변경이므로 이 시점에만 랭킹 재계산
   const { recomputeRankingsAfter } = require('./rankings');
