@@ -1,5 +1,5 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
-const { getDatabase } = require('firebase-admin/database');
+const { getDatabase, getDatabaseWithUrl } = require('firebase-admin/database');
 const { requireAuth, requireAdmin, assertNotBanned } = require('./lib/auth');
 const { logAudit } = require('./lib/audit');
 const { avatarUrlFor } = require('./lib/avatar');
@@ -11,6 +11,11 @@ const crypto = require('node:crypto');
 
 const NOTE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const NOTE_CODE_TTL_MS = 15 * 60 * 1000;
+const LIFE_GAME_DATABASE_URL = 'https://streamer-life-game-rtdb.firebaseio.com';
+
+function lifeGameDatabase() {
+  return getDatabaseWithUrl(LIFE_GAME_DATABASE_URL);
+}
 function newNoteCode() {
   return Array.from(crypto.randomBytes(6), (byte) => NOTE_CODE_ALPHABET[byte % NOTE_CODE_ALPHABET.length]).join('');
 }
@@ -103,7 +108,7 @@ const submitVerificationRequest = onCall(async (request) => {
   // 배팅시장에서도 별도 관리자 대기 없이 인증한다. 계정 전환은 쪽지 발신 ID가 기존
   // 인증 레코드의 SOOP ID와 일치할 때만 자동 승인하고, 식별정보 충돌은 수동 검수한다.
   const [reviewedSnap, existingSnap, soopIdMatchSnap] = await Promise.all([
-    db.ref(`lifeGame/playedStreamerAllowlist/${uid}/${trimmedSoopId}`).get(),
+    lifeGameDatabase().ref(`lifeGame/playedStreamerAllowlist/${uid}/${trimmedSoopId}`).get(),
     db.ref('streamerVerifications')
       .orderByChild('nickname')
       .equalTo(trimmedNickname)
