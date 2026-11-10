@@ -12,9 +12,16 @@ const crypto = require('node:crypto');
 const NOTE_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 const NOTE_CODE_TTL_MS = 15 * 60 * 1000;
 const LIFE_GAME_DATABASE_URL = 'https://streamer-life-game-rtdb.firebaseio.com';
+const STOCK_MARKET_DATABASE_URL = 'https://soop-stock-market-rtdb.firebaseio.com';
+const STOCK_MARKET_MIGRATION_STATE_PATH = 'adminCenter/stockMarketDatabaseMigration/state';
 
 function lifeGameDatabase() {
   return getDatabaseWithUrl(LIFE_GAME_DATABASE_URL);
+}
+async function activeStockMarketDatabase() {
+  const shared = getDatabase();
+  const state = (await shared.ref(STOCK_MARKET_MIGRATION_STATE_PATH).get()).val() || {};
+  return state.phase === 'market-primary' ? getDatabaseWithUrl(STOCK_MARKET_DATABASE_URL) : shared;
 }
 function newNoteCode() {
   return Array.from(crypto.randomBytes(6), (byte) => NOTE_CODE_ALPHABET[byte % NOTE_CODE_ALPHABET.length]).join('');
@@ -410,7 +417,7 @@ const confirmBettingVerificationByNote = onCall(async (request) => {
         return { ok: false, reason: 'identity-conflict-needs-manual-review' };
       }
     }
-    const stocksSnapshot = await db.ref('stocks').get();
+    const stocksSnapshot = await (await activeStockMarketDatabase()).ref('stocks').get();
     if (!isStreamerStockListed(stocksSnapshot.val(), current.nickname)) {
       await lockRef.remove();
       await claimRef.remove();

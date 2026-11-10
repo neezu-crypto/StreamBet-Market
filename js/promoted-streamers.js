@@ -17,10 +17,10 @@ var sbmPromotedStreamerNamesLoaded = false;
 
 function sbmRefreshPromotedStreamerDatalist() {
   var datalist = document.getElementById('promoted-streamer-datalist');
-  if (!datalist || sbmPromotedStreamerNamesLoaded || !window.sbmFirebase || !window.sbmDb) return;
+  if (!datalist || sbmPromotedStreamerNamesLoaded || !window.sbmFirebase || !window.sbmStockDb) return;
   sbmPromotedStreamerNamesLoaded = true;
   var fb = window.sbmFirebase;
-    fb.get(fb.ref(window.sbmDb, 'stocksPublic')).then(function (snap) {
+    fb.get(fb.ref(window.sbmStockDb, 'stocksPublic')).then(function (snap) {
     var val = snap.val() || {};
     var names = Object.keys(val).map(function (id) { return val[id].name; }).filter(Boolean);
     datalist.innerHTML = names.map(function (n) {

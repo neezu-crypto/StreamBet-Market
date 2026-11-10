@@ -1,6 +1,6 @@
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onValueWritten } = require('firebase-functions/v2/database');
-const { getDatabase, ServerValue } = require('firebase-admin/database');
+const { getDatabase, getDatabaseWithUrl, ServerValue } = require('firebase-admin/database');
 const {
   requireAuth,
   isRealAccount,
@@ -23,6 +23,14 @@ const {
   JACKPOT_RAKE_SHARE,
 } = require('./constants');
 const { publicIdFor, ensurePublicId } = require('./lib/public-identity');
+
+const STOCK_MARKET_DATABASE_URL = 'https://soop-stock-market-rtdb.firebaseio.com';
+const STOCK_MARKET_MIGRATION_STATE_PATH = 'adminCenter/stockMarketDatabaseMigration/state';
+async function activeStockMarketDatabase() {
+  const shared = getDatabase();
+  const state = (await shared.ref(STOCK_MARKET_MIGRATION_STATE_PATH).get()).val() || {};
+  return state.phase === 'market-primary' ? getDatabaseWithUrl(STOCK_MARKET_DATABASE_URL) : shared;
+}
 
 function sanitizePublicMarket(source) {
   const publicMarket = JSON.parse(JSON.stringify(source || {}));
@@ -144,7 +152,8 @@ const submitMarketProposal = onCall(async (request) => {
 
   const db = getDatabase();
   // 05번 — stocks에 실재하는 스트리머인지 서버 검증
-  const streamerDocs = await Promise.all(ids.map((id) => db.ref('stocks/' + id).get()));
+  const stockDb = await activeStockMarketDatabase();
+  const streamerDocs = await Promise.all(ids.map((id) => stockDb.ref('stocks/' + id).get()));
   const names = {};
   streamerDocs.forEach((snap, i) => {
     if (!snap.exists()) {

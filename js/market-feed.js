@@ -7,7 +7,7 @@ window.sbmMarketsCache = sbmMarketsCache;
 var sbmStockNames = {};
 if (window.sbmFirebase && window.sbmDb) {
   var sbmFbInit = window.sbmFirebase;
-  sbmFbInit.get(sbmFbInit.ref(window.sbmDb, 'stocksPublic')).then(function (snap) {
+  sbmFbInit.get(sbmFbInit.ref(window.sbmStockDb, 'stocksPublic')).then(function (snap) {
     var val = snap.val() || {};
     Object.keys(val).forEach(function (id) { sbmStockNames[id] = val[id].name; });
   });

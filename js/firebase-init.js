@@ -45,6 +45,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
+// 주식시장 공개 시세만 전용 RTDB로 옮길 준비용 참조다. 이전 검증 전에는
+// false를 유지해 배팅시장 자체 데이터·지갑·인증 경로와 함께 기본 DB를 쓴다.
+const stockDb = getDatabase(app, 'https://soop-stock-market-rtdb.firebaseio.com');
+const STOCK_MARKET_DATABASE_PRIMARY = true;
+const marketDb = STOCK_MARKET_DATABASE_PRIMARY ? stockDb : db;
 const functions = getFunctions(app);
 
 window.sbmFirebase = {
@@ -61,6 +66,7 @@ const logBettingMarketVisitFn = httpsCallable(functions, 'logBettingMarketVisit'
 const requestStreamerVerificationFn = httpsCallable(functions, 'requestStreamerVerification');
 window.sbmAuth = auth;
 window.sbmDb = db;
+window.sbmStockDb = marketDb;
 window.sbmUser = null;      // 익명 계정 포함, 현재 인증 세션 (마켓 등 공개 데이터 읽기 권한용)
 window.sbmRealUser = null;  // 익명이 아닌 실제(Google) 로그인 계정만. 익명 세션의 인증 스트리머는
                              // 여기 안 잡히므로, "로그인한 것처럼 대우" 판단은 sbmTrusted를 쓴다.
