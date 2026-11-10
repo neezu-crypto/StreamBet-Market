@@ -1,10 +1,13 @@
 const { onSchedule } = require('firebase-functions/v2/scheduler');
 const { getDatabase } = require('firebase-admin/database');
+const { isServicePaused } = require('./service-pause');
 
 // 06번 — 배팅 마감 시각(서버 시각 기준)이 지난 open 마켓을 자동으로 closed 처리 +
 // 판정 유예시간(1분)이 지난 pendingSettlement 마켓 확정 지급. 활동량이 낮은 기간에는
 // 5분 간격으로 확인해 불필요한 함수 실행·RTDB 조회를 줄인다(스케줄러 job 수는 그대로).
 const closeBettingScheduled = onSchedule('every 5 minutes', async () => {
+  // 서비스 일시정지 중에는 건너뛴다(관리자 센터 서비스 일시정지, 기본 상태: 일시정지).
+  if (await isServicePaused(getDatabase(), 'bettingMarket', true)) return;
   const db = getDatabase();
   const now = Date.now();
 
