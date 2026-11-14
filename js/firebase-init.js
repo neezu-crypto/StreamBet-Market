@@ -29,6 +29,7 @@ import {
   getFunctions,
   httpsCallable,
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app-check.js';
 
 // 07번 — 배팅시장 전용 Web App 등록 (같은 프로젝트 soop-stock-market, appId만 별개)
 const firebaseConfig = {
@@ -43,6 +44,7 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+try { initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider('6Ld0AfAtAAAAABcCio4_5AoiCdrjfM7_4riWiYXR'), isTokenAutoRefreshEnabled: true }); } catch (error) { console.warn('App Check 초기화 실패', error); }
 const auth = getAuth(app);
 const db = getDatabase(app);
 // 주식시장 공개 시세만 전용 RTDB로 옮길 준비용 참조다. 이전 검증 전에는
