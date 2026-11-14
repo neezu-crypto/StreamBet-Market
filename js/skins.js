@@ -1,5 +1,5 @@
-// 16번 — 스킨 탭. 카탈로그는 서버(functions/src/constants.js SKIN_CATALOG)와 동일하게
-// 클라이언트에도 상수로 둔다(표시용 — 실제 가격 검증은 항상 서버가 한다).
+//  16번 — 스킨 탭. 카탈로그는 서버(functions/src/constants.js SKIN_CATALOG)와 동일하게
+//  클라이언트에도 상수로 둔다(표시용 — 실제 가격 검증은 항상 서버가 한다).
 var SBM_SKIN_CATALOG = {
   'excel-default': { name: '스프레드시트 테마', category: 'theme', price: 150000 },
   'win11-folder': { name: '탐색기 스타일 테마', category: 'theme', price: 150000 },
@@ -19,7 +19,7 @@ var SBM_SKIN_CATALOG = {
   'sketch-border': { name: '손그림 스케치 테마', category: 'theme', price: 200000 },
 };
 
-// 관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
+//  관리 탭 — 스킨 구매 내역. RTDB 규칙상 관리자·인증 스트리머만 읽을 수 있는 경로라
 // 다른 관리 전용 목록(감사 로그 등)과 동일하게 구독 가드를 둔다.
 var sbmSkinPurchaseLogSubscribed = false;
 function sbmRenderSkinPurchaseLog() {
@@ -64,17 +64,17 @@ function sbmRenderSkinPurchaseLog() {
     sbmUpdateSnow(false); // 3D 회전 숲 배경(js/winter-scene.js)으로 교체 — 발자국 셰이더는 비활성화(코드는 남겨둠)
     sbmUpdateCandleChart(skinId === 'trading-terminal');
     sbmUpdateBilliards(skinId === 'billiard-table');
-    // 불꽃놀이 야시장 테마는 js/firework-scene.js(three.js WebGL, winter-scene.js와
-    // 동일하게 MutationObserver로 theme-firework-market 클래스를 직접 관찰)로 교체 —
-    // 여기서 별도로 호출할 필요가 없다.
+    //  불꽃놀이 야시장 테마는 js/firework-scene.js(three.js WebGL, winter-scene.js와
+    //  동일하게 MutationObserver로 theme-firework-market 클래스를 직접 관찰)로 교체 —
+    //  여기서 별도로 호출할 필요가 없다.
     sbmUpdatePastelBubbles(skinId === 'pastel-dream');
   }
 
   // 여름 테마 — 실시간 WebGL 수면 왜곡 셰이더. 정적 CSS 배경(풀장 SVG) 위에
-  // 겹쳐서, 그 이미지를 매 프레임 노이즈로 굴절시켜 실제 물처럼 일렁이게 하고
+  //  겹쳐서, 그 이미지를 매 프레임 노이즈로 굴절시켜 실제 물처럼 일렁이게 하고
   // 카우스틱(빛 그물무늬) 발광을 더한다. 셰이더 알고리즘(심플렉스 노이즈 기반
   // 표면 왜곡)은 Ksenia Kondrashova의 MIT 라이선스 CodePen
-  // (https://codepen.io/ksenia-k/pen/RwXVMMY, "Lightweight Water Distortion
+  //  (https://codepen.io/ksenia-k/pen/RwXVMMY, "Lightweight Water Distortion
   // Effect")을 원 저작자 표기와 함께 그대로 가져와 이 프로젝트의 풀장 이미지에
   // 맞게 붙였다. WebGL을 지원하지 않는 환경에서는 캔버스가 그려지지 않고
   // 아래 CSS 배경(정적 이미지)이 그대로 보이므로 안전하게 폴백된다.
@@ -86,9 +86,9 @@ function sbmRenderSkinPurchaseLog() {
   var sbmWaterReducedMotion = false;
   var SBM_WATER_PARAMS = { blueish: 0.5, scale: 8, illumination: 0.2, surfaceDistortion: 0.05, waterDistortion: 0.025 };
 
-  // 셰이더가 굴절시키는 "원본 이미지"를 정적 파일이 아니라, 매 프레임 다시 그리는
+  //  셰이더가 굴절시키는 "원본 이미지"를 정적 파일이 아니라, 매 프레임 다시 그리는
   // 작은 2D 캔버스로 바꿨다 — 단색 배경 위에 큰 튜브의 그림자를 그 프레임의 튜브
-  // 위치에 맞춰 얹은 뒤 이걸 텍스처로 올리면, 셰이더의 굴절·왜곡이 그림자에도
+  //  위치에 맞춰 얹은 뒤 이걸 텍스처로 올리면, 셰이더의 굴절·왜곡이 그림자에도
   // 그대로 적용된다("그림자가 물살에 따라 왜곡"되는 효과). 화면 해상도와 무관하게
   // 작은 고정 폭(SBM_WATER_TEX_W)만 쓰므로 매 프레임 다시 그려도 비용이 적다.
   var sbmWaterTexCanvas = null;
@@ -150,7 +150,7 @@ function sbmRenderSkinPurchaseLog() {
     '  mat2 m = rotate2D(.5);' +
     // 프래그먼트 셰이더는 화면의 모든 픽셀마다 이 루프를 도는데, 반복마다 sin/cos를
     // (vec2라 실질 4회) 호출해 프레임 드랍의 주범이었다. 반복 횟수를 10 → 5로 줄여
-    // 이 루프의 삼각함수 연산량을 절반으로 낮췄다(scale이 반복마다 1.2배씩 커지는
+    //  이 루프의 삼각함수 연산량을 절반으로 낮췄다(scale이 반복마다 1.2배씩 커지는
     // 누적 방식이라, 절반만 돌아도 저주파~중간 주파수 디테일은 거의 그대로 유지된다).
     '  for (int j = 0; j < 5; j++) {' +
     '    uv *= m; n *= m;' +
@@ -186,16 +186,16 @@ function sbmRenderSkinPurchaseLog() {
     '  img *= (1. + u_illumination * sn);' +
     '  color += img.rgb;' +
     '  color += u_illumination * vec3(1. - u_blueish, 1., 1.) * sn;' +
-    // 안개(feTurbulence 애니메이션) 대신, 이미 계산해둔 잔물결 노이즈(sn)를 그대로
+    //  안개(feTurbulence 애니메이션) 대신, 이미 계산해둔 잔물결 노이즈(sn)를 그대로
     // 재활용해 물결에 의해 빛이 덜 모이는 자리를 풀장 바닥 그림자로 어둡게 한다.
-    // sn을 셰이더가 어차피 굴절·발광에 쓰려고 매 프레임 계산하던 값이라 추가
+    //  sn을 셰이더가 어차피 굴절·발광에 쓰려고 매 프레임 계산하던 값이라 추가
     // 연산 비용이 거의 없고, 별도 애니메이션 텍스처를 계속 다시 그릴 필요도 없다.
     '  float shadow = smoothstep(0.15, 0.0, sn);' +
     '  color -= shadow * (0.3 + u_illumination) * vec3(0.04, 0.12, 0.16);' +
     '  opacity += img.a;' +
     // 원본 데모의 edge_alpha 비네트(액자 속 사진처럼 가장자리를 투명하게 페이드아웃하는
-    // 로직)는 제거했다 — 여기선 액자가 아니라 화면 전체가 물이어야 하므로, 가장자리도
-    // 중앙과 동일하게 불투명하게 그린다(CLAMP_TO_EDGE라 UV가 [0,1]을 살짝 벗어나도
+    //  로직)는 제거했다 — 여기선 액자가 아니라 화면 전체가 물이어야 하므로, 가장자리도
+    //  중앙과 동일하게 불투명하게 그린다(CLAMP_TO_EDGE라 UV가 [0,1]을 살짝 벗어나도
     // 텍스처 가장자리 색이 자연스럽게 이어진다).
     '  gl_FragColor = vec4(color, opacity);' +
     '}';
@@ -261,8 +261,8 @@ function sbmRenderSkinPurchaseLog() {
     gl.uniform1f(sbmWaterUniforms.u_ratio, sbmWaterCanvas.width / sbmWaterCanvas.height);
 
     // 텍스처 캔버스를 항상 화면 비율과 똑같이 맞춘다 — u_ratio === u_img_ratio가
-    // 항상 성립해야 아래 sbmWaterUpdateTexture()의 화면→텍스처 좌표 변환 공식이
-    // (셰이더의 img_uv 계산과 어긋나지 않고) 정확하게 들어맞는다.
+    //  항상 성립해야 아래 sbmWaterUpdateTexture()의 화면→텍스처 좌표 변환 공식이
+    //  (셰이더의 img_uv 계산과 어긋나지 않고) 정확하게 들어맞는다.
     if (!sbmWaterTexCanvas) {
       sbmWaterTexCanvas = document.createElement('canvas');
       sbmWaterTexCtx = sbmWaterTexCanvas.getContext('2d');
@@ -285,7 +285,7 @@ function sbmRenderSkinPurchaseLog() {
     }
   }
 
-  // 매 프레임 텍스처를 다시 그린다 — 단색 배경 위에, 큰 튜브가 떠 있으면 그
+  //  매 프레임 텍스처를 다시 그린다 — 단색 배경 위에, 큰 튜브가 떠 있으면 그
   // 화면 위치를 셰이더의 img_uv 공식(사방 1.4배 확대 + Y축 반전)대로 그대로
   // 역산해 텍스처 좌표로 옮긴 뒤 그림자를 얹는다. 이 텍스처를 셰이더가 매
   // 프레임 굴절시키므로, 그림자도 물결을 따라 함께 일렁인다.
@@ -357,10 +357,10 @@ function sbmRenderSkinPurchaseLog() {
 
   // 여름 테마 — 큰 튜브 하나. 예전엔 장난감을 여러 개(최대 22개) 물리 연산 +
   // ctx.filter 블러 그림자로 그려서 프레임 드랍이 있었는데, 이번엔 딱 1개만
-  // 그리는 대신 라디얼 그라데이션으로 원환(torus) 단면의 입체감·광택·안쪽
-  // 그림자를 살려 디테일을 높였다(ctx.filter 블러 대신 그림자도 저비용
+  //  그리는 대신 라디얼 그라데이션으로 원환(torus) 단면의 입체감·광택·안쪽
+  //  그림자를 살려 디테일을 높였다(ctx.filter 블러 대신 그림자도 저비용
   // 라디얼 그라데이션으로 그려서 개수가 늘어도 안전한 방식을 유지). 마우스에
-  // 닿으면 그 반대 방향으로 튕기고, 화면 가장자리에서는 벽처럼 반사된다.
+  //  닿으면 그 반대 방향으로 튕기고, 화면 가장자리에서는 벽처럼 반사된다.
   var sbmTubeCanvas = null;
   var sbmTubeCtx = null;
   var sbmTube = null;
@@ -390,7 +390,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmTubeCanvas.style.height = window.innerHeight + 'px';
     sbmTubeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
     if (!sbmTube) sbmTubeSeed();
-    // 리사이즈로 화면이 좁아져 튜브가 밖으로 밀려나지 않도록 위치를 안쪽으로 당긴다
+    //  리사이즈로 화면이 좁아져 튜브가 밖으로 밀려나지 않도록 위치를 안쪽으로 당긴다
     sbmTube.x = Math.min(Math.max(sbmTube.x, sbmTube.r), window.innerWidth - sbmTube.r);
     sbmTube.y = Math.min(Math.max(sbmTube.y, sbmTube.r), window.innerHeight - sbmTube.r);
     sbmTubeDraw(0);
@@ -431,7 +431,7 @@ function sbmRenderSkinPurchaseLog() {
       p.vr += (Math.random() - 0.5) * 0.2;
     }
 
-    // 물 위를 떠도는 잔잔한 표류 + 아주 느린 자체 회전(하이라이트·밸브가 보이도록)
+    //  물 위를 떠도는 잔잔한 표류 + 아주 느린 자체 회전(하이라이트·밸브가 보이도록)
     p.vx += (Math.random() - 0.5) * 0.05;
     p.vy += (Math.random() - 0.5) * 0.05;
     p.vx *= 0.985;
@@ -502,7 +502,7 @@ function sbmRenderSkinPurchaseLog() {
     ctx.fillStyle = '#7a2020';
     ctx.fill();
 
-    // 바깥 테두리를 살짝 어둡게 눌러 윤곽을 또렷하게
+    //  바깥 테두리를 살짝 어둡게 눌러 윤곽을 또렷하게
     ctx.beginPath();
     ctx.arc(0, 0, outerR, 0, Math.PI * 2);
     ctx.lineWidth = 2;
@@ -555,7 +555,7 @@ function sbmRenderSkinPurchaseLog() {
   // 가을 테마 — 위에서 계속 낙엽이 떨어져 바닥에 쌓이고(화면을 여러 구간으로
   // 나눠 구간별 더미 높이를 추적), 마우스가 지나가면 강풍기처럼 반대 방향으로
   // 흩날린다. 세게 밀려 화면 밖으로 나가면 그 낙엽은 사라지고, 개수 상한 이하로
-  // 유지되는 동안 위에서 계속 보충 생성된다. 물리는 경과 시간(dtFactor, 60fps
+  //  유지되는 동안 위에서 계속 보충 생성된다. 물리는 경과 시간(dtFactor, 60fps
   // 기준 정규화)으로 적분해 모니터 주사율과 무관하게 같은 속도로 움직인다.
   var sbmLeafCanvas = null;
   var sbmLeafCtx = null;
@@ -694,7 +694,7 @@ function sbmRenderSkinPurchaseLog() {
       next.push(leaf);
     }
 
-    // 위에서 계속 보충 생성 — "떨어지는 중"인 낙엽 수만 기준으로 삼는다. 바닥에
+    //  위에서 계속 보충 생성 — "떨어지는 중"인 낙엽 수만 기준으로 삼는다. 바닥에
     // 쌓인 낙엽은 마우스로 직접 흩날리기 전까지는 치우지 않고 계속 쌓이게 둔다.
     if (fallingCount < SBM_LEAF_FALL_CAP && Math.random() < 0.6 * dtFactor) {
       next.push(sbmLeafSpawn());
@@ -764,15 +764,15 @@ function sbmRenderSkinPurchaseLog() {
   }
 
   // 겨울 테마 — 실시간 WebGL 눈밭 셰이더. 마우스가 지나간 자리를 높이맵
-  // 텍스처에 "찍어서"(radial gradient + globalCompositeOperation:'lighten'로
-  // 같은 자리를 반복해서 지나가도 자연스럽게 최대치까지만 눌리게) 영구히
-  // 남기고, 프래그먼트 셰이더가 그 높이맵의 경사(주변 텍셀과의 차이)를
+  //  텍스처에 "찍어서"(radial gradient + globalCompositeOperation:'lighten'로
+  //  같은 자리를 반복해서 지나가도 자연스럽게 최대치까지만 눌리게) 영구히
+  //  남기고, 프래그먼트 셰이더가 그 높이맵의 경사(주변 텍셀과의 차이)를
   // 노멀처럼 써서 음영을 계산해 실제로 눌려서 움푹 들어간 것처럼 보이게 한다.
   // 참고한 CodePen("A man walking on snow", Den, MIT — 원 개념은 Codrops의
-  // React Three Fiber 지형 변형 데모)은 3D 메시 지형이지만, 이 프로젝트는
+  //  React Three Fiber 지형 변형 데모)은 3D 메시 지형이지만, 이 프로젝트는
   // React·3D 엔진을 안 쓰므로 같은 "높이맵에 눌러서 남기고 그 경사로 음영을
   // 낸다"는 핵심 아이디어만 2D 텍스처 + 셰이더 노멀 셰이딩으로 재구현했다.
-  // 걷는 사람 캐릭터는 요청대로 구현하지 않는다.
+  //  걷는 사람 캐릭터는 요청대로 구현하지 않는다.
   var sbmSnowCanvas = null;
   var sbmSnowGL = null;
   var sbmSnowUniforms = null;
@@ -849,8 +849,8 @@ function sbmRenderSkinPurchaseLog() {
     sbmSnowCanvas.style.height = window.innerHeight + 'px';
     gl.viewport(0, 0, sbmSnowCanvas.width, sbmSnowCanvas.height);
 
-    // 높이맵 텍스처는 화면 해상도와 무관한 작은 고정 폭만 쓴다(발자국은 부드러운
-    // 얼룩이라 이 정도 해상도로 충분하고, 매번 다시 만들면 찍힌 자국이 사라지므로
+    //  높이맵 텍스처는 화면 해상도와 무관한 작은 고정 폭만 쓴다(발자국은 부드러운
+    //  얼룩이라 이 정도 해상도로 충분하고, 매번 다시 만들면 찍힌 자국이 사라지므로
     // 최초 1회만 생성한다).
     if (!sbmSnowTexCanvas) {
       sbmSnowTexCanvas = document.createElement('canvas');
@@ -961,9 +961,9 @@ function sbmRenderSkinPurchaseLog() {
   }
 
   // 트레이딩 터미널 테마 — 배경 레이어에 은은하게(카드 가독성을 해치지 않는
-  // 낮은 불투명도) 흐르는 캔들차트를 그린다. 랜덤워크로 가격을 생성하고, 시간이
-  // 지나면 오래된 캔들은 왼쪽으로 흘러 사라지고 오른쪽에 새 캔들이 생긴다.
-  // 도형만 그리는 저비용 canvas 2D라 프레임 드랍 걱정 없이 계속 켜둘 수 있다.
+  //  낮은 불투명도) 흐르는 캔들차트를 그린다. 랜덤워크로 가격을 생성하고, 시간이
+  //  지나면 오래된 캔들은 왼쪽으로 흘러 사라지고 오른쪽에 새 캔들이 생긴다.
+  //  도형만 그리는 저비용 canvas 2D라 프레임 드랍 걱정 없이 계속 켜둘 수 있다.
   var sbmCandleCanvas = null;
   var sbmCandleCtx = null;
   var sbmCandles = null;
@@ -1095,7 +1095,7 @@ function sbmRenderSkinPurchaseLog() {
   }
 
   // 당구대 테마 — 마우스가 큐처럼 공을 밀어내고(반대 방향으로 튕김), 화면
-  // 가장자리(레일)에서도 튕기고, 공끼리도 서로 충돌한다. 6개 포켓(모서리 4 +
+  //  가장자리(레일)에서도 튕기고, 공끼리도 서로 충돌한다. 6개 포켓(모서리 4 +
   // 상하 중앙 2) 중 하나에 들어가면 살짝 줄어들며 사라지고, 테이블이 비면
   // 잠시 후 새 공 세트로 다시 랙(rack)된다.
   var sbmBilliardCanvas = null;
@@ -1189,7 +1189,7 @@ function sbmRenderSkinPurchaseLog() {
       ball = balls[i];
       if (ball.sinking) { ball.sinkT += dtFactor; continue; }
 
-      // 마우스(큐) 충돌 — 닿는 순간 반대 방향으로 튕겨나간다
+      //  마우스(큐) 충돌 — 닿는 순간 반대 방향으로 튕겨나간다
       var dx = ball.x - mx, dy = ball.y - my;
       var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
       var minDist = ball.r + SBM_MOUSE_CUE_R;
@@ -1254,7 +1254,7 @@ function sbmRenderSkinPurchaseLog() {
       }
     }
 
-    // 다 가라앉은 공은 배열에서 제거하고, 테이블이 비면 잠시 후 다시 랙
+    //  다 가라앉은 공은 배열에서 제거하고, 테이블이 비면 잠시 후 다시 랙
     sbmBalls = balls.filter(function (bl) { return !(bl.sinking && bl.sinkT > 0.35); });
     if (sbmBalls.length === 0) {
       sbmBilliardRackTimer += dtFactor / 60;
@@ -1295,7 +1295,7 @@ function sbmRenderSkinPurchaseLog() {
 
       ctx.save();
       ctx.globalAlpha = t;
-      // 그림자
+      //  그림자
       ctx.beginPath();
       ctx.ellipse(x + 3, y + 4, r * 0.9, r * 0.5, 0, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(0,0,0,0.25)';
@@ -1366,9 +1366,9 @@ function sbmRenderSkinPurchaseLog() {
 
   // 벚꽃 테마 — 배경 레이어 전체에 이미 두껍게 쌓인 꽃잎 카펫 + 마우스가 지나갈 때
   // 그 자리를 낙엽 치우는 강풍기처럼 쓸어버리는 효과. 개수가 많고(전체 화면을
-  // 덮는 밀도) 매 프레임 물리 연산(스프링 복귀 + 감쇠)이 필요해 DOM 엘리먼트
+  //  덮는 밀도) 매 프레임 물리 연산(스프링 복귀 + 감쇠)이 필요해 DOM 엘리먼트
   // 대신 <canvas> 2D 렌더링을 쓴다 — 수백 개의 style 변경보다 캔버스 draw 호출이
-  // 훨씬 가볍다. 물리는 경과 시간(dtFactor, 60fps 기준 정규화)으로 적분해
+  //  훨씬 가볍다. 물리는 경과 시간(dtFactor, 60fps 기준 정규화)으로 적분해
   // 모니터 주사율과 무관하게 같은 속도로 움직인다.
   var sbmPetalCanvas = null;
   var sbmPetalCtx = null;
@@ -1410,7 +1410,7 @@ function sbmRenderSkinPurchaseLog() {
     sbmPetalDraw();
   }
 
-  // 마우스 이동 속도(직전 위치 대비 변위/경과시간)를 추적 — 빠르게 움직일수록
+  //  마우스 이동 속도(직전 위치 대비 변위/경과시간)를 추적 — 빠르게 움직일수록
   // "강풍"이 세지고, 멈춰있으면(속도 0에 가까워지면) 꽃잎도 다시 잠잠해진다.
   function sbmPetalTrackPointer(x, y) {
     var now = performance.now();
@@ -1441,14 +1441,14 @@ function sbmRenderSkinPurchaseLog() {
         var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
         if (dist < SBM_PETAL_BLOW_RADIUS) {
           // 마우스 위치에서 바깥쪽(마우스의 반대 방향)으로 밀어내는 힘 — 가까울수록,
-          // 마우스가 빠르게 움직일수록 세게 흩날린다(강풍기로 쓸어버리는 느낌).
+          //  마우스가 빠르게 움직일수록 세게 흩날린다(강풍기로 쓸어버리는 느낌).
           var force = (1 - dist / SBM_PETAL_BLOW_RADIUS) * Math.min(speed, 40) * 0.35;
           p.vx += (dx / dist) * force;
           p.vy += (dy / dist) * force;
           p.vr += (Math.random() - 0.5) * 0.15;
         }
       }
-      // 제자리로 되돌아오는 스프링 힘 없음 — 밀려난 자리에서 감쇠(공기 저항)로만
+      //  제자리로 되돌아오는 스프링 힘 없음 — 밀려난 자리에서 감쇠(공기 저항)로만
       // 서서히 멈춰서고, 다시 원래 쌓여있던 위치로는 돌아가지 않는다.
       p.vx *= 0.92;
       p.vy *= 0.92;
@@ -1462,7 +1462,7 @@ function sbmRenderSkinPurchaseLog() {
       if (p.x < 0) { p.x = 0; p.vx = 0; } else if (p.x > w) { p.x = w; p.vx = 0; }
       if (p.y < 0) { p.y = 0; p.vy = 0; } else if (p.y > h) { p.y = h; p.vy = 0; }
     }
-    // 마우스가 멈추면 "체감 속도"도 같이 잦아들게 매 프레임 감쇠
+    //  마우스가 멈추면 "체감 속도"도 같이 잦아들게 매 프레임 감쇠
     sbmPetalMouse.vx *= 0.85;
     sbmPetalMouse.vy *= 0.85;
   }
@@ -1524,8 +1524,8 @@ function sbmRenderSkinPurchaseLog() {
     sbmPetalRAF = requestAnimationFrame(sbmPetalLoop);
   }
 
-  // 파스텔 드림 테마 — 화면 아래에서 위로 천천히 둥둥 떠오르는 파스텔 톤
-  // 비눗방울. 마우스 반응 없이 은은하게 표류만 하는 가벼운 캔버스 애니메이션
+  //  파스텔 드림 테마 — 화면 아래에서 위로 천천히 둥둥 떠오르는 파스텔 톤
+  //  비눗방울. 마우스 반응 없이 은은하게 표류만 하는 가벼운 캔버스 애니메이션
   // (좌우로 사인파 흔들림 + 상승, 화면 위로 나가면 아래에서 다시 리스폰).
   var sbmBubbleCanvas = null;
   var sbmBubbleCtx = null;
@@ -1644,8 +1644,8 @@ function sbmRenderSkinPurchaseLog() {
   // 여름 테마 — 풀장 탑뷰 배경(assets/summer-pool.svg) 위에 비치볼 · 튜브 · 오리
   // 튜브 등 물놀이 장난감을 캔버스로 띄운다. 마우스가 닿으면(원형 충돌) 그
   // 반대 방향으로 튕겨나가고, 화면 가장자리에 닿으면 벽처럼 반사돼 튕긴다.
-  // 물 위에 떠 있는 느낌을 위해 각 장난감 아래에 흐린 그림자(물그림자)를 깔고,
-  // 평소엔 잔물결에 살짝씩 흔들리듯 미세한 표류(현재)를 계속 준다.
+  //  물 위에 떠 있는 느낌을 위해 각 장난감 아래에 흐린 그림자(물그림자)를 깔고,
+  //  평소엔 잔물결에 살짝씩 흔들리듯 미세한 표류(현재)를 계속 준다.
   var sbmPoolCanvas = null;
   var sbmPoolCtx = null;
   var sbmPoolToys = null;
@@ -1715,7 +1715,7 @@ function sbmRenderSkinPurchaseLog() {
       var p = toys[i];
 
       // 마우스와의 원형 충돌 — 닿는 순간 반대 방향으로 튕겨나간다(마우스 속도가
-      // 빠를수록 더 세게). 겹친 만큼 위치도 즉시 밀어내 계속 붙어있지 않게 한다.
+      //  빠를수록 더 세게). 겹친 만큼 위치도 즉시 밀어내 계속 붙어있지 않게 한다.
       var dx = p.x - mx, dy = p.y - my;
       var dist = Math.sqrt(dx * dx + dy * dy) || 0.0001;
       var minDist = p.r + SBM_POOL_MOUSE_R;
@@ -1729,7 +1729,7 @@ function sbmRenderSkinPurchaseLog() {
         p.vr += (Math.random() - 0.5) * 0.25;
       }
 
-      // 물 위를 떠도는 잔잔한 현(전류) — 완전히 멈추지 않고 계속 미세하게 표류
+      //  물 위를 떠도는 잔잔한 현(전류) — 완전히 멈추지 않고 계속 미세하게 표류
       p.vx += (Math.random() - 0.5) * 0.06;
       p.vy += (Math.random() - 0.5) * 0.06;
       p.vx *= 0.985;
@@ -1740,7 +1740,7 @@ function sbmRenderSkinPurchaseLog() {
       p.y += p.vy * dtFactor;
       p.rot += p.vr * dtFactor;
 
-      // 화면 가장자리 = 벽 — 반사(반발계수 0.8)돼 튕기고 밖으로 나가지 않는다
+      //  화면 가장자리 = 벽 — 반사(반발계수 0.8)돼 튕기고 밖으로 나가지 않는다
       if (p.x < p.r) { p.x = p.r; p.vx = Math.abs(p.vx) * 0.8; }
       else if (p.x > w - p.r) { p.x = w - p.r; p.vx = -Math.abs(p.vx) * 0.8; }
       if (p.y < p.r) { p.y = p.r; p.vy = Math.abs(p.vy) * 0.8; }
@@ -1956,7 +1956,7 @@ function sbmRenderSkinPurchaseLog() {
     }
   });
 
-  // 시범 공개 중인 관리자 전용 스킨(예: 계절 테마 4종) — 관리자가 아니면 카테고리
+  //  시범 공개 중인 관리자 전용 스킨(예: 계절 테마 4종) — 관리자가 아니면 카테고리
   // 필터 조작과 무관하게 항상 숨겨야 하므로, style.display가 아니라 별도 클래스로
   // 게이팅한다(CSS 쪽 .skin-card[data-admin-only] 규칙 참고).
   function updateAdminOnlyCards() {
