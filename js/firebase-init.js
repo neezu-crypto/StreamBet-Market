@@ -129,7 +129,8 @@ function sbmHandleSwitchApproval(user, requestId) {
 // 익명 세션도 대부분 쓸 수 있지만(어뷰징 위험이 큰 환전만 예외), 인증 스트리머 여부는
 // 익명 세션이어도 반드시 확인해야 한다 — 로그인을 꺼리는 스트리머가 인증만 받으면
 // 로그인 없이도 실계정과 동일하게 쓸 수 있어야 하기 때문.
-onAuthStateChanged(auth, async (user) => {
+// 메인만 보기(점검 중)에는 게이트가 풀어 줄 때까지 로그인·데이터 읽기를 시작하지 않는다(2026-11-27).
+Promise.resolve(window.__seriesAppReady).then(() => onAuthStateChanged(auth, async (user) => {
   if (sbmVerifiedFlagUnsubscribe) { sbmVerifiedFlagUnsubscribe(); sbmVerifiedFlagUnsubscribe = null; }
   if (sbmSwitchApprovalUnsubscribe) { sbmSwitchApprovalUnsubscribe(); sbmSwitchApprovalUnsubscribe = null; }
   window.sbmUser = user;
@@ -188,7 +189,7 @@ onAuthStateChanged(auth, async (user) => {
   document.dispatchEvent(new CustomEvent('sbm-auth-changed', { detail: { user, realUser: window.sbmRealUser, trusted: window.sbmTrusted } }));
 
   startPresenceRefreshLoop();
-});
+}));
 
 // 10번 — 페이지별 접속자 분석. presence/bettingMarket/{uid}에 주기적으로 lastSeen을
 // 기록한다(soop-stock-market이 이미 검증한 5분 주기 패턴을 그대로 재사용, 경로만
