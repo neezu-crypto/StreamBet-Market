@@ -29,7 +29,7 @@ import {
   httpsCallable,
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app-check.js';
-import { createSeriesLogin } from './series-login.js?v=20261128-kit3';
+import { createSeriesLogin } from './series-login.js?v=20261128-kit4';
 
 // 07번 — 배팅시장 전용 Web App 등록 (같은 프로젝트 soop-stock-market, appId만 별개)
 const firebaseConfig = {
