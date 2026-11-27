@@ -199,23 +199,6 @@
   </div>
 </div>
 
-<div class="profile-backdrop" id="login-backdrop">
-  <div class="profile-modal login-modal">
-    <button class="profile-modal-close" id="login-modal-close" type="button" aria-label="닫기">✕</button>
-    <h3 class="profile-modal-title">로그인</h3>
-    <p class="login-modal-sub">로그인하면 배팅 · 제안 · 환전 등 실계정 기능을 이용할 수 있어요.</p>
-    <button class="btn-login-option btn-google" id="login-google-btn" type="button">
-      <span class="login-option-icon">G</span> Google로 시작하기
-    </button>
-    <button class="btn-login-option btn-kakao" id="kakao-login-btn" type="button">
-      <span class="login-option-icon">K</span> 카카오로 시작하기
-    </button>
-    <button class="btn-login-option btn-verify-cta" id="login-verify-btn" type="button">
-      스트리머 인증 신청하기
-    </button>
-    <p class="login-modal-hint">스트리머 인증 신청은 로그인 없이도 가능해요.</p>
-  </div>
-</div>
 
 <div class="profile-backdrop" id="jackpot-history-backdrop">
   <div class="profile-modal jackpot-history-modal">
@@ -554,50 +537,6 @@
   </div>
 </div>
 
-<div class="verify-backdrop" id="verify-backdrop">
-  <div class="verify-modal" style="max-height:calc(100dvh - 40px);overflow-y:auto;">
-    <button class="verify-modal-close" id="verify-modal-close" type="button" aria-label="닫기">✕</button>
-    <h3>스트리머 인증 신청</h3>
-    <p class="verify-modal-sub">SOOP에서 본인을 검색해 신청한 뒤, 안내되는 코드를 SOOP 쪽지로 보내면 자동 승인됩니다.</p>
-
-    <ul class="verify-benefits">
-      <li><b>인증되면</b> 메인페이지 홍보 배너에 노출돼요</li>
-      <li>모든 <b>배팅 주제 신청을 직접 검수(오픈 승인)</b>할 수 있어요</li>
-      <li>모든 배팅의 <b>최종 승 · 패 판정을 확정</b>할 수 있어요</li>
-    </ul>
-
-    <div class="verify-preview-row">
-      <div class="verify-preview-ring">
-        <div class="verify-preview-inner">
-          <img id="verify-preview-img" alt="배너 미리보기">
-          <span class="verify-preview-placeholder" id="verify-preview-placeholder">배너</span>
-        </div>
-      </div>
-      <p class="verify-preview-caption">SOOP 아이디를 입력하면<br>홍보 배너 이미지를 미리 볼 수 있어요</p>
-    </div>
-
-    <label class="verify-field">
-      <span>닉네임</span>
-      <input type="text" id="verify-nickname" maxlength="20" placeholder="예: 오목지면시그" autocomplete="off">
-    </label>
-    <label class="verify-field">
-      <span>SOOP 아이디</span>
-      <input type="text" id="verify-soopid" maxlength="20" pattern="[a-z0-9]{2,20}" placeholder="예: skftodwocks2" autocomplete="off">
-    </label>
-
-    <button class="verify-submit-btn" id="verify-submit-btn" type="button">신청하기</button>
-    <p class="verify-status" id="verify-status"></p>
-    <div id="verify-note" hidden style="padding:12px;border:1px solid #aaa;border-radius:10px;margin:12px 0;">
-      <strong>SOOP 쪽지로 본인 확인</strong>
-      <p>6자리 코드를 SOOP 쪽지로 보내주세요. 계정 전환 신청은 기존 인증 스트리머의 SOOP 아이디로 보내야 자동 승인됩니다. 상태 확인은 코드를 바꾸지 않습니다.</p>
-      <button id="verify-note-code" type="button" style="width:100%;font-size:20px;letter-spacing:4px;"></button>
-      <a href="https://note.sooplive.com/app/index.php?page=write&amp;id_list=skftodwocks2" target="_blank" rel="noopener noreferrer" style="display:block;margin:10px 0;">SOOP 쪽지 보내기 ↗</a>
-      <p id="verify-note-status" role="status"></p>
-      <button id="verify-note-renew" type="button">새 코드 발급 (이전 코드 무효화)</button>
-    </div>
-    <button id="verify-check-btn" type="button">승인됐는지 확인하기</button>
-  </div>
-</div>
 
 <div class="devbar">
   <div class="devbar-inner">
@@ -1310,13 +1249,11 @@
   </footer>
 </div>
 
-<script type="module" src="js/firebase-init.js?v=20261118-vw1"></script>
+<script type="module" src="js/firebase-init.js?v=20261128-kit2"></script>
 <script type="module" src="js/devbar-links.js"></script>
 <script defer src="https://developers.kakao.com/sdk/js/kakao.js"></script>
 <script defer src="js/devbar.js"></script>
 <script defer src="js/shared.js"></script>
-<script defer src="js/login-modal.js"></script>
-<script defer src="js/kakao-login.js"></script>
 <script defer src="js/wallet.js"></script>
 <script defer src="js/checkin-modal.js"></script>
 <script defer src="js/jackpot.js"></script>
@@ -1340,7 +1277,7 @@
      다시 그리는(들끓는·boiling 효과) 방식. rough.js는 이 스크립트에서만 쓰므로
      importmap 없이 CDN URL을 직접 import한다. -->
 <script type="module" src="js/sketch-border-scene.js"></script>
-<script defer src="js/streamer-verification.js?v=20261006-live-verification"></script>
+<script defer src="js/streamer-verification.js?v=20261128-kit2"></script>
 <script defer src="js/promoted-streamers.js?v=20261110-market-db"></script>
 <script defer src="js/market-report.js"></script>
 <script defer src="js/boot.js"></script>

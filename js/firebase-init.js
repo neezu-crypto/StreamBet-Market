@@ -3,7 +3,6 @@ import {
   getAuth,
   GoogleAuthProvider,
   signInAnonymously,
-  signInWithPopup,
   signInWithCustomToken,
   signOut,
   onAuthStateChanged,
@@ -30,6 +29,7 @@ import {
   httpsCallable,
 } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-functions.js';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'https://www.gstatic.com/firebasejs/12.16.0/firebase-app-check.js';
+import { createSeriesLogin } from './series-login.js?v=20261128-kit2';
 
 // 07번 — 배팅시장 전용 Web App 등록 (같은 프로젝트 soop-stock-market, appId만 별개)
 const firebaseConfig = {
@@ -75,16 +75,20 @@ window.sbmRealUser = null;  // 익명이 아닌 실제(Google) 로그인 계정�
 // 07번 — 관리자 판별: Firebase Auth 이메일이 skftodwocks2@gmail.com인 계정
 window.sbmIsAdmin = false;
 
-function signIn() {
-  const provider = new GoogleAuthProvider();
-  return signInWithPopup(auth, provider).catch((err) => {
-    console.error('Google 로그인 실패', err);
-    // 사용자가 스스로 팝업을 닫거나 중복 요청을 취소한 경우는 실패가 아니라 조용히 무시한다.
-    if (err && (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request')) return;
-    alert('Google 로그인에 실패했습니다. 잠시 후 다시 시도해 주세요.');
-  });
-}
-window.sbmSignIn = signIn;
+// 로그인 창은 시리즈 공통 부품(series-kit login-modal, 2026-11-28). Google은 익명 계정을 그대로 연결해
+// 쌓인 기록을 지키고, 이미 다른 계정에 연결된 수단이면 창 안에서 확인 후 전환한다.
+// 신뢰 상태(sbmTrusted)는 로그인 시점에 계산되므로 로그인·인증이 끝나면 새로고침한다(기존 동작과 같음).
+const seriesLogin = createSeriesLogin({
+  auth, functions, source: 'streamer-betting-market',
+  intro: '로그인하면 배팅·제안·환전 등 실계정 기능을 이용할 수 있어요. 스트리머 인증은 로그인 없이도 신청할 수 있어요.',
+  soopSearchScript: './js/soop-verify-search.js?v=20261118-svs1',
+  reloadAfterSwitch: true, reloadAfterVerify: true,
+  onChange: () => { window.location.reload(); },
+});
+window.sbmOpenLoginModal = (options) => seriesLogin.open(options || {});
+window.sbmCloseLoginModal = () => seriesLogin.close();
+window.sbmOpenVerifyModal = () => seriesLogin.open({ streamer: true });
+window.sbmSignIn = () => seriesLogin.open();
 window.sbmSignOut = () => signOut(auth);
 // 주식시장과 동일 프로젝트를 공유하는 linkKakaoAccount Function이 돌려주는
 // 커스텀 토큰으로 전환할 때 쓴다 (js/kakao-login.js).
@@ -214,44 +218,3 @@ document.addEventListener('keydown', (e) => {
     signIn();
   }
 });
-
-// 스트리머 인증 신청: SOOP 검색을 기본 방식으로(2026-11-18). 기존 입력칸은 "직접 입력하기"로 남긴다.
-// 검색은 팬페이지 서버의 streamerFanPageVerifySearch(로그인 필요, 사용자별 횟수 제한)를 함께 쓴다.
-{
-  const soopVerifySearchFn = httpsCallable(functions, 'streamerFanPageVerifySearch');
-  const attachSoopVerifySearchTo = (nicknameId, soopIdId, steps) => {
-    if (!document.getElementById(nicknameId) || !document.getElementById(soopIdId)) return;
-    window.attachSoopVerifySearch({
-      nicknameInput: nicknameId,
-      soopIdInput: soopIdId,
-      steps,
-      search: async (query) => {
-        await auth.authStateReady();
-        if (!auth.currentUser) await signInAnonymously(auth);
-        // 검색하는 동안 인증 서버를 미리 깨운다(확인 전용 호출: 신청·코드를 만들지 않음, 5분에 한 번).
-        if (Date.now() - (window.__verifyWarmAt || 0) > 300000) {
-          window.__verifyWarmAt = Date.now();
-          httpsCallable(functions, 'requestStreamerVerification')({ checkOnly: true }).catch(() => {});
-        }
-        const result = await soopVerifySearchFn({ query });
-        return (result.data && result.data.streamers) || [];
-      },
-    });
-  };
-  const attachAll = () => {
-  attachSoopVerifySearchTo('verify-nickname', 'verify-soopid', {
-      root: 'verify-backdrop',
-      isPending: () => !document.getElementById('verify-note').hidden,
-      afterSelect: ['verify-submit-btn'],
-      pendingOnly: ['verify-check-btn'],
-      hideAlways: [document.querySelector('#verify-backdrop .verify-preview-row')],
-    });
-  };
-  if (window.attachSoopVerifySearch) attachAll();
-  else {
-    const script = document.createElement('script');
-    script.src = new URL('./soop-verify-search.js?v=20261118-svs1', import.meta.url).href;
-    script.onload = attachAll;
-    document.head.appendChild(script);
-  }
-}
